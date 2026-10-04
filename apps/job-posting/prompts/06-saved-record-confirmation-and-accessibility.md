@@ -1,6 +1,6 @@
 # Stage 6: Confirmation and accessible user experience
 
-Read `prompts/job-posting-angular/shared-requirements.md` first. Stages 1–5 must exist; implement only this stage.
+Read `apps/job-posting/prompts/shared-requirements.md` first. Stages 1–5 must exist; implement only this stage.
 
 ## Tasks
 

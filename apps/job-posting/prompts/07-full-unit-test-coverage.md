@@ -1,6 +1,6 @@
 # Stage 7: Full unit coverage gate
 
-Read `prompts/job-posting-angular/shared-requirements.md` first. Stages 1–6 must exist; implement only this stage.
+Read `apps/job-posting/prompts/shared-requirements.md` first. Stages 1–6 must exist; implement only this stage.
 
 ## Tasks
 

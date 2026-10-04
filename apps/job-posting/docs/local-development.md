@@ -49,7 +49,7 @@ Optional interactive commands: npm.cmd run test:watch and npm.cmd run watch. Cov
 - src/app/features/job-posting/state: immutable attempts, sessionStorage adapters and page-scoped submission workflow.
 - tests: mirrors source organization; all client specs live here.
 - docs: development, proposed API contract, idempotency and test coverage notes.
-- ../../prompts/job-posting-angular: staged implementation prompts and shared requirements.
+- prompts: staged implementation prompts and shared requirements.
 - ../../ai-log: truthful work notes; an actual chat transcript is still required.
 
 ## Angular and user behavior
