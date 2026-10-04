@@ -8,7 +8,12 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
-    "test:coverage": "ng test --watch=false --coverage"
+    "test:coverage": "ng test --watch=false --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:install": "playwright install chromium",
+    "test:e2e:check": "tsc --project tsconfig.e2e.json"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
@@ -26,6 +31,8 @@
     "@angular/build": "^22.2.1",
     "@angular/cli": "^22.2.1",
     "@angular/compiler-cli": "^22.2.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.5",
     "@vitest/coverage-v8": "^5.0.3",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",

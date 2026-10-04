@@ -1,8 +1,9 @@
 <section aria-labelledby="new-job-heading">
+  <p class="eyebrow">Recruitment workspace</p>
   <h1 id="new-job-heading">Post a job</h1>
   <p>Create a new opening for your team.</p>
-  <p>All fields are required.</p>
-  <div class="submission-status" role="status" aria-live="polite">{{ workflow.message() }}</div>
+  <p class="required-note">All fields are required.</p>
+  <div class="submission-status" [attr.data-state]="workflow.state()" role="status" aria-live="polite">{{ workflow.message() }}</div>
   @if (workflow.remainingSeconds() > 0) { <p>Retry available in {{ workflow.remainingSeconds() }} seconds.</p> }
   @if (workflow.state() === 'throttled' && workflow.remainingSeconds() === 0) { <p>No active retry delay is available. Retry this same submission manually when ready.</p> }
   @if (workflow.state() === 'unknown' || workflow.state() === 'pending' || workflow.state() === 'throttled') {
@@ -20,14 +21,17 @@
     @if (summary().length > 0 || serverForm().length > 0) {
       <section class="error-summary" aria-labelledby="error-heading">
         <h2 id="error-heading">Check the job details</h2>
+        <p>Review the highlighted fields below.</p>
         <ul>
-          @for (error of summary(); track $index) { <li><a [href]="'#' + error.field">{{ labels[error.field] }}: {{ error.message }}</a></li> }
+          @for (field of fields; track field) {
+            @if (messages(field).length > 0) { <li><a [href]="'#' + field">{{ labels[field] }}</a></li> }
+          }
           @for (message of serverForm(); track $index) { <li>{{ message }}</li> }
         </ul>
       </section>
     }
     @for (field of fields; track field) {
-      <div class="field">
+      <div class="field" [class.salary-field]="field === 'salaryMin' || field === 'salaryMax'">
         <label [for]="field">{{ labels[field] }}</label>
         @if (field === 'description') {
           <textarea [id]="field" [formField]="jobForm[field]" rows="6" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'"></textarea>

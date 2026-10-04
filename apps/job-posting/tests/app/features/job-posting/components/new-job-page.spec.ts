@@ -1,5 +1,5 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ATTEMPT_STORAGE } from '../../../../../src/app/features/job-posting/state/posting-attempt-store';
+import { ATTEMPT_STORAGE, ATTEMPT_UUID } from '../../../../../src/app/features/job-posting/state/posting-attempt-store';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NewJobPage } from '../../../../../src/app/features/job-posting/components/new-job-page';
 import { LOCAL_CLOCK } from '../../../../../src/app/features/job-posting/validators/job-validation';
@@ -14,12 +14,13 @@ describe('Job Signal Form', () => {
   let now: Date;
   beforeEach(async () => {
     now = new Date(2026, 9, 4, 23, 59);
-    TestBed.configureTestingModule({ imports: [NewJobPage], providers: [provideHttpClientTesting(), { provide: ATTEMPT_STORAGE, useFactory: () => ({ read: () => null, write: vi.fn(), remove: vi.fn() }) }, { provide: LOCAL_CLOCK, useValue: () => now }] });
+    TestBed.configureTestingModule({ imports: [NewJobPage], providers: [provideHttpClientTesting(), { provide: ATTEMPT_UUID, useValue: () => 'form-test-key' }, { provide: ATTEMPT_STORAGE, useFactory: () => ({ read: () => null, write: vi.fn(), remove: vi.fn() }) }, { provide: LOCAL_CLOCK, useValue: () => now }] });
     fixture = TestBed.createComponent(NewJobPage);
     page = fixture.componentInstance;
     root = fixture.nativeElement;
     await fixture.whenStable();
   });
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
   async function submit() {
     root.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await fixture.whenStable();

@@ -63,7 +63,29 @@ describe('Submission workflow integration', () => {
     expect(page.workflow.state()).toBe('saved'); expect(root.querySelector('form')).toBeNull();
     expect(root.textContent).toContain('could not be cleared');
   });
-  it('does not dispatch invalid form values' , async () => {
+  it('uses an explicit checkbox to enable recovery reset and a polite status region', async () => {
+    raw = 'invalid'; await create();
+    const status = root.querySelector('[role="status"]');
+    expect(status?.getAttribute('aria-live')).toBe('polite');
+    const reset = root.querySelector<HTMLButtonElement>('#resolve-recovery')!;
+    expect(reset.type).toBe('button'); expect(reset.disabled).toBe(true);
+    root.querySelector<HTMLInputElement>('input[type=checkbox]')!.click(); await fixture.whenStable();
+    expect(reset.disabled).toBe(false); reset.click(); await fixture.whenStable();
+    expect(page.workflow.state()).toBe('editing'); expect(raw).toBeNull();
+    expect(root.querySelector('button[type=submit]')).not.toBeNull();
+    expect(root.querySelectorAll('.field [role=alert]')).toHaveLength(0);
+  });
+  it('retries a recovered snapshot with its stored identity and accepts a replay response', async () => {
+    recovery('in-flight'); await create(); http.expectNone('/api/jobs');
+    expect(page.workflow.retry()).toBe(true);
+    const req = http.expectOne('/api/jobs');
+    expect(req.request.headers.get('Idempotency-Key')).toBe('recovered-key');
+    expect(req.request.body).toEqual(payload);
+    req.flush(saved, { status: 200, statusText: 'Replay' }); await fixture.whenStable();
+    expect(page.workflow.savedRecord()).toEqual(saved);
+    expect(root.querySelector('app-saved-job-confirmation')?.textContent).toContain('Server title');
+  });
+  it('does not dispatch invalid form values'  , async () => {
     await create(); expect(page.workflow.savedRecord()).toBeNull(); await submit(); http.expectNone('/api/jobs'); expect(page.workflow.state()).toBe('editing');
   });
   it('sends one persisted POST and locks controls during a delayed response', async () => {

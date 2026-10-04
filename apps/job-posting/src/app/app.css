@@ -1,6 +1,7 @@
-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border-bottom: 1px solid #cbd5e1; background: white; }
-.brand { font-weight: 700; font-size: 1.25rem; }
-main { max-width: 50rem; margin: 2rem auto; padding: 0 1.25rem; }
-.skip-link { position: absolute; left: 1rem; top: -5rem; padding: .75rem; background: white; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem max(1.25rem, calc((100% - 48rem) / 2)); border-bottom: 1px solid #d9e2ec; background: #fff; }
+header span { color: #475569; font-size: .85rem; }
+.brand { font-weight: 750; font-size: 1.2rem; letter-spacing: -.025em; text-decoration: none; }
+main { max-width: 50rem; margin: 2.5rem auto; padding: 0 1.25rem; }
+.skip-link { position: absolute; z-index: 10; left: 1rem; top: -5rem; padding: .75rem; background: white; }
 .skip-link:focus { top: .5rem; }
-@media (max-width: 30rem) { header { flex-wrap: wrap; } }
+@media (max-width: 30rem) { header { flex-wrap: wrap; } main { margin-block: 1.75rem; } }

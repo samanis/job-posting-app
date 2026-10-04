@@ -18,9 +18,9 @@ POST `/api/jobs`, `Content-Type: application/json`, `Idempotency-Key: <caller-su
 }
 ```
 
-The workflow must pass an immutable normalized CreateJobRequest and its existing attempt key. The transport never generates keys or edits payloads. Its Observable is cold: each subscription sends one request, so the later workflow must subscribe once and own concurrency protection. No interceptor or automatic retry repeats this mutation.
+The workflow must pass an immutable normalized CreateJobRequest and its existing attempt key. The transport never generates keys or edits payloads. Its Observable is cold: each subscription sends one request, PostingWorkflow subscribes once per permitted dispatch and owns concurrency protection. No interceptor or automatic retry repeats this mutation.
 
-Proposed validation: trim required text and reject whitespace-only values; salaries are finite, nonnegative decimal numbers with at most two decimal places and minimum strictly below maximum. Currency is unspecified. Closing date is a valid YYYY-MM-DD calendar date strictly later than today's local calendar date. Stage 3 implements client form validation; the backend must independently validate.
+Proposed validation: trim required text and reject whitespace-only values; salaries are finite, nonnegative decimal numbers with at most two decimal places and minimum strictly below maximum. Currency is unspecified. Closing date is a valid YYYY-MM-DD calendar date strictly later than today's local calendar date. The client implements form validation; the backend must independently validate.
 
 ## Saved record
 
@@ -32,7 +32,7 @@ The returned record is authoritative; confirmation must display it rather than r
 
 PostingOutcome is a discriminated union keyed by `kind`:
 
-| HTTP/transport result | Client kind | Data and intended later workflow behavior |
+| HTTP/transport result | Client kind | Data and workflow behavior |
 | --- | --- | --- |
 | Complete saved 2xx except 202 | saved | Actual record and HTTP status; confirm completion |
 | 202 | pending | reason accepted; retain attempt |
@@ -49,7 +49,7 @@ PostingOutcome is a discriminated union keyed by `kind`:
 | Timeout | unknown | reason timeout; server completion is uncertain |
 | Other unexpected error/status | unknown | reason unexpected; safe fallback |
 
-No dedicated 401/403 handling, authentication headers, redirects, or authorization behavior. These statuses fall through generic 4xx handling. Transport returns outcomes; it does not yet render messages, control form state, persist attempts, or retry them.
+No dedicated 401/403 handling, authentication headers, redirects, or authorization behavior. These statuses fall through generic 4xx handling. Transport returns outcomes; it does not render messages, control form state, persist attempts, or retry them.
 
 ## Validation errors
 
@@ -67,23 +67,29 @@ Proposed ASP.NET-style Problem Details:
 }
 ```
 
-Known names title, department, location, description, salaryMin, salaryMax, closingDate map case-insensitively, including PascalCase/camelCase. Multiple aliases merge messages. Unknown field messages become form-level messages. Only nonblank strings in message arrays are retained; malformed entries are ignored, and absent usable messages produce a safe fallback. General title/detail fields and raw diagnostic bodies are not displayed. Later components must render messages as text, never HTML.
+Known names title, department, location, description, salaryMin, salaryMax, closingDate map case-insensitively, including PascalCase/camelCase. Multiple aliases merge messages. Unknown field messages become form-level messages. Only nonblank strings in message arrays are retained; malformed entries are ignored, and absent usable messages produce a safe fallback. General title/detail fields and raw diagnostic bodies are not displayed. Components render messages as text, never HTML.
 
 Proposed 409 bodies use a top-level `code` string. Nested extension formats must be agreed before integration.
 
 ## Timing and Retry-After
 
-POSTING_TIMEOUT_MS defaults to 15000 ms. Finite overrides clamp to 1000?60000 ms; nonfinite overrides use the default. RxJS timeout bounds the full response wait and cancels the client subscription, which does not prove the server canceled the save.
+POSTING_TIMEOUT_MS defaults to 15000 ms. Finite overrides clamp to 1000-60000 ms; nonfinite overrides use the default. RxJS timeout bounds the full response wait and cancels the client subscription, which does not prove the server canceled the save.
 
-API_CLOCK is an injectable epoch-millisecond clock. Retry-After accepts nonnegative integer seconds (including zero) or a valid IMF-fixdate HTTP date. Future dates yield their absolute deadline; elapsed dates yield now. Missing, malformed, negative, fractional, invalid calendar/weekday, and unsafe overflow values yield null. Null means there is no reliable delay: the later UI must explain throttling and permit intentional manual retry without inventing a server deadline. Other obsolete HTTP-date formats are not currently supported; align this with the API.
+API_CLOCK is an injectable epoch-millisecond clock. Retry-After accepts nonnegative integer seconds (including zero) or a valid IMF-fixdate HTTP date. Future dates yield their absolute deadline; elapsed dates yield now. Missing, malformed, negative, fractional, invalid calendar/weekday, and unsafe overflow values yield null. Null means there is no reliable delay: the UI explains throttling and permits intentional manual retry without inventing a server deadline. Other obsolete HTTP-date formats are not currently supported; align this with the API.
 
 ## Backend obligations and unresolved integration agreements
 
 The future backend must atomically associate a key and request fingerprint with at most one job, serialize concurrent duplicates, replay the saved response, and reject key/payload mismatches. Key retention must cover the client's retry lifetime. Do not expire unresolved client attempts automatically before retention is agreed. Retrying an uncertain outcome is safe only when the server honors this contract.
 
-The later client uses sessionStorage for recovery in one tab; independently entered submissions in different tabs/devices are not deduplicated by client code. Response DTO naming, error codes, timezone/closing-date semantics, salary precision/currency, retention lifetime, and actual API origin remain integration agreements. Client fixtures establish expected behavior, not proof of a real backend's correctness.
+The client uses sessionStorage for recovery in one tab; independently entered submissions in different tabs/devices are not deduplicated by client code. Response DTO naming, error codes, timezone/closing-date semantics, salary precision/currency, retention lifetime, and actual API origin remain integration agreements. Client fixtures establish expected behavior, not proof of a real backend's correctness.
 
 ## Implementation references
 
 - HttpClient full responses and error handling: https://angular.dev/guide/http/making-requests
 - Angular HTTP test utilities: https://angular.dev/guide/http/testing
+
+## Implemented client lifecycle
+
+PostingWorkflow acquires a persisted attempt before dispatch, uses its caller key and payload unchanged, and subscribes once. It renders outcomes through the page, preserves unresolved snapshots for explicit same-key retries, and displays the actual saved API record. Definite validation/client rejection permits a corrected attempt with a new key. Pending/unknown/throttled outcomes keep the original identity; key conflicts require explicit reconciliation, never silent key replacement. Post another job explicitly clears confirmed saved state before a fresh attempt. Corrupt/unavailable sessionStorage blocks posting. No request is sent automatically after refresh.
+
+Backend key retention remains unspecified; the client never automatically expires unresolved attempts. The server must replay the original result before applying changed current-date validation to an already-completed key. A stored payload may have an expired closing date by retry time. Agree how pending processing resolves and how outcomes can be reconciled before deploying, since no lookup/status endpoint is presently defined. Browser tab storage is not durable cross-device recovery.

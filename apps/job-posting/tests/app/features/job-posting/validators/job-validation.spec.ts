@@ -22,9 +22,12 @@ describe('Job validation', () => {
     expect(localDate(date)).toBe('2026-01-01');
   });
   it('provides a real clock by default', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-04T15:00:00Z'));
     const now = TestBed.inject(LOCAL_CLOCK)();
     expect(now).toBeInstanceOf(Date);
-    expect(Number.isFinite(now.getTime())).toBe(true);
+    expect(now.toISOString()).toBe('2026-10-04T15:00:00.000Z');
+    vi.useRealTimers();
   });
   it('validates whitespace and valid text', () => {
     expect(fieldError('title', EMPTY_DRAFT, '2026-10-04')).not.toBeNull();
