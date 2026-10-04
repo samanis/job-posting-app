@@ -1,0 +1,11 @@
+form { padding: 1.5rem; background: white; border: 1px solid #cbd5e1; border-radius: .5rem; }
+.field { margin-block: 1.25rem; }
+label { display: block; font-weight: 600; margin-bottom: .4rem; }
+input, textarea { width: 100%; padding: .7rem; font: inherit; border: 1px solid #64748b; border-radius: .25rem; }
+textarea { resize: vertical; }
+.help { margin: .4rem 0; color: #475569; font-size: .9rem; }
+.errors { color: #a01818; margin: .4rem 0; padding-left: 1.25rem; }
+.error-summary { border: 2px solid #a01818; padding: 1rem; }
+.error-summary h2 { margin-top: 0; font-size: 1.1rem; }
+button { padding: .75rem 1.5rem; background: #1748a0; color: white; border: 0; border-radius: .25rem; font: inherit; cursor: pointer; }
+@media (max-width: 30rem) { form { padding: 1rem; } }

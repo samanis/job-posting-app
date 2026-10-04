@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { TimeoutError } from 'rxjs';
-import { classifyFailure, classifyResponse, isSavedJob, parseRetryAfter } from './posting-response';
+import { classifyFailure, classifyResponse, isSavedJob, parseRetryAfter } from '../../../../src/app/core/api/posting-response';
 
 export const saved = { id: 'job-1', title: 'Engineer', department: 'Engineering', location: 'Toronto', description: 'Build software', salaryMin: 10, salaryMax: 20, closingDate: '2027-02-28', createdAt: '2026-10-04T15:00:00Z' };
 const now = Date.parse('2026-10-04T15:00:00Z');

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { routes } from './app.routes';
-import { appConfig } from './app.config';
+import { routes } from '../../src/app/app.routes';
+import { appConfig } from '../../src/app/app.config';
 
 describe('Application routes', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter(routes), ...appConfig.providers] }));

@@ -2,8 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { API_CLOCK, JobPostingApi, POSTING_TIMEOUT_MS } from './job-posting-api';
-import { CreateJobRequest } from './job-posting-contract';
+import { API_CLOCK, JobPostingApi, POSTING_TIMEOUT_MS } from '../../../../src/app/core/api/job-posting-api';
+import { CreateJobRequest } from '../../../../src/app/core/api/job-posting-contract';
 
 const payload: CreateJobRequest = Object.freeze({ title: 'Engineer', department: 'Engineering', location: 'Toronto', description: 'Build software', salaryMin: 10, salaryMax: 20, closingDate: '2027-02-28' });
 const saved = { ...payload, id: 'job-1', createdAt: '2026-10-04T15:00:00Z' };
