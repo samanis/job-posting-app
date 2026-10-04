@@ -9,3 +9,11 @@ textarea { resize: vertical; }
 .error-summary h2 { margin-top: 0; font-size: 1.1rem; }
 button { padding: .75rem 1.5rem; background: #1748a0; color: white; border: 0; border-radius: .25rem; font: inherit; cursor: pointer; }
 @media (max-width: 30rem) { form { padding: 1rem; } }
+
+.submission-status:not(:empty) { padding: 1rem; margin-block: 1rem; border-left: 4px solid #1748a0; background: #eaf0fb; overflow-wrap: anywhere; }
+button { min-height: 44px; }
+button:disabled { background: #475569; cursor: default; }
+input[readonly], textarea[readonly] { background: #f1f5f9; }
+input[type="checkbox"] { width: auto; margin-right: .5rem; }
+.error-summary, .errors { overflow-wrap: anywhere; }
+@media (max-width: 30rem) { button { width: 100%; margin-block: .5rem; } }

@@ -13,6 +13,9 @@
     <label><input type="checkbox" #recoveryCheckbox [checked]="recoveryConfirmed()" (change)="recoveryConfirmed.set(recoveryCheckbox.checked)" /> I have reconciled the prior server outcome and can safely start a new submission.</label>
     <button type="button" id="resolve-recovery" [disabled]="!recoveryConfirmed()" (click)="resolveRecovery()">Reset reconciled submission</button>
   }
+  @if (workflow.savedRecord(); as record) {
+    <app-saved-job-confirmation [record]="record" (postAnother)="postAnother()" />
+  } @else {
   <form novalidate [attr.aria-busy]="workflow.state() === 'submitting'" (submit)="onSubmit($event)">
     @if (summary().length > 0 || serverForm().length > 0) {
       <section class="error-summary" aria-labelledby="error-heading">
@@ -47,4 +50,5 @@
     }
     <button type="submit" [disabled]="workflow.editingLocked()">Post job</button>
   </form>
+  }
 </section>

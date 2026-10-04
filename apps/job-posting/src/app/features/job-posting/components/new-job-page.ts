@@ -1,13 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, Injector, computed, effect, inject, output, signal } from '@angular/core';
 import { form, FormField, readonly as readonlyForm, validate } from '@angular/forms/signals';
 import { CreateJobRequest, JobField } from '../../../core/api/job-posting-contract';
+import { SavedJobConfirmation } from './saved-job-confirmation';
 import { PostingWorkflow } from '../state/posting-workflow';
 import { EMPTY_DRAFT, JOB_FIELDS, JobDraft } from '../models/job-draft';
 import { fieldError, LOCAL_CLOCK, localDate, normalizeDraft, validationMessage } from '../validators/job-validation';
 
 @Component({
   selector: 'app-new-job-page',
-  imports: [FormField],
+  imports: [FormField, SavedJobConfirmation],
   providers: [PostingWorkflow],
   templateUrl: './new-job-page.html',
   styleUrl: './new-job-page.css',
@@ -16,6 +17,7 @@ import { fieldError, LOCAL_CLOCK, localDate, normalizeDraft, validationMessage }
 export class NewJobPage {
   readonly workflow = inject(PostingWorkflow);
   readonly recoveryConfirmed = signal(false);
+  private readonly injector = inject(Injector);
   private readonly clock = inject(LOCAL_CLOCK);
   readonly draft = signal<JobDraft>({ ...EMPTY_DRAFT });
   readonly today = signal(localDate(this.clock()));
@@ -70,6 +72,15 @@ export class NewJobPage {
     }
     this.serverFields.set(entries);
     this.serverForm.set([...formMessages]);
+  }
+
+  postAnother(): void {
+    if (!this.workflow.postAnother()) return;
+    this.draft.set({ ...EMPTY_DRAFT });
+    this.attempted.set(false);
+    this.today.set(localDate(this.clock()));
+    this.setServerErrors({});
+    afterNextRender(() => this.jobForm.title().focusBoundControl(), { injector: this.injector });
   }
 
   resolveRecovery(): void {

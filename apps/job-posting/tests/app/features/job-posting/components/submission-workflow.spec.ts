@@ -32,7 +32,9 @@ describe('Submission workflow integration', () => {
     http = TestBed.inject(HttpTestingController); await fixture.whenStable();
   }
   async function submit() {
-    root.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    const event = new Event('submit', { cancelable: true, bubbles: true });
+    const form = root.querySelector('form');
+    if (form === null) page.onSubmit(event); else form.dispatchEvent(event);
     await fixture.whenStable();
   }
   async function ready() {
@@ -42,7 +44,26 @@ describe('Submission workflow integration', () => {
   function recovery(status: string, patch: Record<string, unknown> = {}) {
     raw = JSON.stringify({ version: 1, key: 'recovered-key', payload, status, retryAt: null, savedRecord: null, ...patch });
   }
-  it('does not dispatch invalid form values', async () => {
+  it('shows the API record, focuses confirmation and starts a clean logical attempt explicitly', async () => {
+    const req = await ready(); req.flush(saved); await fixture.whenStable();
+    expect(root.querySelector('form')).toBeNull();
+    expect(root.querySelector('app-saved-job-confirmation')?.textContent).toContain('Server title');
+    expect(document.activeElement?.id).toBe('confirmation-heading');
+    root.querySelector<HTMLButtonElement>('app-saved-job-confirmation button')!.click(); await fixture.whenStable();
+    expect(page.workflow.state()).toBe('editing'); expect(page.draft().title).toBe('');
+    expect(page.attempted()).toBe(false); expect(document.activeElement?.id).toBe('title');
+    page.draft.set({ ...payload, salaryMin: '10', salaryMax: '20' }); await fixture.whenStable(); await submit();
+    const next = http.expectOne('/api/jobs'); expect(next.request.headers.get('Idempotency-Key')).toBe('key-2'); next.flush(saved);
+  });
+  it('does not reset before success or when saved cleanup fails', async () => {
+    await create(); page.postAnother(); expect(page.workflow.state()).toBe('editing');
+    expect(page.workflow.submit(payload)).toBe(true); http.expectOne('/api/jobs').flush(saved); await fixture.whenStable();
+    storage.remove.mockImplementation(() => { throw new Error('Denied'); });
+    root.querySelector<HTMLButtonElement>('app-saved-job-confirmation button')!.click(); await fixture.whenStable();
+    expect(page.workflow.state()).toBe('saved'); expect(root.querySelector('form')).toBeNull();
+    expect(root.textContent).toContain('could not be cleared');
+  });
+  it('does not dispatch invalid form values' , async () => {
     await create(); expect(page.workflow.savedRecord()).toBeNull(); await submit(); http.expectNone('/api/jobs'); expect(page.workflow.state()).toBe('editing');
   });
   it('sends one persisted POST and locks controls during a delayed response', async () => {
