@@ -1,1 +1,11 @@
 .npm-cache/
+
+# Generated app files can remain after switching to a branch without that app.
+/apps/*/node_modules/
+/apps/*/.angular/cache/
+/apps/*/dist/
+/apps/*/out-tsc/
+/apps/*/coverage/
+/apps/*/playwright-report/
+/apps/*/test-results/
+/apps/*/tmp/
