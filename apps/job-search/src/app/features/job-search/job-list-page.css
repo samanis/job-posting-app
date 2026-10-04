@@ -1,0 +1,18 @@
+form { padding: 1.5rem; background: white; border: 1px solid #d5deec; border-radius: .75rem; }
+.filters { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 3fr); gap: .8rem 1rem; align-items: center; }
+input, select { width: 100%; min-width: 0; padding: .75rem; font: inherit; border: 1px solid #8594ac; border-radius: .3rem; }
+button { padding: .7rem 1rem; font: inherit; border: 1px solid #174ca5; border-radius: .3rem; color: #174ca5; background: white; cursor: pointer; }
+button[type=submit] { background: #174ca5; color: white; } button:disabled { opacity: .5; cursor: default; }
+.actions, nav { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
+[role=alert] { padding: 1rem; color: #981c1c; background: #fff1f1; margin-top: 1rem; }
+@media (max-width: 35rem) { .filters { grid-template-columns: minmax(0, 1fr); } }
+.eyebrow { color: #174ca5; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); }
+section[aria-label="Search results"] { margin-top: 1.5rem; }
+section[aria-busy=true] { min-height: 14rem; }
+.job-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.job-card { padding: 1.5rem; background: white; border: 1px solid #d5deec; border-radius: .75rem; }
+.job-card h2 { margin: 0 0 1.25rem; font-size: 1.25rem; overflow-wrap: anywhere; }
+.job-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0; }
+.job-card dt { color: #475a76; font-size: .85rem; } .job-card dd { margin: .3rem 0 0; overflow-wrap: anywhere; }
+@media (max-width: 35rem) { .job-card dl { grid-template-columns: minmax(0, 1fr); } }
