@@ -1,6 +1,6 @@
 # Stage 4: Client idempotency and recovery
 
-Read `prompts/job-posting-angular/shared-requirements.md` first. Stages 1–3 must exist; implement only this stage.
+Read `apps/job-posting/prompts/shared-requirements.md` first. Stages 1–3 must exist; implement only this stage.
 
 ## Tasks
 

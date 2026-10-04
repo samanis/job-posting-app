@@ -1,6 +1,6 @@
 # Stage 3: Signal Form and validation
 
-Read `prompts/job-posting-angular/shared-requirements.md` first. Stages 1–2 must exist; implement only this stage.
+Read `apps/job-posting/prompts/shared-requirements.md` first. Stages 1–2 must exist; implement only this stage.
 
 ## Tasks
 

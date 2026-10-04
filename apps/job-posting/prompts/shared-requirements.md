@@ -1,6 +1,6 @@
 # Job posting client prompts
 
-Run the numbered prompts in order by asking: `Run prompts/job-posting-angular/01-angular22-foundation.md`.
+Run the numbered prompts in order by asking: `Run apps/job-posting/prompts/01-angular22-foundation.md`.
 Each prompt requires reading this file first. Only implement the selected stage; do not execute later prompts automatically.
 
 ## Shared instructions for every stage

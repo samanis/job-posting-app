@@ -1,6 +1,6 @@
 # Stage 1: Angular 22 foundation
 
-Read `prompts/job-posting-angular/shared-requirements.md` and follow its shared instructions. Implement only this stage.
+Read `apps/job-posting/prompts/shared-requirements.md` and follow its shared instructions. Implement only this stage.
 
 ## Tasks
 

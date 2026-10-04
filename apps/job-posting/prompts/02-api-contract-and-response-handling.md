@@ -1,6 +1,6 @@
 # Stage 2: API contract and response handling
 
-Read `prompts/job-posting-angular/shared-requirements.md` first. Stage 1 must exist; implement only this stage.
+Read `apps/job-posting/prompts/shared-requirements.md` first. Stage 1 must exist; implement only this stage.
 
 ## Tasks
 
