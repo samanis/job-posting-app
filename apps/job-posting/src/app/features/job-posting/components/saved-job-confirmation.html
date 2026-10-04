@@ -1,0 +1,16 @@
+<section class="confirmation" aria-labelledby="confirmation-heading">
+  <h2 id="confirmation-heading" #confirmationHeading tabindex="-1">Job saved</h2>
+  <p>The API confirmed this saved record.</p>
+  <dl>
+    <div><dt>Job identifier</dt><dd>{{ record().id }}</dd></div>
+    <div><dt>Job title</dt><dd>{{ record().title }}</dd></div>
+    <div><dt>Department</dt><dd>{{ record().department }}</dd></div>
+    <div><dt>Location</dt><dd>{{ record().location }}</dd></div>
+    <div><dt>Salary minimum</dt><dd>{{ record().salaryMin | number:'1.0-2' }}</dd></div>
+    <div><dt>Salary maximum</dt><dd>{{ record().salaryMax | number:'1.0-2' }}</dd></div>
+    <div><dt>Closing date</dt><dd><time [attr.datetime]="record().closingDate">{{ closingDateLabel() }}</time></dd></div>
+    <div><dt>Saved timestamp (UTC)</dt><dd><time [attr.datetime]="record().createdAt">{{ record().createdAt | date:'medium':'UTC' }} UTC</time></dd></div>
+    <div class="description"><dt>Description</dt><dd>{{ record().description }}</dd></div>
+  </dl>
+  <button type="button" (click)="postAnother.emit()">Post another job</button>
+</section>

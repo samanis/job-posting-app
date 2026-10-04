@@ -1,0 +1,58 @@
+<section aria-labelledby="new-job-heading">
+  <p class="eyebrow">Recruitment workspace</p>
+  <h1 id="new-job-heading">Post a job</h1>
+  <p>Create a new opening for your team.</p>
+  <p class="required-note">All fields are required.</p>
+  <div class="submission-status" [attr.data-state]="workflow.state()" role="status" aria-live="polite">{{ workflow.message() }}</div>
+  @if (workflow.remainingSeconds() > 0) { <p>Retry available in {{ workflow.remainingSeconds() }} seconds.</p> }
+  @if (workflow.state() === 'throttled' && workflow.remainingSeconds() === 0) { <p>No active retry delay is available. Retry this same submission manually when ready.</p> }
+  @if (workflow.state() === 'unknown' || workflow.state() === 'pending' || workflow.state() === 'throttled') {
+    <button type="button" id="retry-submission" [disabled]="!workflow.canRetry()" (click)="workflow.retry()">Retry same submission</button>
+  }
+  @if (workflow.state() === 'recovery-blocked' || workflow.state() === 'conflict') {
+    <p>Check the prior submission with the API owner before starting another job. Resetting cannot undo a saved job.</p>
+    <label><input type="checkbox" #recoveryCheckbox [checked]="recoveryConfirmed()" (change)="recoveryConfirmed.set(recoveryCheckbox.checked)" /> I have reconciled the prior server outcome and can safely start a new submission.</label>
+    <button type="button" id="resolve-recovery" [disabled]="!recoveryConfirmed()" (click)="resolveRecovery()">Reset reconciled submission</button>
+  }
+  @if (workflow.savedRecord(); as record) {
+    <app-saved-job-confirmation [record]="record" (postAnother)="postAnother()" />
+  } @else {
+  <form novalidate [attr.aria-busy]="workflow.state() === 'submitting'" (submit)="onSubmit($event)">
+    @if (summary().length > 0 || serverForm().length > 0) {
+      <section class="error-summary" aria-labelledby="error-heading">
+        <h2 id="error-heading">Check the job details</h2>
+        <p>Review the highlighted fields below.</p>
+        <ul>
+          @for (field of fields; track field) {
+            @if (messages(field).length > 0) { <li><a [href]="'#' + field">{{ labels[field] }}</a></li> }
+          }
+          @for (message of serverForm(); track $index) { <li>{{ message }}</li> }
+        </ul>
+      </section>
+    }
+    @for (field of fields; track field) {
+      <div class="field" [class.salary-field]="field === 'salaryMin' || field === 'salaryMax'">
+        <label [for]="field">{{ labels[field] }}</label>
+        @if (field === 'description') {
+          <textarea [id]="field" [formField]="jobForm[field]" rows="6" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'"></textarea>
+        } @else {
+          <input [id]="field" [type]="field === 'closingDate' ? 'date' : 'text'" [attr.inputmode]="field === 'salaryMin' || field === 'salaryMax' ? 'decimal' : null" [formField]="jobForm[field]" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'" />
+        }
+        <p class="help" [id]="field + '-help'">
+          @switch (field) {
+            @case ('salaryMin') { Nonnegative amount, up to two decimal places; less than the maximum. }
+            @case ('salaryMax') { Nonnegative amount, up to two decimal places; greater than the minimum. }
+            @case ('closingDate') { Choose a date later than today in your local timezone. }
+            @case ('description') { Describe the role and responsibilities. }
+            @default { Enter the {{ labels[field].toLowerCase() }}. }
+          }
+        </p>
+        <ul class="errors" [id]="field + '-errors'">
+          @for (message of messages(field); track $index) { <li>{{ message }}</li> }
+        </ul>
+      </div>
+    }
+    <button type="submit" [disabled]="workflow.editingLocked()">Post job</button>
+  </form>
+  }
+</section>
