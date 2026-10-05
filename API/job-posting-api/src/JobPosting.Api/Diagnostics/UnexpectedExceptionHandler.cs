@@ -10,17 +10,30 @@ public sealed class UnexpectedExceptionHandler(
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        logger.LogError(new EventId(1001, "UnhandledException"), exception,
-            "Unhandled request exception; trace {TraceId}", httpContext.TraceIdentifier);
+        logger.LogError(new EventId(1001, "UnhandledException"),
+            "Unhandled request exception; trace {TraceId}; failure {Failure}", httpContext.TraceIdentifier, exception.GetType().Name);
 
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        var problem = new ProblemDetails
+        ProblemDetails problem;
+        if (exception is JobPosting.Api.Posting.PostingWorkflowException workflow)
+        {
+            problem = JobPosting.Api.Contracts.JobApiProblems.Failure(workflow.Code, httpContext.TraceIdentifier);
+            httpContext.Response.Headers.RetryAfter = "1";
+        }
+        else if (exception is BadHttpRequestException { StatusCode: 413 })
+        {
+            problem = new ProblemDetails { Status = 413, Title = "The request body is too large." };
+        }
+        else
+        {
+        problem = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
             Title = "An unexpected error occurred.",
             Detail = "The request could not be completed. Contact support with the trace identifier.",
             Type = "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.1"
         };
+        }
+        httpContext.Response.StatusCode = problem.Status!.Value;
         problem.Extensions["traceId"] = httpContext.TraceIdentifier;
 
         if (!await problemDetailsService.TryWriteAsync(new ProblemDetailsContext

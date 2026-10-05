@@ -10,7 +10,7 @@
     <Include>[JobPosting.*]*,[JobBoard.Persistence]*</Include>
     <Exclude Condition="'$(CoverageSuite)' == 'Unit'">[JobPosting.Api]Program*</Exclude>
     <Include Condition="'$(CoverageSuite)' == 'Host'">[JobPosting.*]Program*</Include>
-    <ExcludeByFile>**/obj/**/OpenApiXmlCommentSupport.generated.cs</ExcludeByFile>
+    <ExcludeByFile>**/obj/**/OpenApiXmlCommentSupport.generated.cs,**/Persistence/Migrations/20261005172328_InitialPosting.Designer.cs,**/Persistence/Migrations/20261005203934_JobRowIdempotency.Designer.cs,**/Persistence/Migrations/PostingDbContextModelSnapshot.cs</ExcludeByFile>
     <IncludeTestAssembly>false</IncludeTestAssembly>
     <SkipAutoProps>false</SkipAutoProps>
     <Threshold>100</Threshold>
@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild" Version="10.0.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">

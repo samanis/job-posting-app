@@ -1,0 +1,17 @@
+# Allow only production build inputs; local secrets/frontends/tests never enter the context.
+**
+!Dockerfile
+!.dockerignore
+!global.json
+!Directory.Build.props
+!NuGet.Config
+!JobBoard.slnx
+!.config/
+!.config/dotnet-tools.json
+!src/
+!src/**
+**/bin/**
+**/obj/**
+**/TestResults/**
+**/.env
+**/.env.*

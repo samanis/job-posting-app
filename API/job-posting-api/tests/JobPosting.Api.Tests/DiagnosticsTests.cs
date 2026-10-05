@@ -114,7 +114,7 @@ public sealed class DiagnosticsTests
         var log = Assert.Single(logs.Entries);
         Assert.Equal(1001, log.EventId.Id);
         Assert.Equal(LogLevel.Error, log.Level);
-        Assert.Same(exception, log.Exception);
+        Assert.Null(log.Exception);
         Assert.Equal("test-trace", log.Properties["TraceId"]);
     }
 

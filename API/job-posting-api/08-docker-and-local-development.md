@@ -8,7 +8,7 @@ Read `API/job-posting-api/shared-requirements.md` and `requirements-review.md` f
 2. Create/extend API/job-posting-api/docker-compose.yml starting posting API, posting PostgreSQL and RabbitMQ management image, health checks and durable named volumes. Keep Dockerfiles, .dockerignore, environment examples and broker/database settings under API/job-posting-api. Use API/job-posting-api as the build context and working directory for Compose commands. Use loopback published ports for local services and stop_grace_period 45s. Do not create fake search service/database; describe this phase's subset. The user's backend-folder requirement overrides the PDF's repository-root Compose placement.
 3. Include safe schema initialization through an explicit migration command or a one-shot migration service, sequenced before API readiness. Prevent every replica from racing migrations. Use service hostnames inside Docker and localhost in host-mode dotnet run configuration.
 4. Supply safe local config defaults or committed .env.example, startup validation and environment overrides; ignore real secrets. Document PostgreSQL/RabbitMQ versions and credentials as local-only. No dependency on untracked machine files.
-5. Document fresh-clone restore/build/test, docker compose up --build, migrations, local dotnet run, URLs/ports, POST examples with key, replay/conflict, broker outage recovery and docker compose stop. Do not use down -v in the ordinary stop path or delete user volumes.
+5. Document fresh-clone restore/build/test, docker compose up --build, migrations, local dotnet run, URLs/ports, POST examples with key, replay/conflict, broker outage compensation and manual investigation and docker compose stop. Do not use down -v in the ordinary stop path or delete user volumes.
 6. Verify .gitignore/.dockerignore includes all build/run inputs. Update root README minimally to link API instructions and note the later search/client phase, preserving current app setup.
 
 ## Acceptance and checks
@@ -17,7 +17,7 @@ Read `API/job-posting-api/shared-requirements.md` and `requirements-review.md` f
 
 - Compose config validates and the posting subset starts from empty named volumes with migrations applied.
 - Posting POST works through container networking, including confirmed publication and same-key replay.
-- Restart retains jobs/idempotency/outbox/broker data; graceful stop respects configured budgets.
+- Restart retains jobs with idempotency/publication metadata and broker data; graceful stop respects configured budgets.
 - A clean checkout contains Dockerfile, Compose, migrations, manifests/tool config and safe configuration examples.
 
 Run appropriate build/tests and record actual results in `API/job-posting-api/ai-log/job-posting-api-work-notes.md`. Report changed files, assumptions and blockers. Do not commit, push or continue into later stages automatically.

@@ -1,6 +1,9 @@
+> Stages 1-6 implement this contract using job-row idempotency and direct RabbitMQ publication; no ledger, outbox or recovery dispatcher.
+
+
 # Job posting API contract
 
-Stage 2 implements the DTOs, strict JSON reader, independent normalization/validation, temporal validation, fingerprinting and Problem Details factories described here. **POST `/api/jobs` still returns 404.** Persistence, idempotency coordination, publication and the HTTP endpoint belong to later stages. Examples specify the eventual endpoint; they do not claim a working create operation today.
+Stage 2 implements the DTOs, strict JSON reader, independent normalization/validation, temporal validation, fingerprinting and Problem Details factories described here. Stages 3–4 add PostgreSQL persistence and [durable idempotency coordination](idempotency.md). Stage 6 implements POST and publication/compensation. See [POST workflow](post-workflow.md).
 
 ## Request and validation
 
@@ -22,7 +25,7 @@ Idempotency-Key: 3340fd95-4f42-4df0-86aa-0cfb57a862fb
 }
 ```
 
-The header is an opaque, case-sensitive value of 1–128 ASCII letters, digits, `_` or `-`. Missing, empty, comma-combined or multiple values are invalid; no fallback key is generated, trimmed or silently replaced. A later stage will retain a key digest/ledger for each job's lifetime. Keys are not authentication, and distinct keys are not content-based deduplication.
+The header is an opaque, case-sensitive value of 1–128 ASCII letters, digits, `_` or `-`. Missing, empty, comma-combined or multiple values are invalid; no fallback key is generated, trimmed or silently replaced. The job row retains a unique key digest for its lifetime. Keys are not authentication, and distinct keys are not content-based deduplication.
 
 All seven fields are required. Missing/null fields and blank text are semantic errors (422); nullable salary DTOs distinguish absent values from a legitimate zero. The JSON reader requires a single object, exact camelCase field names and supported JSON types. Unknown/case-variant and duplicate fields are rejected (400), a documented Stage 2 choice to avoid ambiguous payload fingerprints. Root arrays/null, malformed JSON (including invalid Unicode surrogate escapes), numeric strings, booleans/objects where text/numbers are expected, non-JSON NaN/infinity and decimal overflow are 400. Errors never echo submitted values or unknown property names.
 
@@ -37,21 +40,21 @@ All seven fields are required. Missing/null fields and blank text are semantic e
 
 Text limits are measured **after trimming**, using .NET string length, not byte length or grapheme count. No HTML rendering/sanitization or Unicode normalization is performed; consumers must display description as text. These lengths and salary bounds are the documented implementation assumptions, not extra requirements attributed to the PDF. Currency remains unspecified.
 
-Salary precision is checked on the original JSON token independently of decimal conversion, so parsing cannot hide extra fractions. For exponent notation, fractional scale is mantissa fractional digits minus exponent: `1e1` and `10.00` are valid equivalents; `1e-3`, `10.001` and even `10.000` have excessive scale and are 422. `10.000e1` is valid (100.00). Very small fractions are rejected rather than accepted as rounded zero; overflow is 400. Direct typed validation also checks decimal scale. No floating-point arithmetic is used. The later endpoint must use `CreateJobRequestReader`; permissive MVC/default numeric-string binding does not establish this contract.
+Salary precision is checked on the original JSON token independently of decimal conversion, so parsing cannot hide extra fractions. For exponent notation, fractional scale is mantissa fractional digits minus exponent: `1e1` and `10.00` are valid equivalents; `1e-3`, `10.001` and even `10.000` have excessive scale and are 422. `10.000e1` is valid (100.00). Very small fractions are rejected rather than accepted as rounded zero; overflow is 400. Direct typed validation also checks decimal scale. No floating-point arithmetic is used. The endpoint uses `CreateJobRequestReader`; permissive MVC/default numeric-string binding does not establish this contract.
 
 A malformed/nonexistent calendar date or datetime string is 400; missing/null date is 422. Closing date is never converted to UTC. Default business timezone is `America/Toronto`, startup validated; the validator converts injectable `TimeProvider.GetUtcNow()` into this zone only to determine today's calendar date. The browser currently validates against its own local date; users outside this timezone can disagree with the server near midnight. Later client integration must explain/align this rule.
 
 ## Preparation, temporal validation and replay
 
-The later request workflow must use these boundaries in order:
+The request workflow uses these boundaries in order:
 
 1. Validate the header with `IdempotencyKeyValidator.TryValidate`.
 2. Read JSON with `CreateJobRequestReader.Read`. A non-null `ErrorStatus` is 400 or 422; do not continue with a failed result. Mixed syntax/precision errors use 400 if any syntax error exists.
 3. Normalize and validate non-temporal fields with `JobRequestValidator.Normalize`. Failure yields 422 field errors. Success returns an immutable `NormalizedJobRequest`.
-4. Compute `JobRequestFingerprint.Compute`, using `JobRequestFingerprint.Version` (currently 1), then resolve the matching durable idempotency ledger before applying today's date rule. A mismatched fingerprint conflicts.
-5. Only for a **new key**, call `NewJobTemporalValidator.ValidateNew`. Its closing-date error is 422. A matching previous acceptance or resumable saved request bypasses current-date validation, so expiry cannot block recovery/replay.
+4. Compute `JobRequestFingerprint.Compute`, using `JobRequestFingerprint.Version` (currently 1), then resolve the matching saved job by digest before applying today's date rule. A mismatched fingerprint conflicts.
+5. Only for a **new key**, call `NewJobTemporalValidator.ValidateNew`. Its closing-date error is 422. A matching saved request bypasses current-date validation: published rows replay 202, while unpublished rows remain unresolved without recovery or republication.
 
-Normalization and fingerprinting never read the clock. Their success alone is not acceptance; all new requests still require temporal validation and the later durable workflow. JSON metadata/ordering and leading/trailing text whitespace do not participate in fingerprint identity. Internal whitespace, case, Unicode code-point differences and each of the seven fields do.
+Normalization and fingerprinting never read the clock. Their success alone is not acceptance; all new requests still require temporal validation and the durable workflow. JSON metadata/ordering and leading/trailing text whitespace do not participate in fingerprint identity. Internal whitespace, case, Unicode code-point differences and each of the seven fields do.
 
 Canonicalization version 1 produces a UTF-8 JSON array in this fixed order:
 
@@ -63,7 +66,7 @@ The leading number is the canonicalization version. Salary entries are invariant
 
 ## Acceptance: 202 with the complete authoritative saved record
 
-Return 202 **only after** (a) the PostgreSQL transaction commits the job, ledger and outbox event, (b) RabbitMQ confirms the stored event and mandatory routing produces no return, and (c) publication state is durably recorded under the valid claim. PostgreSQL save alone, an unconfirmed send or a confirmation with an unroutable return is insufficient.
+Return 202 **only after** (a) the PostgreSQL transaction commits the job and its idempotency metadata, (b) RabbitMQ confirms the directly published event and mandatory routing produces no return, and (c) PublishedAt is durably recorded on the same job. PostgreSQL save alone, an unconfirmed send or a confirmation with an unroutable return is insufficient.
 
 ```json
 {
@@ -81,13 +84,13 @@ Return 202 **only after** (a) the PostgreSQL transaction commits the job, ledger
 }
 ```
 
-`SavedJobRecord` contains all seven normalized fields plus a generated string UUID and UTC `createdAt`. `SavedJobRecord.Create` accepts the future persistence-generated identity/time and normalizes the supplied timestamp to UTC. `JobAcceptedResponse.FromSaved` copies this authoritative record at the top level, adding fixed status/message. It does not itself verify the acceptance gate. Persist the original response snapshot for a stable 202 replay (same identity, timestamp, fields and message); do not regenerate it or republish a known-completed event. Decimal JSON formatting may omit redundant zeroes without changing numeric meaning.
+`SavedJobRecord` contains all seven normalized fields plus a generated string UUID and UTC `createdAt`. `SavedJobRecord.Create` accepts the persistence-generated identity/time and normalizes the supplied timestamp to UTC. `JobAcceptedResponse.FromSaved` copies this authoritative record at the top level, adding fixed status/message. It does not itself verify the acceptance gate. Persist the original response snapshot for a stable 202 replay (same identity, timestamp, fields and message); do not regenerate it or republish a known-completed event. Decimal JSON formatting may omit redundant zeroes without changing numeric meaning.
 
-The message means broker-confirmed acceptance for asynchronous search projection, not verified search visibility. Do not invent a Location/status URI or return a body-less 202. There is no job GET/status, update/delete or search endpoint in this phase. At-least-once publication can duplicate event delivery; a future search consumer must deduplicate event IDs.
+The message means broker-confirmed acceptance for asynchronous search projection, not verified search visibility. Do not invent a Location/status URI or return a body-less 202. There is no job GET/status, update/delete or search endpoint in this phase. Broker redelivery and recreation after compensating deletion can duplicate event delivery; a future search consumer must deduplicate event IDs.
 
 ## Error responses
 
-Use `application/problem+json`, camelCase field names, safe server-generated messages, top-level `traceId` and matching `X-Trace-Id`. Code values are top-level Problem Details extensions, not nested in an `extensions` object. `JobApiProblems.Validation` and `.Failure` build these contracts; the later endpoint remains responsible for actual HTTP status/content type/headers. Central exception handling already supplies generic 500 responses.
+Use `application/problem+json`, camelCase field names, safe server-generated messages, top-level `traceId` and matching `X-Trace-Id`. Code values are top-level Problem Details extensions, not nested in an `extensions` object. `JobApiProblems.Validation` and `.Failure` build these contracts; the endpoint is responsible for actual HTTP status/content type/headers. Central exception handling already supplies generic 500 responses.
 
 ### 400: invalid JSON/header/shape/type/calendar date
 
@@ -133,7 +136,7 @@ An invalid header uses `errors: { "Idempotency-Key": ["Provide exactly one key o
 
 ### 409: another owner is processing the same key
 
-Supply bounded integer-seconds `Retry-After` (for example `Retry-After: 2`), then:
+Supply bounded integer-seconds `Retry-After` (`Retry-After: 1`), then:
 
 ```json
 {
@@ -148,20 +151,20 @@ Supply bounded integer-seconds `Retry-After` (for example `Retry-After: 2`), the
 
 ### 503: committed job, publication or confirmed-state recording unresolved
 
-Supply `Retry-After` (for example 2 seconds), then:
+Supply `Retry-After` (1 second), then:
 
 ```json
 {
   "type": "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.4",
   "title": "Publication is pending.",
   "status": 503,
-  "detail": "The job has been saved, but confirmed publication is unresolved. Wait for Retry-After, then retry the same key and payload.",
-  "code": "publication_pending",
+  "detail": "The job has been saved, but publication is unresolved. Retain the same key and payload; manual investigation may be required.",
+  "code": "publication_unresolved",
   "traceId": "trace-example"
 }
 ```
 
-The job remains saved and recoverable; never claim rollback. Broker timeout/lost acknowledgement and a failure to record confirmation can require republishing the same event ID. Recovery may finish before a same-key POST retry.
+There is no automatic recovery or republication. Confirmed-before-status failure retains the job; cleanup failure may leave its state uncertain. Manual investigation may be required. A publication exception with successful deletion instead returns 503 `publication_failed`; a queued message may still exist after lost acknowledgement. Neither failure returns 202.
 
 ### 503: database unavailable or commit outcome uncertain
 
@@ -190,15 +193,17 @@ Supply `Retry-After`, then:
 }
 ```
 
-Only server logs contain full exception diagnostics. Client timeouts/disconnects do not prove a save failed; retry the same key/payload for unresolved work. This demo phase has no authentication/authorization and is not an authenticated public production service.
+Server logs contain safe failure types and correlation/identity context; raw exception messages/stacks are suppressed. Client timeouts/disconnects do not prove a save failed; retry the same key/payload for unresolved work. This demo phase has no authentication/authorization and is not an authenticated public production service.
 
 ## Angular integration remains a later task
 
-The current posting client's [contract](../../../../../apps/job-posting/docs/api-contract.md) and transport explicitly treat **every 202** as pending/unconfirmed, even when a complete saved record is supplied. This API's broker-confirmed 202 instead resolves creation and must display the authoritative saved record, clear the resolved attempt and explain eventual search visibility. Updating that client behavior, its tests and timezone communication is a separate integration task; Stage 2 does not edit Angular files or claim the form can save yet.
+The current posting client's [contract](../../../../../apps/job-posting/docs/api-contract.md) and transport explicitly treat **every 202** as pending/unconfirmed, even when a complete saved record is supplied. This API's broker-confirmed 202 instead resolves creation and must display the authoritative saved record, clear the resolved attempt and explain eventual search visibility. Updating that client behavior, its tests and timezone communication is a separate integration task; this stage does not edit Angular files or connect the form to this API.
 
 ## Verification and implementation references
 
-Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, deterministic canonicalization, all seven fingerprint fields, response/problem contracts and timezone/leap/midnight boundaries. In-process host tests separately verify startup/DI and keep the POST endpoint absent. No PostgreSQL/RabbitMQ writes or integration evidence are claimed.
+Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, deterministic canonicalization, all seven fingerprint fields, response/problem contracts and timezone/leap/midnight boundaries. In-process host tests separately verify startup/DI, POST responses, strict input rejection and safe exception mapping. Stage 3 adds PostgreSQL persistence and separately measured real-database tests; see the [persistence guide](persistence.md). Real PostgreSQL/RabbitMQ workflow tests verify success, replay, concurrent duplicates, compensation and status failure windows.
 
 - [System.Text.Json decimal-token conversion](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.trygetdecimal?view=net-10.0): checks JSON numeric type and representability; raw precision still requires independent validation.
 - [System.Text.Json date/time support](https://learn.microsoft.com/en-us/dotnet/standard/datetime/system-text-json-support): date/timestamp serialization support; the request reader separately enforces exact date-only syntax.
+
+See the [client integration handoff](../../../docs/client-integration-handoff.md) and [final verification/runbook](../../../docs/verification-and-handoff.md).

@@ -1,0 +1,17 @@
+[
+  {
+    "path": "src/JobPosting.Api/Persistence/Migrations/20261005172328_InitialPosting.Designer.cs",
+    "sha256": "8a78d6870db9f33c9a458482fe65555f0a447e75bc0ada602311c4252aea1989",
+    "reason": "Unmodified EF-generated model metadata; all authored migration Up/Down logic remains covered."
+  },
+  {
+    "path": "src/JobPosting.Api/Persistence/Migrations/20261005203934_JobRowIdempotency.Designer.cs",
+    "sha256": "f295e4a92e1a011f1d12fb6ba1d8021fd3f3c27e4b465c44a150f460f87ea8c1",
+    "reason": "Unmodified EF-generated model metadata; all authored migration Up/Down logic remains covered."
+  },
+  {
+    "path": "src/JobPosting.Api/Persistence/Migrations/PostingDbContextModelSnapshot.cs",
+    "sha256": "e1546433d91e12ef47be97f233011f08d5fce3ff14cc7530cc10aa13be5a892d",
+    "reason": "Unmodified EF-generated model metadata; all authored migration Up/Down logic remains covered."
+  }
+]

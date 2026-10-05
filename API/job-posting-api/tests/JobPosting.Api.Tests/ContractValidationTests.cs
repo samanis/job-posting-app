@@ -422,7 +422,8 @@ public sealed class ContractValidationTests
     [Theory]
     [InlineData(JobApiProblems.IdempotencyKeyConflict, 409)]
     [InlineData(JobApiProblems.IdempotencyInProgress, 409)]
-    [InlineData(JobApiProblems.PublicationPending, 503)]
+    [InlineData(JobApiProblems.PublicationUnresolved, 503)]
+    [InlineData(JobApiProblems.PublicationFailed, 503)]
     [InlineData(JobApiProblems.DependencyUnavailable, 503)]
     public void FailureCodesAreTopLevelAndExplainSameKeyRecovery(string code, int status)
     {
@@ -434,7 +435,7 @@ public sealed class ContractValidationTests
         Assert.Contains("rfc9110", problem.Type);
         Assert.Equal(code, json.RootElement.GetProperty("code").GetString());
         Assert.Equal("trace-2", json.RootElement.GetProperty("traceId").GetString());
-        if (code == JobApiProblems.PublicationPending) Assert.Contains("has been saved", problem.Detail);
+        if (code == JobApiProblems.PublicationUnresolved) Assert.Contains("has been saved", problem.Detail);
         if (code == JobApiProblems.DependencyUnavailable) Assert.Contains("uncertain", problem.Detail);
     }
 
