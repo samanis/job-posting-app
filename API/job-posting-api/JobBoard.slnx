@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/applications/">
+    <Project Path="src/JobPosting.Api/JobPosting.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JobPosting.Api.Tests/JobPosting.Api.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/CoverageGate/CoverageGate.csproj" />
+  </Folder>
+</Solution>

@@ -9,3 +9,8 @@
 /apps/*/playwright-report/
 /apps/*/test-results/
 /apps/*/tmp/
+
+# Local secrets (safe examples remain tracked)
+.env
+.env.*
+!.env.example

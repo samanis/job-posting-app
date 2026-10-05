@@ -2,6 +2,8 @@
 
 Angular 22 client. Requires Node.js 22.22.3 or later in the Node 22 series and npm.
 
+The UI uses Angular Material 22 with a Material 3 azure theme in `src/styles.scss`. Fonts use the local system stack; no external font or icon service is needed.
+
 ## Run locally
 
 From the repository root:

@@ -2,6 +2,8 @@
 
 Two independent Angular applications live in `apps/job-posting` and `apps/job-search`. Each app has its own package manifest, committed npm lockfile, source, tests, and build configuration.
 
+Backend applications, tests, .NET build configuration and infrastructure belong under `API/`, separately from the Angular applications in `apps/`. All job posting API source, persistence, tests, tools, prompts and configuration live together in `API/job-posting-api`; see its [application guide](API/job-posting-api/README.md). Job creation and backend dependencies are not implemented yet.
+
 ## Prerequisites
 
 - Node.js 22.22.3 or later in the Node 22 series. Check with `node --version`.

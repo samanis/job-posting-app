@@ -1,29 +1,24 @@
-h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); letter-spacing: -.035em; margin: .4rem 0 .65rem; }
-.eyebrow { color: #1748a0; font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin: 0; }
-.required-note { color: #475569; font-size: .85rem; margin: 1.25rem 0; }
-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem 1.5rem; padding: 2rem; background: #fff; border: 1px solid #d9e2ec; border-radius: .85rem; box-shadow: 0 5px 24px #17203308; }
+section { max-width: 56rem; margin-inline: auto; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; letter-spacing: -.04em; margin: .5rem 0 .75rem; }
+.eyebrow { color: var(--mat-sys-primary); font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin: 0; }
+.required-note { color: var(--mat-sys-on-surface-variant); font-size: .85rem; margin: 1.5rem 0; }
+form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; padding: 2rem; border: 1px solid var(--mat-sys-outline-variant); background: var(--mat-sys-surface-container-lowest); border-radius: 24px; }
 .field { grid-column: 1 / -1; min-width: 0; }
 .salary-field { grid-column: auto; }
-label { display: block; font-size: .9rem; font-weight: 650; margin-bottom: .5rem; }
-input, textarea { width: 100%; padding: .8rem .9rem; font: inherit; border: 1px solid #8897aa; border-radius: .4rem; color: #172033; background: #fff; }
-input:focus, textarea:focus { border-color: #1748a0; }
-[aria-invalid="true"] { border-color: #a01818; }
+mat-form-field { width: 100%; }
 textarea { resize: vertical; }
-.help { margin: .45rem 0 0; color: #475569; font-size: .8rem; line-height: 1.5; }
-.errors { color: #a01818; margin: .45rem 0 0; padding-left: 1.1rem; font-size: .85rem; }
+.help { margin: .5rem .9rem 0; color: var(--mat-sys-on-surface-variant); font-size: .8rem; line-height: 1.5; }
+.errors { margin: 0; padding-left: 1rem; font-size: .8rem; overflow-wrap: anywhere; }
 .errors:empty { display: none; }
-.error-summary { grid-column: 1 / -1; border: 1px solid #dca5a5; border-left: 4px solid #a01818; background: #fff6f6; border-radius: .35rem; padding: 1rem 1.25rem; }
-.error-summary h2 { margin: 0 0 .4rem; font-size: 1rem; }
-.error-summary p { margin: 0; font-size: .85rem; color: #692727; }
-.error-summary ul { display: flex; flex-wrap: wrap; gap: .4rem 1rem; padding: 0; margin: .75rem 0 0; list-style: none; font-size: .85rem; }
-button { justify-self: start; min-height: 46px; padding: .8rem 1.5rem; background: #1748a0; color: #fff; border: 0; border-radius: .4rem; font: inherit; font-weight: 600; cursor: pointer; }
-button:hover:enabled { background: #103777; }
-button:disabled { background: #475569; cursor: default; }
-.submission-status:not(:empty) { padding: 1rem 1.25rem; margin-block: 1rem; border-left: 4px solid #1748a0; background: #eaf0fb; border-radius: .35rem; overflow-wrap: anywhere; }
-.submission-status[data-state="saved"] { background: #eaf6ee; border-color: #187044; }
-.submission-status[data-state="conflict"], .submission-status[data-state="recovery-blocked"], .submission-status[data-state="rejected"] { background: #fff1f1; border-color: #a01818; }
-.submission-status[data-state="pending"], .submission-status[data-state="unknown"], .submission-status[data-state="throttled"] { background: #fff6e6; border-color: #945500; }
-input[readonly], textarea[readonly] { background: #f1f5f9; }
-input[type="checkbox"] { width: auto; margin-right: .5rem; }
-.error-summary, .errors { overflow-wrap: anywhere; }
-@media (max-width: 35rem) { form { grid-template-columns: 1fr; padding: 1.25rem; gap: 1.2rem; } .salary-field { grid-column: 1 / -1; } button { width: 100%; margin-block: .5rem; } }
+.error-summary { grid-column: 1 / -1; background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); border-radius: 16px; padding: 1.25rem; overflow-wrap: anywhere; }
+.error-summary h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
+.error-summary p { margin: 0; }
+.error-summary ul { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; padding: 0; margin: .75rem 0 0; list-style: none; }
+.error-summary a { color: inherit; }
+button { justify-self: start; min-height: 44px; }
+.submission-status:not(:empty) { padding: 1rem 1.25rem; margin-block: 1.5rem; background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); border-radius: 16px; overflow-wrap: anywhere; }
+.submission-status[data-state="saved"] { background: #e7f5ed; color: #155333; }
+.submission-status[data-state="conflict"], .submission-status[data-state="recovery-blocked"], .submission-status[data-state="rejected"] { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+mat-progress-bar { margin-bottom: 1rem; }
+input[type="checkbox"] { margin-right: .5rem; }
+@media (max-width: 35rem) { form { grid-template-columns: 1fr; padding: 1.25rem; border-radius: 20px; } .salary-field { grid-column: 1 / -1; } }

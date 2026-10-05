@@ -1,9 +1,8 @@
-.confirmation { padding: 1.5rem; background: #fff; border: 1px solid #cbd5e1; border-top: 4px solid #187044; border-radius: .5rem; }
+.confirmation { padding: 2rem; background: #fff; border: 1px solid #cbd5e1; border-top: 4px solid #187044; border-radius: 24px; }
 h2 { margin-top: 0; }
 dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 dt { font-weight: 600; color: #475569; }
 dd { margin: .4rem 0 0; overflow-wrap: anywhere; }
 .description { grid-column: 1 / -1; }
 .description dd { white-space: pre-wrap; }
-button { padding: .75rem 1.25rem; background: #1748a0; color: white; border: 0; border-radius: .25rem; font: inherit; cursor: pointer; min-height: 44px; }
 @media (max-width: 35rem) { dl { grid-template-columns: 1fr; } .confirmation { padding: 1rem; } }

@@ -1,3 +1,8 @@
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { map } from 'rxjs';
@@ -8,7 +13,7 @@ import { ListQueryWorkflow } from './list-query-workflow';
 import { closingDateLabel } from './job-presentation';
 import { ListReturnFocus } from './list-return-focus';
 
-@Component({ selector: 'app-job-list-page', providers: [ListQueryWorkflow], imports: [RouterLink, DecimalPipe], templateUrl: './job-list-page.html', styleUrl: './job-list-page.css', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-job-list-page', providers: [ListQueryWorkflow], imports: [RouterLink, DecimalPipe, MatButtonModule, MatCardModule, MatProgressBarModule, MatFormFieldModule, MatInputModule], templateUrl: './job-list-page.html', styleUrl: './job-list-page.css', changeDetection: ChangeDetectionStrategy.OnPush })
 export class JobListPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

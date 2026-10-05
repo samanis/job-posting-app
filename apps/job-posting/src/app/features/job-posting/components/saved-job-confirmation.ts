@@ -1,10 +1,12 @@
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output } from '@angular/core';
 import { SavedJob } from '../../../core/api/job-posting-contract';
 
 @Component({
   selector: 'app-saved-job-confirmation',
-  imports: [DatePipe, DecimalPipe],
+  imports: [DatePipe, DecimalPipe, MatButtonModule, MatCardModule],
   templateUrl: './saved-job-confirmation.html',
   styleUrl: './saved-job-confirmation.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,1 +1,9 @@
-.skip-link { position: absolute; top: -5rem; padding: 1rem; background: white; } .skip-link:focus { top: 0; } header { display: flex; justify-content: space-between; gap: 1rem; padding: 1.5rem max(1rem, calc((100% - 60rem) / 2)); background: white; border-bottom: 1px solid #d5deec; } header a { font-weight: 700; text-decoration: none; } main { max-width: 60rem; margin: 3rem auto; padding: 0 1rem; }
+header { background: var(--mat-sys-surface-container-lowest); border-bottom: 1px solid var(--mat-sys-outline-variant); }
+.workspace-toolbar { height: auto; min-height: 80px; padding: 1rem max(1.25rem, calc((100% - 72rem) / 2)); gap: 1rem; background: transparent; }
+.brand { display: inline-flex; align-items: center; gap: .75rem; font-size: 1.25rem; font-weight: 700; text-decoration: none; color: var(--mat-sys-on-surface); }
+.brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--mat-sys-primary); color: var(--mat-sys-on-primary); font-size: .9rem; letter-spacing: .03em; }
+.workspace-label { margin-left: auto; font-size: .85rem; font-weight: 400; color: var(--mat-sys-on-surface-variant); white-space: normal; text-align: right; }
+main { max-width: 72rem; margin: 3rem auto; padding: 0 1.5rem 3rem; }
+.skip-link { position: absolute; z-index: 10; top: -5rem; left: 1rem; padding: 1rem; background: var(--mat-sys-surface); }
+.skip-link:focus { top: .5rem; }
+@media (max-width: 40rem) { .workspace-toolbar { min-height: 72px; padding: 1rem; } main { margin: 2rem auto; padding-inline: 1rem; } .workspace-label { max-width: 9rem; font-size: .75rem; } }

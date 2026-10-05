@@ -1,4 +1,4 @@
-<section class="confirmation" aria-labelledby="confirmation-heading">
+<mat-card appearance="outlined" class="confirmation" aria-labelledby="confirmation-heading">
   <h2 id="confirmation-heading" #confirmationHeading tabindex="-1">Job saved</h2>
   <p>The API confirmed this saved record.</p>
   <dl>
@@ -12,5 +12,5 @@
     <div><dt>Saved timestamp (UTC)</dt><dd><time [attr.datetime]="record().createdAt">{{ record().createdAt | date:'medium':'UTC' }} UTC</time></dd></div>
     <div class="description"><dt>Description</dt><dd>{{ record().description }}</dd></div>
   </dl>
-  <button type="button" (click)="postAnother.emit()">Post another job</button>
-</section>
+  <button matButton="filled" type="button" (click)="postAnother.emit()">Post another job</button>
+</mat-card>

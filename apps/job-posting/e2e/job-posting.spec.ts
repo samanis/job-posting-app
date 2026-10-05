@@ -22,6 +22,7 @@ test('validates required fields, salary bounds and future closing date without P
   await page.locator('#closingDate').fill('2026-10-04');
   await page.getByRole('button', { name: 'Post job', exact: true }).click();
   await expect(page.locator('#salaryMin-errors')).toContainText('less than');
+  await expect(page.locator('#salaryMin-errors')).toBeVisible();
   await expect(page.locator('#closingDate-errors')).toContainText('later than today');
   await page.locator('#salaryMin').fill('1.234');
   await expect(page.locator('#salaryMin-errors')).toContainText('two decimal');
@@ -70,7 +71,7 @@ for (const failure of ['server', 'network', 'accepted'] as const) {
     });
     await fill(page); await page.getByRole('button', { name: 'Post job', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Retry same submission' })).toBeEnabled();
-    await expect(page.locator('#title')).toHaveAttribute('readonly', '');
+    await expect(page.locator('#title')).toHaveJSProperty('readOnly', true);
     await page.reload(); await expect(page.getByRole('button', { name: 'Retry same submission' })).toBeEnabled();
     expect(requests).toHaveLength(1);
     await page.getByRole('button', { name: 'Retry same submission' }).click();
@@ -104,6 +105,7 @@ test('honors throttle delay with controlled browser time', async ({ page }) => {
 });
 
 test('form fits the viewport and keyboard submission focuses the first invalid field', async ({ page }) => {
+  await expect(page.locator('#title')).toHaveAttribute('aria-required', 'true');
   await expect(page.locator('#title')).toHaveAttribute('aria-describedby', 'title-help title-errors');
   await page.getByRole('button', { name: 'Post job', exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(page.locator('#title')).toBeFocused();

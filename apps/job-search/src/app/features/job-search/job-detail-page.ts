@@ -1,3 +1,6 @@
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, runInInjectionContext, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Title } from '@angular/platform-browser';
@@ -7,7 +10,7 @@ import { parseQuery, queryParams } from './search-query';
 import { distinctUntilChanged, map, tap } from 'rxjs';
 import { DetailQueryWorkflow } from './detail-query-workflow';
 import { closingDateLabel } from './job-presentation';
-@Component({ selector: 'app-job-detail-page', providers: [DetailQueryWorkflow], imports: [RouterLink, DatePipe, DecimalPipe], templateUrl: './job-detail-page.html', styleUrl: './job-detail-page.css', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-job-detail-page', providers: [DetailQueryWorkflow], imports: [RouterLink, DatePipe, DecimalPipe, MatButtonModule, MatCardModule, MatProgressBarModule], templateUrl: './job-detail-page.html', styleUrl: './job-detail-page.css', changeDetection: ChangeDetectionStrategy.OnPush })
 export class JobDetailPage {
   readonly returnParams = signal<Params>({});
   readonly workflow = inject(DetailQueryWorkflow);

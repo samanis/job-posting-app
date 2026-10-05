@@ -1,5 +1,9 @@
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { afterNextRender, ChangeDetectionStrategy, Component, Injector, computed, effect, inject, output, signal } from '@angular/core';
-import { form, FormField, readonly as readonlyForm, validate } from '@angular/forms/signals';
+import { form, FormField, metadata, REQUIRED, readonly as readonlyForm, validate } from '@angular/forms/signals';
 import { CreateJobRequest, JobField } from '../../../core/api/job-posting-contract';
 import { SavedJobConfirmation } from './saved-job-confirmation';
 import { PostingWorkflow } from '../state/posting-workflow';
@@ -8,7 +12,7 @@ import { fieldError, LOCAL_CLOCK, localDate, normalizeDraft, validationMessage }
 
 @Component({
   selector: 'app-new-job-page',
-  imports: [FormField, SavedJobConfirmation],
+  imports: [FormField, SavedJobConfirmation, MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule],
   providers: [PostingWorkflow],
   templateUrl: './new-job-page.html',
   styleUrl: './new-job-page.css',
@@ -24,15 +28,19 @@ export class NewJobPage {
   readonly attempted = signal(false);
   readonly validPayload = output<CreateJobRequest>();
   readonly fields = JOB_FIELDS;
+  readonly errorMatchers = Object.fromEntries(JOB_FIELDS.map(field => [field, { isErrorState: () => this.messages(field).length > 0 }])) as Record<JobField, { isErrorState: () => boolean }>;
   readonly labels: Record<JobField, string> = { title: 'Job title', department: 'Department', location: 'Location', description: 'Description', salaryMin: 'Salary minimum', salaryMax: 'Salary maximum', closingDate: 'Closing date' };
   private readonly serverFields = signal<Partial<Record<JobField, { value: string; messages: readonly string[] }>>>({});
   readonly serverForm = signal<readonly string[]>([]);
   readonly jobForm = form(this.draft, path => {
     readonlyForm(path, () => this.workflow.editingLocked());
-    for (const field of JOB_FIELDS) validate(path[field], () => {
-      const message = fieldError(field, this.draft(), this.today());
-      return message === null ? null : { kind: 'job-validation', message };
-    });
+    for (const field of JOB_FIELDS) {
+      metadata(path[field], REQUIRED, () => true);
+      validate(path[field], () => {
+        const message = fieldError(field, this.draft(), this.today());
+        return message === null ? null : { kind: 'job-validation', message };
+      });
+    }
   });
   readonly summary = computed(() => JOB_FIELDS.flatMap(field => this.messages(field).map(message => ({ field, message }))));
 

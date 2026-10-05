@@ -1,6 +1,7 @@
 <section aria-labelledby="detail-heading" [attr.aria-busy]="workflow.busy()">
-  <a routerLink="/jobs" [queryParams]="returnParams()">Back to jobs</a>
+  <a matButton="text" routerLink="/jobs" [queryParams]="returnParams()">Back to jobs</a>
   <h1 id="detail-heading" tabindex="-1">{{ workflow.data()?.title ?? 'Job details' }}</h1>
+  @if (workflow.busy()) { <mat-progress-bar mode="indeterminate" aria-label="Loading job details" /> }
   @switch (workflow.state().kind) {
     @case ('loading') { <p role="status">Loading job details…</p> }
     @case ('refreshing') { <p role="status">Refreshing details. Previously loaded data is shown while checking for updates.</p> }
@@ -9,11 +10,11 @@
   @if (workflow.state(); as state) {
     @if ('failure' in state) {
       <p role="alert">{{ state.failure.message }}</p>
-      @if (state.kind !== 'unavailable') { <button type="button" (click)="workflow.refresh()">Retry</button> }
+      @if (state.kind !== 'unavailable') { <button matButton="outlined" type="button" (click)="workflow.refresh()">Retry</button> }
     }
   }
   @if (workflow.data(); as job) {
-    <article class="detail-card">
+    <mat-card appearance="outlined" class="detail-card">
       <dl>
         <div><dt>Department</dt><dd>{{ job.department }}</dd></div>
         <div><dt>Location</dt><dd>{{ job.location }}</dd></div>
@@ -24,7 +25,7 @@
         <div><dt>Job identifier</dt><dd>{{ job.id }}</dd></div>
       </dl>
       <h2>Description</h2><p class="description">{{ job.description }}</p>
-    </article>
-    <button type="button" [disabled]="workflow.busy()" (click)="workflow.refresh()">Refresh details</button>
+    </mat-card>
+    <button matButton="outlined" type="button" [disabled]="workflow.busy()" (click)="workflow.refresh()">Refresh details</button>
   }
 </section>

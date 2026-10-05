@@ -7,16 +7,17 @@
   @if (workflow.remainingSeconds() > 0) { <p>Retry available in {{ workflow.remainingSeconds() }} seconds.</p> }
   @if (workflow.state() === 'throttled' && workflow.remainingSeconds() === 0) { <p>No active retry delay is available. Retry this same submission manually when ready.</p> }
   @if (workflow.state() === 'unknown' || workflow.state() === 'pending' || workflow.state() === 'throttled') {
-    <button type="button" id="retry-submission" [disabled]="!workflow.canRetry()" (click)="workflow.retry()">Retry same submission</button>
+    <button matButton="outlined" type="button" id="retry-submission" [disabled]="!workflow.canRetry()" (click)="workflow.retry()">Retry same submission</button>
   }
   @if (workflow.state() === 'recovery-blocked' || workflow.state() === 'conflict') {
     <p>Check the prior submission with the API owner before starting another job. Resetting cannot undo a saved job.</p>
     <label><input type="checkbox" #recoveryCheckbox [checked]="recoveryConfirmed()" (change)="recoveryConfirmed.set(recoveryCheckbox.checked)" /> I have reconciled the prior server outcome and can safely start a new submission.</label>
-    <button type="button" id="resolve-recovery" [disabled]="!recoveryConfirmed()" (click)="resolveRecovery()">Reset reconciled submission</button>
+    <button matButton="outlined" type="button" id="resolve-recovery" [disabled]="!recoveryConfirmed()" (click)="resolveRecovery()">Reset reconciled submission</button>
   }
   @if (workflow.savedRecord(); as record) {
     <app-saved-job-confirmation [record]="record" (postAnother)="postAnother()" />
   } @else {
+  @if (workflow.state() === 'submitting') { <mat-progress-bar mode="indeterminate" aria-label="Saving job" /> }
   <form novalidate [attr.aria-busy]="workflow.state() === 'submitting'" (submit)="onSubmit($event)">
     @if (summary().length > 0 || serverForm().length > 0) {
       <section class="error-summary" aria-labelledby="error-heading">
@@ -32,12 +33,19 @@
     }
     @for (field of fields; track field) {
       <div class="field" [class.salary-field]="field === 'salaryMin' || field === 'salaryMax'">
-        <label [for]="field">{{ labels[field] }}</label>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" hideRequiredMarker>
+        <mat-label>{{ labels[field] }}</mat-label>
         @if (field === 'description') {
-          <textarea [id]="field" [formField]="jobForm[field]" rows="6" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'"></textarea>
+          <textarea matInput [errorStateMatcher]="errorMatchers[field]" [id]="field" [formField]="jobForm[field]" rows="6" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'"></textarea>
         } @else {
-          <input [id]="field" [type]="field === 'closingDate' ? 'date' : 'text'" [attr.inputmode]="field === 'salaryMin' || field === 'salaryMax' ? 'decimal' : null" [formField]="jobForm[field]" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'" />
+          <input matInput [errorStateMatcher]="errorMatchers[field]" [id]="field" [type]="field === 'closingDate' ? 'date' : 'text'" [attr.inputmode]="field === 'salaryMin' || field === 'salaryMax' ? 'decimal' : null" [formField]="jobForm[field]" aria-required="true" [attr.aria-invalid]="messages(field).length > 0" [attr.aria-describedby]="field + '-help ' + field + '-errors'" />
         }
+        <mat-error>
+        <ul class="errors" [id]="field + '-errors'">
+          @for (message of messages(field); track $index) { <li>{{ message }}</li> }
+        </ul>
+        </mat-error>
+        </mat-form-field>
         <p class="help" [id]="field + '-help'">
           @switch (field) {
             @case ('salaryMin') { Nonnegative amount, up to two decimal places; less than the maximum. }
@@ -47,12 +55,9 @@
             @default { Enter the {{ labels[field].toLowerCase() }}. }
           }
         </p>
-        <ul class="errors" [id]="field + '-errors'">
-          @for (message of messages(field); track $index) { <li>{{ message }}</li> }
-        </ul>
       </div>
     }
-    <button type="submit" [disabled]="workflow.editingLocked()">Post job</button>
+    <button matButton="filled" type="submit" [disabled]="workflow.editingLocked()">Post job</button>
   </form>
   }
 </section>

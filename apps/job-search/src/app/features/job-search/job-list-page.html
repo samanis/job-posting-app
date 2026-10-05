@@ -5,31 +5,32 @@
       @for (field of ['q', 'department', 'location']; track field) {
         @switch (field) {
           @case ('q') {
-            <label for="keyword">Keywords</label>
-            <input id="keyword" name="q" type="search" maxlength="200" [value]="draft().q" (input)="edit('q', $any($event.target).value)" (compositionstart)="compositionStart('q')" (compositionend)="compositionEnd('q', $any($event.target).value)" />
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Keywords</mat-label>
+            <input matInput id="keyword" name="q" type="search" maxlength="200" [value]="draft().q" (input)="edit('q', $any($event.target).value)" (compositionstart)="compositionStart('q')" (compositionend)="compositionEnd('q', $any($event.target).value)" /></mat-form-field>
           }
           @case ('department') {
-            <label for="department">Department</label>
-            <input id="department" name="department" maxlength="100" [value]="draft().department" (input)="edit('department', $any($event.target).value)" (compositionstart)="compositionStart('department')" (compositionend)="compositionEnd('department', $any($event.target).value)" />
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Department</mat-label>
+            <input matInput id="department" name="department" maxlength="100" [value]="draft().department" (input)="edit('department', $any($event.target).value)" (compositionstart)="compositionStart('department')" (compositionend)="compositionEnd('department', $any($event.target).value)" /></mat-form-field>
           }
           @case ('location') {
-            <label for="location">Location</label>
-            <input id="location" name="location" maxlength="100" [value]="draft().location" (input)="edit('location', $any($event.target).value)" (compositionstart)="compositionStart('location')" (compositionend)="compositionEnd('location', $any($event.target).value)" />
+            <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Location</mat-label>
+            <input matInput id="location" name="location" maxlength="100" [value]="draft().location" (input)="edit('location', $any($event.target).value)" (compositionstart)="compositionStart('location')" (compositionend)="compositionEnd('location', $any($event.target).value)" /></mat-form-field>
           }
         }
       }
-      <label for="sort">Sort by</label>
-      <select id="sort" name="sort" [value]="draft().sort" (change)="select('sort', $any($event.target).value)"><option value="newest">Newest first</option><option value="closing-soon">Closing soon</option></select>
-      <label for="limit">Jobs per page</label>
-      <select id="limit" name="limit" (change)="select('limit', $any($event.target).value)">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Sort by</mat-label>
+      <select matNativeControl id="sort" name="sort" [value]="draft().sort" (change)="select('sort', $any($event.target).value)"><option value="newest">Newest first</option><option value="closing-soon">Closing soon</option></select></mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Jobs per page</mat-label>
+      <select matNativeControl id="limit" name="limit" (change)="select('limit', $any($event.target).value)">
         @for (limit of [10, 20, 50]; track limit) { <option [value]="limit" [selected]="draft().limit === limit">{{ limit }}</option> }
         @if (![10, 20, 50].includes(draft().limit)) { <option [value]="draft().limit" selected>{{ draft().limit }}</option> }
-      </select>
+      </select></mat-form-field>
     </div>
-    <div class="actions"><button type="submit">Search</button><button type="button" (click)="clear()">Clear filters</button></div>
+    <div class="actions"><button matButton="filled" type="submit">Search</button><button matButton="outlined" type="button" (click)="clear()">Clear filters</button></div>
   </form>
   @if (errors().length) { <div role="alert"><h2>Check the search criteria</h2><ul>@for (error of errors(); track error) { <li>{{ error }}</li> }</ul></div> }
   <section aria-label="Search results" [attr.aria-busy]="workflow.busy()">
+    @if (workflow.busy()) { <mat-progress-bar mode="indeterminate" aria-label="Loading search results" /> }
     <p role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
     @switch (workflow.state().kind) {
       @case ('initial-loading') { <p>Loading jobs…</p><p>No job data has been loaded.</p> }
@@ -38,7 +39,8 @@
     }
     <ul class="job-list">
       @for (job of cards(); track job.id) {
-        <li class="job-card">
+        <li>
+        <mat-card appearance="outlined" class="job-card">
           <h2><a [routerLink]="job.url" [attr.data-job-id]="job.id" (click)="rememberReturn(job.id)">{{ job.title }}</a></h2>
           <dl>
             <div><dt>Department</dt><dd>{{ job.department }}</dd></div>
@@ -46,21 +48,22 @@
             <div><dt>Salary range</dt><dd>{{ job.salaryMin | number:'1.0-2' }} – {{ job.salaryMax | number:'1.0-2' }}</dd></div>
             <div><dt>Closing date</dt><dd><time [attr.datetime]="job.closingDate">{{ job.dateLabel }}</time></dd></div>
           </dl>
+        </mat-card>
         </li>
       }
     </ul>
     @if (workflow.state(); as state) {
       @if ('failure' in state) {
         <p role="alert">{{ state.failure.message }}</p>
-        @if (state.failure.kind === 'cursor-expired') { <button type="button" (click)="first()">Reload first page</button> }
-        <button type="button" (click)="workflow.refresh()">Retry</button>
+        @if (state.failure.kind === 'cursor-expired') { <button matButton="outlined" type="button" (click)="first()">Reload first page</button> }
+        <button matButton="outlined" type="button" (click)="workflow.refresh()">Retry</button>
       }
     }
-    @if (!('failure' in workflow.state())) { <button type="button" [disabled]="workflow.busy()" (click)="workflow.refresh()">Refresh results</button> }
+    @if (!('failure' in workflow.state())) { <button matButton="outlined" type="button" [disabled]="workflow.busy()" (click)="workflow.refresh()">Refresh results</button> }
   </section>
   <nav aria-label="Results pages">
-    <button type="button" [disabled]="!history.canPrevious()" (click)="previous()">Previous</button>
-    <button type="button" [disabled]="nextCursor() === null" (click)="next()">Next</button>
-    <button type="button" [disabled]="committed().cursor === null" (click)="first()">First page</button>
+    <button matButton="outlined" type="button" [disabled]="!history.canPrevious()" (click)="previous()">Previous</button>
+    <button matButton="outlined" type="button" [disabled]="nextCursor() === null" (click)="next()">Next</button>
+    <button matButton="outlined" type="button" [disabled]="committed().cursor === null" (click)="first()">First page</button>
   </nav>
 </section>
