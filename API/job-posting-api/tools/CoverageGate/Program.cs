@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -54,6 +56,20 @@ static void Run(params string[] arguments)
 static void Verify(string root, string suite, string report)
 {
     if (suite is not ("Unit" or "Host")) throw new InvalidOperationException("Unknown coverage suite.");
+    var generated = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    using (var exclusions = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "coverage-exclusions.json"))))
+    {
+        foreach (var item in exclusions.RootElement.EnumerateArray())
+        {
+            var source = Path.GetFullPath(Path.Combine(root, item.GetProperty("path").GetString()!));
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(File.ReadAllText(source).Replace("\r\n", "\n", StringComparison.Ordinal)))).ToLowerInvariant();
+            if (hash != item.GetProperty("sha256").GetString())
+                throw new InvalidOperationException($"Generated exclusion changed; inspect before reauthorizing: {source}");
+            if (string.IsNullOrWhiteSpace(item.GetProperty("reason").GetString()))
+                throw new InvalidOperationException("Generated exclusion requires an exact reason.");
+            generated.Add(source);
+        }
+    }
     var projects = Directory.EnumerateFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories)
         .Where(path => !GeneratedPath(path)).ToArray();
     if (projects.Length == 0) throw new InvalidOperationException("No posting production projects found.");
@@ -64,7 +80,7 @@ static void Verify(string root, string suite, string report)
         var assembly = XDocument.Load(project).Descendants("AssemblyName").SingleOrDefault()?.Value
             ?? Path.GetFileNameWithoutExtension(project);
         var projectFiles = Directory.EnumerateFiles(Path.GetDirectoryName(project)!, "*.cs", SearchOption.AllDirectories)
-            .Where(path => !GeneratedPath(path));
+            .Where(path => !GeneratedPath(path) && !generated.Contains(Path.GetFullPath(path)));
         foreach (var file in projectFiles)
         {
             var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(file));

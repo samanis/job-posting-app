@@ -6,7 +6,8 @@ public static class JobApiProblems
 {
     public const string IdempotencyKeyConflict = "idempotency_key_conflict";
     public const string IdempotencyInProgress = "idempotency_in_progress";
-    public const string PublicationPending = "publication_pending";
+    public const string PublicationUnresolved = "publication_unresolved";
+    public const string PublicationFailed = "publication_failed";
     public const string DependencyUnavailable = "dependency_unavailable";
 
     public static ValidationProblemDetails Validation(int status, IDictionary<string, string[]> errors, string traceId)
@@ -28,7 +29,8 @@ public static class JobApiProblems
         {
             IdempotencyKeyConflict => (409, "Idempotency key conflict.", "This key is associated with a different job posting. Resolve the existing attempt before submitting another."),
             IdempotencyInProgress => (409, "Job posting is being processed.", "Wait for Retry-After, then retry the same key and payload."),
-            PublicationPending => (503, "Publication is pending.", "The job has been saved, but confirmed publication is unresolved. Wait for Retry-After, then retry the same key and payload."),
+            PublicationUnresolved => (503, "Publication is pending.", "The job has been saved, but publication is unresolved. Retain the same key and payload; manual investigation may be required."),
+            PublicationFailed => (503, "Publication failed.", "The saved job was removed after publication could not be confirmed. A queued message may still exist if acknowledgment was lost."),
             DependencyUnavailable => (503, "A required dependency is unavailable.", "The outcome may be uncertain. Wait for Retry-After, then retry the same key and payload."),
             _ => throw new ArgumentOutOfRangeException(nameof(code))
         };

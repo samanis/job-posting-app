@@ -2,7 +2,7 @@
 
 Two independent Angular applications live in `apps/job-posting` and `apps/job-search`. Each app has its own package manifest, committed npm lockfile, source, tests, and build configuration.
 
-Backend applications, tests, .NET build configuration and infrastructure belong under `API/`, separately from the Angular applications in `apps/`. All job posting API source, persistence, tests, tools, prompts and configuration live together in `API/job-posting-api`; see its [application guide](API/job-posting-api/README.md). Job creation and backend dependencies are not implemented yet.
+Backend applications, tests, .NET build configuration and infrastructure belong under `API/`, separately from the Angular applications in `apps/`. All job posting API source, persistence, tests, tools, prompts and configuration live together in `API/job-posting-api`; see its [application guide](API/job-posting-api/README.md). The posting API now includes POST, PostgreSQL idempotency, confirmed RabbitMQ publication, resilience and a reproducible [Docker/local setup](API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md). Search API/consumer/query storage and client integration remain later phases.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ npm --prefix apps/job-search start
 
 Open http://localhost:4201/jobs. Stop either server with **Ctrl+C**. On Windows PowerShell, use `npm.cmd` if execution policy blocks `npm`.
 
-The clients start without environment files or API credentials. Backend APIs are not implemented in this repository: saving jobs and loading live search results require compatible APIs. To connect them, follow the app guides for `JOB_POSTING_API_URL` and `JOB_SEARCH_API_URL`:
+The clients start without environment files or API credentials. The posting API is implemented under `API/job-posting-api`; the search API and complete client integration remain later phases. To connect them, follow the app guides for `JOB_POSTING_API_URL` and `JOB_SEARCH_API_URL`:
 
 - [Job posting setup and API contract](apps/job-posting/README.md)
 - [Job search setup and API contract](apps/job-search/README.md)

@@ -1,6 +1,13 @@
-# Shared requirements: job posting API
+> Current implementation status: revised Stages 3-9 are implemented and verified, including POST, confirmed publication/compensation, resilience and the Docker/local posting subset. Stage 9 verification and client handoff are complete; see docs/verification-and-handoff.md and docs/client-integration-handoff.md. Historical revision statements below describe the earlier transition, not the current code.
 
-Read this file and `requirements-review.md` before every stage. User instructions take priority over reference documents. Implement only the selected stage and reuse earlier work.
+
+# Shared requirements: simplified job posting API
+
+Read this and requirements-review.md before every stage. Latest user decisions override earlier architecture and reference documents.
+
+## Revision status
+
+The user approved prompt updates to replace the ledger/outbox architecture with job-row idempotency, direct publication and compensating deletion. Revised Stages 3-4 replaced the old design and were reverified before dependent Stages 5-8. No automatic business retry/recovery, dispatcher, publication leases, outbox or separate ledger is in scope.
 
 ## Scope and working rules
 
@@ -14,59 +21,56 @@ Read this file and `requirements-review.md` before every stage. User instruction
 
 ## HTTP and validation contract
 
-POST `/api/jobs`; JSON request contains `title`, `department`, `location`, `description`, `salaryMin`, `salaryMax`, `closingDate`; require one valid `Idempotency-Key` header as specified in the review. Do not generate a fallback key.
+POST `/api/jobs` accepts title, department, location, description, salaryMin, salaryMax and closingDate. Require one opaque Idempotency-Key on the FIRST request: 1-128 ASCII letters/digits/underscore/hyphen. The UI generates it; the API does not invent a fallback. Keys are case-sensitive submission identities, not authorization or content deduplication.
 
-Use independently validated server DTOs: required fields must distinguish missing/null salary fields from valid zero; decimal JSON numbers, not strings; date-only valid ISO calendar date; normalized text and bounded lengths/amounts as specified. Reject NaN/infinity, numeric overflow, excess precision, malformed JSON/date, and minimum >= maximum. UTC `createdAt`, generated string UUID `id`, PostgreSQL numeric/date/timestamptz mappings. Do not use floating-point salary arithmetic or UTC conversion of closingDate.
+Retain strict parsing and independent server validation: nullable input salaries distinguish missing/null from zero; decimal JSON numbers, exact precision <=2, nonnegative <=999999999.99 and min < max; valid date-only YYYY-MM-DD; trimmed required text bounded at 200/100/100/10000. Reject unsupported/duplicate/unknown shapes and fields, overflow and invalid dates. No floating-point salary calculations or invented currency. Preserve plain description content. Configure/validate business timezone (America/Toronto default), injectable time and bounded request size.
 
-Business timezone is configured (default America/Toronto), checked at startup; time is injectable. Validate future date for NEW work only. After parsing/canonicalizing an existing-key request, check its fingerprint and replay/resume before applying current-date validation: a previously valid closing date can expire after acceptance.
+Hash the exact UTF-8 key with SHA-256 as lowercase hex. Canonicalize all seven normalized fields with fixed order, invariant two-place salary/date representations and a version, then SHA-256 fingerprint. Exclude current time, generated IDs and createdAt. Persist digest, fingerprint/version, stable response snapshot, EventId and PublishedAt on the job. Use one unique digest constraint; no operation scope, separate ledger or outbox. Generated metadata stays internal, outside response DTO.
 
-Responses:
-
-| Condition | Response |
+| Condition | HTTP contract |
 | --- | --- |
-| New or replayed acceptance: job committed, matching event confirmed and publication state committed | 202; same authoritative saved-record body on replay |
-| Malformed JSON, invalid header/shape/type | 400 safe Problem Details; useful `errors` where applicable |
-| Semantic field validation | 422 ValidationProblemDetails; errors keyed by field names |
-| Same key, different canonical payload | 409 with top-level `code: idempotency_key_conflict` |
-| Concurrent owner still processing same key after bounded wait | 409 with `code: idempotency_in_progress` and Retry-After |
-| Job saved but publication/confirmed-state recording unresolved | 503 with `code: publication_pending`, Retry-After, safe same-key retry guidance |
-| Required database unavailable or commit outcome uncertain | 503 with `code: dependency_unavailable`, same-key retry guidance; never claim rollback without proof |
-| Unhandled exception | 500 generic Problem Details plus traceId; full diagnostics only in server logs |
+| New success or known completed same-key replay | 202 only after job commit, confirmed/routable broker acceptance and recorded PublishedAt; original saved response |
+| Malformed JSON/header/shape/type | 400 safe Problem Details |
+| Semantic validation | 422 field-keyed ValidationProblemDetails |
+| Same key, different fingerprint | 409 `idempotency_key_conflict` |
+| Bounded creation/processing contention | 409 `idempotency_in_progress`, Retry-After: 1 |
+| Publication failed and compensation completed | 503 `publication_failed`; no success claim |
+| Publication status unresolved or compensation failed/uncertain | 503 `publication_unresolved`; safe guidance, no automatic repair |
+| Database unavailable or commit outcome uncertain | 503 `dependency_unavailable`; preserve same-key retry guidance |
+| Unexpected application failure | 500 generic Problem Details with traceId |
 
-Example 202 body: all seven normalized saved fields at the top level, `id`, `createdAt`, `status: accepted`, and `message: Your job posting has been saved and sent for processing. It may take a few moments to appear in search results.` Store stable response values; replay the original body, including timestamp, without republishing a known-completed event. No claim that search visibility has been verified. No body-less success or nonexistent Location URI.
+202 body contains all seven normalized saved fields, id, UTC createdAt, status: accepted and message: Your job posting has been saved and sent for processing. It may take a few moments to appear in search results. Replay stable original content, never fabricate a Location/status URI or wait for search completion.
 
-## Durable acceptance workflow
+## Simplified workflow
 
-1. Parse, normalize and fingerprint the request. Resolve a matching ledger record first; new keys receive semantic validation before writes.
-2. One PostgreSQL transaction creates the job, idempotency record/fingerprint/response snapshot and a stable versioned event in the outbox. Unique constraints are the authority, not check-then-insert or process-local locks. Handle concurrent unique conflicts in a new usable transaction and resolve the existing record.
-3. Commit before contacting RabbitMQ. Never hold a database transaction open while waiting for broker network IO.
-4. Request path and hosted recovery dispatcher share one durable claiming/publication mechanism. Acquire an atomic bounded lease with owner token/claim generation; no double ownership among replicas. Renew when needed, recover expired claims, and use conditional updates/fencing to prevent stale owners from marking/overwriting newer work. Skip other owners after bounded waits.
-5. Publish the exact stored event through a broker-neutral producer. Require publisher confirmation AND no mandatory-routing return. Nack, return, timeout, cancellation, disconnection, or uncertain result never marks it published.
-6. After acknowledgement, durably mark the event published under the valid lease. Only then return 202. If recording this state fails, return an uncertain retryable failure; re-publication may be necessary and must reuse the event ID.
-7. Dispatcher continuously recovers unconfirmed pending events with bounded backoff. A background confirmation can satisfy a later same-key POST replay. A failed original request does not cancel durable recovery or justify a fresh job/key.
+1. Strictly parse, normalize and fingerprint. Look up job by key digest BEFORE future-date validation. Matching published job replays original response without another insert/publish; differing fingerprint conflicts. Matching unpublished job returns bounded in-progress/unresolved failure and does not automatically republish.
+2. Validate future closing date only for a new key. Insert the job and internal metadata in one short PostgreSQL transaction. On unique conflict, dispose the failed transaction and read the winning job in a fresh context. No in-memory lock, reservation mechanism or publication lease. Bound command/lock waits.
+3. Commit before broker IO. A commit exception may be uncertain: a fresh read may establish the outcome; absence cannot prove rollback. Never automatically retry the whole transaction or direct callers to replace a known unresolved attempt's key.
+4. Only the request that created the job directly publishes its immutable envelope once. Require publisher confirmation AND no mandatory-routing return. No consumer acknowledgment or dependency on the search service.
+5. After confirmed acceptance, record PublishedAt, then 202. If status persistence fails, retain the job, log Critical and return publication_unresolved; never retract/delete confirmed work or automatically republish it.
+6. On publication exception (including cancellation or unknown acceptance), attempt exact-job compensation deletion with an independent bounded token, initially 3 seconds. Then throw the publication exception for central safe HTTP mapping. Do not hold a DB transaction during publish or claim deletion retracts broker messages.
+7. If deletion fails or its commit outcome is uncertain, log Critical (.NET Fatal equivalent) with job/event IDs and publication plus cleanup failures, then throw cleanup-failure exception. No automatic cleanup retries or worker.
 
-Retain an idempotency ledger and event identity for the life of each job. Published outbox payload cleanup is only a documented future operation, not a stage requirement. Pending/poison messages must remain inspectable, alertable and recoverable; do not silently drop them after a retry count.
+Remaining job rows retain their digest for their lifetime. Invalid requests consume no key. Compensation deletion removes the key with the job; a later attempt can recreate it and may duplicate a message previously accepted without observed confirmation. No TTL/cleanup of successful rows is in scope.
 
 ## Messaging boundary
 
-Broker-neutral `IJobEventPublisher` accepts immutable event envelope plus CancellationToken and completes successfully only on confirmed broker acceptance; it does not expose RabbitMQ channels/properties outside the adapter. Avoid abstractions that imply every broker has identical topology/guarantees.
+Broker-neutral IJobEventPublisher accepts immutable versioned envelope and CancellationToken, completing only on confirmed/routable acceptance. Keep RabbitMQ types/topology in the adapter. Envelope: eventId, eventType JobPostingCreated, schemaVersion 1, occurredAt UTC, correlationId and complete authoritative saved job. Build it from the saved job; no separately persisted envelope or delivery schedule.
 
-Envelope: `eventId`, `eventType: JobPostingCreated`, `schemaVersion: 1`, `occurredAt` UTC, `correlationId`, and `job` with the complete authoritative saved record. A correlation identifier is diagnostic metadata, not a dedupe key. Serialize once and persist the envelope; retries reuse identity/content even across restarts.
+Use compatible stable RabbitMQ.Client, reused managed connection, safe channel concurrency, persistent JSON, durable direct job-post-exchange, routing key job-posting.created.v1, durable job-post-queue and binding. Local single-node volume durability is development infrastructure, not HA. Connection repair may restore broker capability but must not scan or replay saved jobs. No consumer implementation.
 
-RabbitMQ adapter uses stable compatible RabbitMQ.Client APIs, reusable managed connection, safe channel concurrency, persistent JSON messages, durable direct exchange `job-post-exchange`, routing key `job-posting.created.v1`, durable queue `job-post-queue` and binding. Local single-node durable queue/volume is sufficient; document how HA differs. Topology can be changed by configuration within this adapter. The future search consumer is responsible for idempotent projection by eventId; do not implement it now.
+## Accepted limitations
 
-Exactly-once job creation is scoped to a key under the retained database ledger. At-least-once publication is intentional. Test the confirmation-before-state-write crash window; never present publisher confirms as eliminating duplicate delivery or proving consumer completion.
+Compensation is not an atomic rollback across PostgreSQL and RabbitMQ. Broker acceptance followed by lost confirmation can cause job deletion while the message is queued. Recreation can duplicate delivery. A crash can bypass deletion and Critical logging and leave unresolved records; restart provides no automatic business recovery. Same-key repeats prevent duplicates for retained rows but do not repair unknown publication. Manual investigation is required. Do not promise exactly-once, eventual automatic delivery, guaranteed cleanup or a Fatal log after forced termination.
 
 ## Nonfunctional requirements
 
-- Stateless across requests/replicas: no session affinity, local durable business files, or in-memory idempotency authority. Database rows own all recoverable progress. Pools, clocks, bounded breaker state and connection objects are allowed local resources.
-- Central exception handling (`IExceptionHandler`/Problem Details or supported equivalent), request trace correlation, one structured logging configuration. Suppress stack traces, SQL, hostnames, connection strings, payloads and credentials in production HTTP responses. Avoid logging full job descriptions or raw idempotency keys; use digest/correlation fields. Allow explicit safe validation text.
-- Use a non-HTTP Polly/.NET resilience pipeline around RabbitMQ publication. Circuit breaker shared by request/dispatcher within an instance; bounded confirm timeout/retries, cancellation propagation and background backoff. Never wrap the entire POST or recreate jobs on retry. Cancellation is not a transient retryable error. Permanent topology/authorization/serialization failures need diagnostics, not hot retry loops.
-- Initial configurable publishing budget: <=10 seconds overall for request, <=3 seconds per confirmation, <=2 immediate attempts, jitter, breaker failure ratio 0.5/sample 60s/minimum throughput 3/break 15s. Account for time spent claiming; document total server/request bounds relative to the client 15-second timeout. Avoid nested retry policies exceeding budgets.
-- Graceful SIGTERM: stop accepting/claiming new work, drain in-flight requests and publications within HostOptions shutdown timeout (30s), release or expire safe leases, retain unknown results, then close channels/connections. Docker stop grace 45s. Crash recovery must work even when graceful shutdown is impossible.
-- Liveness checks process health without external IO; readiness reflects database and publisher capability for this strict response contract. An open breaker can make readiness degraded/unready but must not be treated as liveness failure or disable recovery. Broker recovery must reconnect/probe so readiness can recover. Bound health-check IO.
-- JSON logs and metrics: request duration/outcome, duplicate/replay/conflict counts, outbox pending count/oldest age, publish attempts/failures/latency, breaker transitions, shutdown status. Keep high-cardinality IDs in logs/traces, not metric labels. No separate collector/dashboard required.
-- Bounded request size, database commands, outbox batches, leases and worker concurrency; async IO; DI scopes per request/worker batch; validate nonsecret configuration at startup. No secrets committed. Restrict local Docker exposed ports to loopback. Angular proxy works without broad CORS; add allowlisted CORS only if a documented direct-browser deployment requires it.
+- Stateless request handling across replicas: no session affinity, local durable files or in-memory idempotency authority. Database unique rows decide creation; connection pools/clocks/breaker resources may be local.
+- Central exception handling/Problem Details, structured JSON ILogger and correlation. Production responses expose no stack traces, SQL, hosts, payloads, credentials or connection strings. Do not routinely log descriptions/raw keys. Critical compensation logs include safe identity/cause context and sanitized diagnostics.
+- Non-HTTP circuit breaker around one direct publish attempt: publish budget <=10s, confirm timeout <=3s, failure ratio 0.5/sample 60s/minimum throughput 3/break 15s, validated/configurable. No whole-request, message, transaction or cleanup automatic retry. Cancellation is not an outage. Half-open probes/connection repair do not replay jobs.
+- SIGTERM drains requests/publications/cleanup within HostOptions 30s, then disposes channels/connections. Docker stop grace 45s. Cleanup token is independent of request cancellation but bounded by remaining shutdown time. No lease release or dispatcher recovery.
+- Bounded liveness with no external IO; readiness reflects DB/publisher capability. Broker reconnect/probe can recover capability without repairing business records. No backlog health/metrics. Measure duration/outcomes/publication/compensation/breaker transitions without high-cardinality metric labels.
+- Validate nonsecret settings, bound async SQL/network operations, keep scopes per request, no secrets committed. Local exposed ports loopback; use Angular proxy, not broad CORS. No public GET/status/update/delete/search/auth endpoints in this phase.
 
 ## Verification and reproducibility
 
@@ -82,10 +86,8 @@ Exactly-once job creation is scoped to a key under the retained database ledger.
 - The foundation now provides `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. Reuse and extend this gate as production projects/types are added; keep new application/adapter logic in the isolated unit scope and only API bootstrap in the host scope. Retain source/type completeness and negative checks, and update recorded metrics after every stage.
 - Final verification must demonstrate that the gate rejects an intentional below-threshold result and rejects a missing/empty report without changing committed thresholds. Record measured numerators/denominators and report locations in work notes, and document the exact developer/CI command.
 
-Use meaningful unit tests plus ASP.NET integration tests with actual PostgreSQL and RabbitMQ containers. EF InMemory/SQLite cannot prove PostgreSQL locking, uniqueness, migrations or broker confirms. Use deterministic clocks/gates/controllable failures; avoid long sleeps. Tests need isolation, cleanup and bounded waits.
+Use real PostgreSQL/RabbitMQ integration evidence separately from unit/host coverage. Test validation, key races, completed replay after expiry, uncertain commit, publish failures/unknown acceptance, exact-job compensation and cleanup failure/timeout, status-write failure after confirmation, low-volume circuit transitions and graceful/forced stop. Do not require a recoverable outbox or claim crash repair.
 
-Required scenarios: valid acceptance/saved-record replay; all field/shape boundaries; same key same/different payload including concurrency across hosts; late replay after closing date; database failure/ambiguous commit; broker down, nack/unroutable/confirmation timeout; recovery after restart; crash after confirm before marking; concurrent dispatchers and stale leases; production-safe errors/logs; low-traffic breaker open/half-open/closed; SIGTERM during publish; no duplicate job or lost recoverable event.
+API/job-posting-api/docker-compose.yml starts posting, PostgreSQL and RabbitMQ with durable volumes/health checks and explicit administrative migrations or a one-shot service. Non-root exec-form multi-stage .NET10 image, verified pinned versions, all build/run inputs tracked and real secrets ignored. No replica auto-migrations or fake search service.
 
-`API/job-posting-api/docker-compose.yml` starts posting API, PostgreSQL, RabbitMQ and a safe one-shot migration service if selected, with durable named volumes and health checks. Keep Dockerfiles, .dockerignore, environment examples and broker/database settings under API/job-posting-api too. Do not run concurrent migrations automatically in every API replica. Multi-stage .NET 10 Dockerfile runs as non-root, uses exec-form entrypoint and validated SIGTERM behavior. Pin verified stable image/package versions, not floating `latest`.
-
-Document Windows/macOS/Linux commands: prerequisites, restore/build/test, migrations, one Compose command from API/job-posting-api, local `dotnet run`, environment overrides, POST/replay/conflict examples, recovery/backlog checks and graceful stop. `API/job-posting-api/.env.example` may contain clearly labeled local-only defaults; real .env/credentials remain ignored. A clean checkout must include all build/run inputs. Explicitly list deferred search/client integration and do not claim full PDF completion.
+Document Windows/macOS/Linux restore/build/test, migration/Compose/local run commands, key-on-first-request examples, duplicate/conflict/compensation behavior, manual investigation and graceful stop. Preserve user volumes. Explain missing client/search integration and genuine transcript export as separate obligations.

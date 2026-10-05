@@ -13,7 +13,8 @@ public sealed class ApiFactory(
     string environment = "Production",
     Dictionary<string, string?>? settings = null,
     bool includeTestEndpoints = false,
-    TimeProvider? clock = null) : WebApplicationFactory<Program>
+    TimeProvider? clock = null,
+    Action<IServiceCollection>? configureServices = null) : WebApplicationFactory<Program>
 {
     public CapturedLoggerProvider Logs { get; } = new();
 
@@ -30,6 +31,7 @@ public sealed class ApiFactory(
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<ILoggerProvider>(Logs);
+            configureServices?.Invoke(services);
             if (clock is not null)
             {
                 services.AddSingleton(clock);

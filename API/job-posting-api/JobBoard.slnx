@@ -4,6 +4,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/JobPosting.Api.Tests/JobPosting.Api.Tests.csproj" />
+    <Project Path="tests/JobPosting.Api.IntegrationTests/JobPosting.Api.IntegrationTests.csproj" />
+    <Project Path="tests/JobPosting.ShutdownHarness/JobPosting.ShutdownHarness.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/CoverageGate/CoverageGate.csproj" />

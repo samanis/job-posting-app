@@ -5,6 +5,8 @@ using JobPosting.Api.Configuration;
 using JobPosting.Api.Diagnostics;
 using JobPosting.Api.Tests.Support;
 using JobPosting.Api.Validation;
+using JobPosting.Api.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -15,17 +17,31 @@ namespace JobPosting.Api.Tests;
 [Trait("Category", "Host")]
 public sealed class FoundationTests
 {
+    private sealed class HealthDependency : JobPosting.Api.Resilience.IDatabaseProbe, JobPosting.Api.Resilience.IPublisherProbe
+    { public bool Ready=true; public Task<bool> CheckAsync(CancellationToken t)=>Task.FromResult(Ready); public Task ProbeAsync(CancellationToken t)=>Task.CompletedTask; }
     [Fact]
-    public async Task JobPostIsNotImplementedAndCannotReturnAcceptance()
+    public async Task HealthRoutesAndShutdownBoundsAreWiredWithoutExternalIo()
+    {
+        var dependency=new HealthDependency();await using var factory=new ApiFactory(configureServices:services=>{services.AddSingleton<JobPosting.Api.Resilience.IDatabaseProbe>(dependency);services.AddSingleton<JobPosting.Api.Resilience.IPublisherProbe>(dependency);});using var client=factory.CreateClient();
+        Assert.Equal(TimeSpan.FromSeconds(30),factory.Services.GetRequiredService<IOptions<Microsoft.Extensions.Hosting.HostOptions>>().Value.ShutdownTimeout);
+        Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/health/live")).StatusCode);Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/health/ready")).StatusCode);
+        dependency.Ready=false;Assert.Equal(HttpStatusCode.ServiceUnavailable,(await client.GetAsync("/health/ready")).StatusCode);
+        factory.Services.GetRequiredService<JobPosting.Api.Resilience.ShutdownDrain>().BeginStop();Assert.Equal(HttpStatusCode.ServiceUnavailable,(await client.GetAsync("/health/ready")).StatusCode);
+    }
+    [Fact]
+    public async Task InvalidResilienceConfigurationFailsStartupSafely()
+    {await using var factory=new ApiFactory(settings:new(){["Resilience:FailureRatio"]="0"});var exception=Assert.Throws<OptionsValidationException>(()=>factory.CreateClient());Assert.Contains("Resilience:FailureRatio",exception.Message);}
+    [Fact]
+    public async Task JobPostRejectsMissingKeyAndCannotReturnAcceptance()
     {
         await using var factory = new ApiFactory();
         using var client = factory.CreateClient();
         using var response = await client.PostAsync("/api/jobs", new StringContent("{}", Encoding.UTF8, "application/json"));
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(404, body.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal(400, body.RootElement.GetProperty("status").GetInt32());
         Assert.Equal(response.Headers.GetValues(RequestDiagnosticsMiddleware.TraceHeader).Single(),
             body.RootElement.GetProperty("traceId").GetString());
     }
@@ -40,7 +56,7 @@ public sealed class FoundationTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.StartsWith("3.", body.RootElement.GetProperty("openapi").GetString());
-        Assert.False(body.RootElement.GetProperty("paths").TryGetProperty("/api/jobs", out _));
+        Assert.True(body.RootElement.GetProperty("paths").TryGetProperty("/api/jobs", out _));
     }
 
     [Theory]
@@ -82,7 +98,8 @@ public sealed class FoundationTests
         var exception = Assert.Single(factory.Logs.Entries, entry => entry.EventId.Name == "UnhandledException");
         Assert.Equal(LogLevel.Error, exception.Level);
         Assert.Equal(traceId, exception.Properties["TraceId"]);
-        Assert.Equal(TestEndpointsController.ExceptionMarker, exception.Exception?.Message);
+        Assert.Null(exception.Exception);
+        Assert.Equal("InvalidOperationException", exception.Properties["Failure"]);
         var completed = Assert.Single(factory.Logs.Entries, entry => entry.EventId.Name == "RequestCompleted");
         Assert.Equal(500, completed.Properties["StatusCode"]);
         Assert.Equal(traceId, completed.Properties["TraceId"]);
@@ -112,6 +129,12 @@ public sealed class FoundationTests
     [InlineData("JobPosting:BusinessTimeZone", "")]
     [InlineData("JobPosting:MaximumRequestBodyBytes", "0")]
     [InlineData("JobPosting:MaximumRequestBodyBytes", "1048577")]
+    [InlineData("PostingDatabase:ConnectionString", "")]
+    [InlineData("PostingDatabase:ConnectionString", "private-secret=invalid")]
+    [InlineData("PostingDatabase:CommandTimeoutSeconds", "0")]
+    [InlineData("RabbitMq:HostName", "")]
+    [InlineData("RabbitMq:Port", "0")]
+    [InlineData("RabbitMq:ConfirmTimeoutSeconds", "4")]
     public void InvalidConfigurationFailsAtStartup(string key, string value)
     {
         using var factory = new ApiFactory(settings: new Dictionary<string, string?> { [key] = value });
@@ -139,6 +162,10 @@ public sealed class FoundationTests
         Assert.NotNull(factory.Services.GetRequiredService<CreateJobRequestReader>());
         Assert.NotNull(factory.Services.GetRequiredService<JobRequestValidator>());
         Assert.NotNull(factory.Services.GetRequiredService<NewJobTemporalValidator>());
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<PostingWriteStore>());
+        await using var context = await scope.ServiceProvider.GetRequiredService<IDbContextFactory<PostingDbContext>>().CreateDbContextAsync();
+        Assert.Equal(10, context.Database.GetCommandTimeout());
     }
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider
