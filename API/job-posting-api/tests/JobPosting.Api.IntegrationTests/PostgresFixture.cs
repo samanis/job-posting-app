@@ -28,8 +28,14 @@ public sealed class PostgresFixture : IAsyncLifetime
             var port = int.Parse(address.Split(':')[^1], CultureInfo.InvariantCulture);
             adminConnection = new NpgsqlConnectionStringBuilder
             {
-                Host = "127.0.0.1", Port = port, Database = "posting_admin", Username = "jobposting",
-                Password = password, Timeout = 2, CommandTimeout = 10, IncludeErrorDetail = false
+                Host = "127.0.0.1",
+                Port = port,
+                Database = "posting_admin",
+                Username = "jobposting",
+                Password = password,
+                Timeout = 2,
+                CommandTimeout = 10,
+                IncludeErrorDetail = false
             }.ConnectionString;
             var deadline = Stopwatch.StartNew();
             while (true)

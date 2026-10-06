@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
 namespace JobPosting.Api.IntegrationTests;
+
 [Trait("Category", "Integration")]
 public sealed class PostgresPersistenceTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
 {
@@ -125,14 +126,14 @@ public sealed class PostgresPersistenceTests(PostgresFixture postgres) : IClassF
     private static async Task SeedOldAsync(PostingDbContext context, JobPostingEntity j, bool published)
     {
         await SeedJobAsync(context, j); j.PublishedAt = published ? j.CreatedAt.AddSeconds(1) : null;
-        var envelope = JsonSerializer.Serialize(new { eventId=j.EventId, eventType="JobPostingCreated", schemaVersion=1, job=new { id=j.Id } });
+        var envelope = JsonSerializer.Serialize(new { eventId = j.EventId, eventType = "JobPostingCreated", schemaVersion = 1, job = new { id = j.Id } });
         await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO outbox_messages (event_id,job_id,event_type,schema_version,occurred_at,envelope_json,claim_generation,attempt_count,next_attempt_at,published_at) VALUES ({j.EventId},{j.Id},'JobPostingCreated',1,{j.CreatedAt},{envelope},0,0,{j.CreatedAt},{j.PublishedAt})");
         await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO idempotency_records (scope,key_digest,canonicalization_version,fingerprint,job_id,event_id,created_at,response_json) VALUES ('create-job',{j.IdempotencyKeyDigest},{j.CanonicalizationVersion},{j.RequestFingerprint},{j.Id},{j.EventId},{j.CreatedAt},{j.ResponseJson})");
     }
     private static PendingPosting Posting(string? digest = null)
     {
-        var request = new JobRequestValidator().Normalize(new CreateJobRequest { Title="Engineer", Department="Engineering", Location="Toronto", Description="Plain text", SalaryMin=0m, SalaryMax=999999999.99m, ClosingDate=new(2028,2,29) }).Request!;
-        return PendingPosting.Create(request,digest ?? Guid.NewGuid().ToString("N")+Guid.NewGuid().ToString("N"),Guid.NewGuid(),Guid.NewGuid(),new DateTimeOffset(2026,10,5,14,0,0,TimeSpan.FromHours(-4)).AddTicks(1234567),"test");
+        var request = new JobRequestValidator().Normalize(new CreateJobRequest { Title = "Engineer", Department = "Engineering", Location = "Toronto", Description = "Plain text", SalaryMin = 0m, SalaryMax = 999999999.99m, ClosingDate = new(2028, 2, 29) }).Request!;
+        return PendingPosting.Create(request, digest ?? Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"), Guid.NewGuid(), Guid.NewGuid(), new DateTimeOffset(2026, 10, 5, 14, 0, 0, TimeSpan.FromHours(-4)).AddTicks(1234567), "test");
     }
     private sealed class Factory(DbContextOptions<PostingDbContext> options) : IDbContextFactory<PostingDbContext>
     { public PostingDbContext CreateDbContext() => new(options); }

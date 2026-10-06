@@ -1,5 +1,6 @@
 using System.Diagnostics.Metrics;
 namespace JobPosting.Api.Diagnostics;
+
 public static class PostingMetrics
 {
     public const string MeterName = "JobPosting.Api";

@@ -15,8 +15,13 @@ public sealed class IdempotencyTests
     private static readonly DateTimeOffset Now = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
     private static CreateJobRequest Request(string title = " Engineer ", decimal minimum = 10m, DateOnly? closing = null) => new()
     {
-        Title = title, Department = "Engineering", Location = "Toronto", Description = "Description",
-        SalaryMin = minimum, SalaryMax = 100m, ClosingDate = closing ?? new(2026, 10, 6)
+        Title = title,
+        Department = "Engineering",
+        Location = "Toronto",
+        Description = "Description",
+        SalaryMin = minimum,
+        SalaryMax = 100m,
+        ClosingDate = closing ?? new(2026, 10, 6)
     };
     private static PersistedPosting Saved()
     {

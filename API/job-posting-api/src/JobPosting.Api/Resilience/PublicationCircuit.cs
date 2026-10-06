@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Polly;
 using Polly.CircuitBreaker;
 namespace JobPosting.Api.Resilience;
+
 public interface IPublisherProbe { Task ProbeAsync(CancellationToken cancellationToken); }
 public sealed class PublicationCircuit : IJobEventPublisher, IPublisherProbe
 {
@@ -19,10 +20,15 @@ public sealed class PublicationCircuit : IJobEventPublisher, IPublisherProbe
         var settings = options.Value;
         pipeline = new ResiliencePipelineBuilder { TimeProvider = clock }.AddCircuitBreaker(new CircuitBreakerStrategyOptions
         {
-            FailureRatio = settings.FailureRatio, SamplingDuration = TimeSpan.FromSeconds(settings.SamplingSeconds),
-            MinimumThroughput = settings.MinimumThroughput, BreakDuration = TimeSpan.FromSeconds(settings.BreakSeconds), StateProvider = state,
+            FailureRatio = settings.FailureRatio,
+            SamplingDuration = TimeSpan.FromSeconds(settings.SamplingSeconds),
+            MinimumThroughput = settings.MinimumThroughput,
+            BreakDuration = TimeSpan.FromSeconds(settings.BreakSeconds),
+            StateProvider = state,
             ShouldHandle = arguments => ValueTask.FromResult(arguments.Outcome.Exception is JobPublicationException),
-            OnOpened = _ => Transition("open"), OnHalfOpened = _ => Transition("half_open"), OnClosed = _ => Transition("closed")
+            OnOpened = _ => Transition("open"),
+            OnHalfOpened = _ => Transition("half_open"),
+            OnClosed = _ => Transition("closed")
         }).Build();
         ValueTask Transition(string next)
         {

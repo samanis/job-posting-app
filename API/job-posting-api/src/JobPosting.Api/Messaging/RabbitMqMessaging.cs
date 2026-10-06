@@ -21,11 +21,19 @@ public static class RabbitMqMessaging
 
     public static ConnectionFactory CreateFactory(RabbitMqOptions options) => new()
     {
-        HostName = options.HostName, Port = options.Port, UserName = options.UserName, Password = options.Password,
-        VirtualHost = options.VirtualHost, ClientProvidedName = "job-posting-api",
+        HostName = options.HostName,
+        Port = options.Port,
+        UserName = options.UserName,
+        Password = options.Password,
+        VirtualHost = options.VirtualHost,
+        ClientProvidedName = "job-posting-api",
         // Connection repair happens on the next invocation; the library must not replay publications.
-        AutomaticRecoveryEnabled = false, TopologyRecoveryEnabled = false,
-        RequestedConnectionTimeout = TimeSpan.FromSeconds(3), HandshakeContinuationTimeout = TimeSpan.FromSeconds(3),
-        ContinuationTimeout = TimeSpan.FromSeconds(3), SocketReadTimeout = TimeSpan.FromSeconds(3), SocketWriteTimeout = TimeSpan.FromSeconds(3)
+        AutomaticRecoveryEnabled = false,
+        TopologyRecoveryEnabled = false,
+        RequestedConnectionTimeout = TimeSpan.FromSeconds(3),
+        HandshakeContinuationTimeout = TimeSpan.FromSeconds(3),
+        ContinuationTimeout = TimeSpan.FromSeconds(3),
+        SocketReadTimeout = TimeSpan.FromSeconds(3),
+        SocketWriteTimeout = TimeSpan.FromSeconds(3)
     };
 }

@@ -16,8 +16,13 @@ public sealed class PostgresIdempotencyTests(PostgresFixture postgres) : IClassF
     private static readonly DateTimeOffset Now = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
     private static CreateJobRequest Request(string title = "Engineer", decimal salary = 10m) => new()
     {
-        Title = title, Department = "Engineering", Location = "Toronto", Description = "Plain text",
-        SalaryMin = salary, SalaryMax = 100m, ClosingDate = new(2026, 10, 6)
+        Title = title,
+        Department = "Engineering",
+        Location = "Toronto",
+        Description = "Plain text",
+        SalaryMin = salary,
+        SalaryMax = 100m,
+        ClosingDate = new(2026, 10, 6)
     };
     [Theory]
     [InlineData(false)]
@@ -94,7 +99,8 @@ public sealed class PostgresIdempotencyTests(PostgresFixture postgres) : IClassF
         await using var owner = new PostingDbContext(options);
         var bounded = PostingPersistence.CreateOptions(new PostingDatabaseOptions
         {
-            ConnectionString = owner.Database.GetConnectionString()!, LockTimeoutMilliseconds = 200
+            ConnectionString = owner.Database.GetConnectionString()!,
+            LockTimeoutMilliseconds = 200
         });
         var pending = PendingPosting.Create(new JobRequestValidator().Normalize(Request()).Request!, PostingCoordinator.Digest("held-key"),
             Guid.NewGuid(), Guid.NewGuid(), Now, "owner");

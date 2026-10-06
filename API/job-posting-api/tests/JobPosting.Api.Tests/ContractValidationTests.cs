@@ -232,8 +232,13 @@ public sealed class ContractValidationTests
         var request = read.Request!;
         var normalized = new JobRequestValidator().Normalize(new CreateJobRequest
         {
-            Title = request.Title, Department = request.Department, Location = request.Location,
-            Description = request.Description, SalaryMin = request.SalaryMin, SalaryMax = 200m, ClosingDate = request.ClosingDate
+            Title = request.Title,
+            Department = request.Department,
+            Location = request.Location,
+            Description = request.Description,
+            SalaryMin = request.SalaryMin,
+            SalaryMax = 200m,
+            ClosingDate = request.ClosingDate
         });
         Assert.True(normalized.IsValid);
     }
@@ -254,8 +259,13 @@ public sealed class ContractValidationTests
         var valid = new CreateJobRequestReader().Read(ValidJson).Request!;
         var result = new JobRequestValidator().Normalize(new CreateJobRequest
         {
-            Title = valid.Title, Department = valid.Department, Location = valid.Location, Description = valid.Description,
-            SalaryMin = 10.001m, SalaryMax = 20.001m, ClosingDate = valid.ClosingDate
+            Title = valid.Title,
+            Department = valid.Department,
+            Location = valid.Location,
+            Description = valid.Description,
+            SalaryMin = 10.001m,
+            SalaryMax = 20.001m,
+            ClosingDate = valid.ClosingDate
         });
         Assert.False(result.IsValid);
         Assert.Contains("salaryMin", result.Errors.Keys);

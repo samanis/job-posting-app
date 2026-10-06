@@ -15,8 +15,15 @@ public sealed class RabbitMqFixture : IAsyncLifetime
     public RabbitMqOptions Settings()
     {
         var suffix = Guid.NewGuid().ToString("N");
-        return new() { HostName = "127.0.0.1", Port = port, UserName = "jobposting", Password = password,
-            Exchange = "job-post-exchange-" + suffix, Queue = "job-post-queue-" + suffix };
+        return new()
+        {
+            HostName = "127.0.0.1",
+            Port = port,
+            UserName = "jobposting",
+            Password = password,
+            Exchange = "job-post-exchange-" + suffix,
+            Queue = "job-post-queue-" + suffix
+        };
     }
     public async Task InitializeAsync()
     {

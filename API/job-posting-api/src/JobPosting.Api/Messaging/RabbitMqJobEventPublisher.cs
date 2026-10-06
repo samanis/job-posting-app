@@ -33,9 +33,13 @@ public sealed class RabbitMqJobEventPublisher(IConnectionFactory factory, IOptio
             await EnsureChannelAsync(settings, started, budget.Token);
             var properties = new BasicProperties
             {
-                Persistent = true, ContentType = "application/json", ContentEncoding = "utf-8",
-                MessageId = envelope.EventId.ToString("D"), CorrelationId = envelope.CorrelationId,
-                Type = envelope.EventType, Timestamp = new AmqpTimestamp(envelope.OccurredAt.ToUnixTimeSeconds()),
+                Persistent = true,
+                ContentType = "application/json",
+                ContentEncoding = "utf-8",
+                MessageId = envelope.EventId.ToString("D"),
+                CorrelationId = envelope.CorrelationId,
+                Type = envelope.EventType,
+                Timestamp = new AmqpTimestamp(envelope.OccurredAt.ToUnixTimeSeconds()),
                 Headers = new Dictionary<string, object?> { ["schemaVersion"] = envelope.SchemaVersion }
             };
             using var confirmation = CancellationTokenSource.CreateLinkedTokenSource(budget.Token);

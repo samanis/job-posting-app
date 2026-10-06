@@ -13,9 +13,18 @@ public sealed class JobPostingCreated(Guid eventId, DateTimeOffset occurredAt, s
     public SavedJobRecord Job { get; } = job;
 
     public static JobPostingCreated FromSaved(JobPostingEntity row, string correlationId) => new(row.EventId, row.CreatedAt, correlationId,
-        new SavedJobRecord { Id = row.Id.ToString("D"), CreatedAt = row.CreatedAt, Title = row.Title,
-            Department = row.Department, Location = row.Location, Description = row.Description,
-            SalaryMin = row.SalaryMin, SalaryMax = row.SalaryMax, ClosingDate = row.ClosingDate });
+        new SavedJobRecord
+        {
+            Id = row.Id.ToString("D"),
+            CreatedAt = row.CreatedAt,
+            Title = row.Title,
+            Department = row.Department,
+            Location = row.Location,
+            Description = row.Description,
+            SalaryMin = row.SalaryMin,
+            SalaryMax = row.SalaryMax,
+            ClosingDate = row.ClosingDate
+        });
 }
 
 public interface IJobEventPublisher
