@@ -85,5 +85,3 @@ tools/
 - [Consumer lifecycle and quarantine](docs/messaging.md)
 - [Search, cursors and signing-key rotation](docs/search.md)
 - [Implementation prompts](prompt/README.md) used to build this API with AI
-
-`docker-compose.yml` in this folder is a standalone setup that attaches to an existing broker. Use the root Compose file unless you specifically need that.

@@ -6,7 +6,7 @@ Locked restore and Release solution build passed (six projects, zero warnings/er
 
 Release external integration tests passed 28/28 against disposable PostgreSQL and RabbitMQ. The frozen local producer-compatible event is delivered through the broker, committed once on redelivery and ACKed; its expired job is omitted from available lists but retained in detail. Tests cover available reads, concurrent cursor paging, conflicting identities, malformed events/quarantine, dependency outage/recovery and lifecycle boundaries.
 
-`tools/Verify-Compose.ps1` passed: independently built API/migration images, separate disposable PostgreSQL, queued fixture before startup, successful migration gate, list/detail identity, non-root runtime, broker restart/reconnection, normal API/database stop/resume with retained data, and owned-resource cleanup. The real developer queue was not consumed or populated.
+`tools/Verify-Compose.ps1` passed (the script and this API's standalone Compose file were later removed in favour of the repository's root `docker-compose.yml`): independently built API/migration images, separate disposable PostgreSQL, queued fixture before startup, successful migration gate, list/detail identity, non-root runtime, broker restart/reconnection, normal API/database stop/resume with retained data, and owned-resource cleanup. The real developer queue was not consumed or populated.
 
 ## Failure-injection limits
 

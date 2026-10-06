@@ -13,6 +13,8 @@ dotnet test tests/JobPosting.Api.IntegrationTests --configuration Release --no-b
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
 ```
 
+> Later change: `tools/Verify-Compose.ps1` and this API's standalone Compose file were removed in favour of the repository's root `docker-compose.yml`. The record above describes the checks as run at the time.
+
 The gate runs locked restore. Integration and Compose checks create isolated containers/volumes and delete only their owned resources. Do not replace these checks with deletion of a developer's normal Compose volumes.
 
 | Evidence | Scope |

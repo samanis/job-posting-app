@@ -1,122 +1,54 @@
-# Docker and local development (Stage 8)
+# Docker and local development
 
-All backend build, infrastructure and configuration inputs are under `API/job-posting-api`. This Compose subset starts only the posting API, its PostgreSQL database, RabbitMQ and an administrative one-shot migration container. It contains no search API/consumer/query database or frontend. Client integration remains a later task.
+The posting API runs in Docker through the repository's **root** [`docker-compose.yml`](../../../../../docker-compose.yml), which also starts PostgreSQL, RabbitMQ, both migrations and the search API. This guide covers what is specific to the posting API. For the overall quick start, see the [root README](../../../../../README.md).
 
-## Start from a fresh checkout
-
-For the container route, install Docker with Linux containers and Docker Compose v2. Initial image/package downloads require internet access; no host .NET SDK, global EF tool, local database or untracked environment file is needed.
+## Start
 
 From the repository root:
 
 ```sh
-cd API/job-posting-api
-docker compose config --quiet
-docker compose up --build --detach --wait --wait-timeout 180
-docker compose ps --all
+docker compose up --build
 ```
 
-`docker compose up --build` also works in the foreground. A successful initial start shows `postgres`, `rabbitmq` and `job-posting-api` healthy and `migrate` exited with code 0. The migration service runs the committed EF migration bundle once after PostgreSQL is healthy. The API depends on its successful completion and broker health; application replicas never auto-migrate. A failed migration blocks API creation/readiness. Inspect `docker compose logs migrate` if it fails; do not skip the migration dependency to hide a failure.
+A successful start shows `postgres`, `rabbitmq` and `job-posting-api` healthy, and `job-posting-migrate` exited with code 0. The migration container runs the committed EF Core migration bundle once PostgreSQL is healthy; the API waits for it to complete and never migrates on startup. If it fails, inspect `docker compose logs job-posting-migrate` rather than skipping the dependency.
 
-| Local endpoint | Default |
-| --- | --- |
+| Endpoint | URL |
+|---|---|
 | Posting API | http://localhost:5000/api/jobs |
 | Liveness | http://localhost:5000/health/live |
-| Readiness | http://localhost:5000/health/ready |
-| PostgreSQL | localhost:5432, database job_postings |
-| RabbitMQ AMQP | localhost:5672 |
-| RabbitMQ management | http://localhost:15672 |
+| Readiness (database and broker) | http://localhost:5000/health/ready |
 
-All published ports bind to 127.0.0.1. PostgreSQL and RabbitMQ use the public LOCAL DEVELOPMENT sample username `jobposting` and password `local-development-only-change-me`. These are deliberately committed examples, not production secrets. The Compose API runs in Production, so no development OpenAPI page is exposed. Named volumes persist database/queue data. The broker's fixed `rabbitmq` hostname keeps its Erlang node identity stable across container recreation.
+All published ports bind to 127.0.0.1. The Compose API runs in Production, so the OpenAPI document is not exposed; run the API on the host (below) to get it.
 
-## Configuration
+## Image
 
-Compose contains the safe sample defaults, so `.env` is optional. To change ports or initial local credentials, copy `.env.example` to the ignored `.env` before first initialization:
+The [Dockerfile](../../../Dockerfile) has two targets built from this application folder only:
 
-```powershell
-Copy-Item .env.example .env
-```
+- `api`: the published API on the ASP.NET 10 runtime image.
+- `migrations`: an EF Core migration bundle, run once by the `job-posting-migrate` service.
 
-```sh
-cp .env.example .env
-```
+Both run as the built-in non-root user (UID 1654) with exec-form entrypoints and no SDK at runtime. The SDK, runtime, PostgreSQL and RabbitMQ images are pinned by tag and digest; update tags and digests together. `curl` is installed for the bounded health check.
 
-Edit `JOB_POSTING_API_PORT`, `POSTGRES_PORT`, `RABBITMQ_PORT`, `RABBITMQ_MANAGEMENT_PORT` if their ports are occupied. Change sample credentials for your own local setup as needed. Files containing real secrets are ignored by Git and excluded from the Docker build context. Changing init credentials in `.env` does not rotate users already stored in volumes; keep the matching existing credentials or explicitly rotate the stored users through their administrative tools. Do not delete volumes to resolve a password mismatch.
+## Run the API on the host
 
-Within containers, the database hostname is `postgres:5432` and the broker is `rabbitmq:5672`, independent of published host ports. The database password is supplied as `PGPASSWORD`, not concatenated into the connection string. Host-mode uses `127.0.0.1`/`localhost` and the published ports. All API settings still support normal ASP.NET environment overrides; Compose maps the chosen timezone from `JOB_POSTING_TIME_ZONE`. See [resilience](resilience-and-shutdown.md) for validated circuit/publish bounds.
-
-The Dockerfile pins verified .NET SDK 10.0.101 and ASP.NET runtime 10.0.1 to immutable digests, matching the repository's tested baseline; PostgreSQL 18.6 and RabbitMQ 4.3.6-management are also digest-pinned. These are tested compatible versions, not a claim of latest servicing. Update tags and digests together with the SDK/package baseline and rerun verification. The image build supports the amd64/arm64 RID mapping; the verification recorded here ran Linux amd64.
-
-The build restores locked production dependencies and the committed dotnet-ef 10.0.4 manifest, publishes the API, and generates a framework-dependent EF bundle. Separate `api` and `migrations` runtime targets run as the built-in non-root user (UID 1654), with exec-form entrypoints and no SDK/tool restore at runtime. curl supplies bounded readiness health checks; its Ubuntu packages are fetched from the base image's repositories during build. The allowlist `.dockerignore` admits SDK/NuGet/build manifests, tool manifest and production source/migrations/locks, while excluding frontend files, tests, bin/obj/results and secrets. Build context is this application folder, never the repository root.
-
-## Explicit migrations and safe restart
-
-Normal start sequences migrations automatically through the one-shot service. To run the administrative step explicitly:
+To debug the API outside Docker, start its dependencies and migration from the repository root:
 
 ```sh
-docker compose up --detach --wait postgres
-docker compose build migrate
-docker compose run --rm --no-deps migrate
+docker compose up -d postgres rabbitmq job-posting-migrate
 ```
 
-The bundle records applied migration history; rerunning against the same database does not create a second job table or change saved jobs. Before upgrading an existing database, back it up and review the committed migration SQL/history. The data-preserving job-row upgrade is forward-only and aborts incomplete old metadata atomically; see [persistence](persistence.md). A different Compose project name owns different containers/volumes by default; keep the same project name to resume your data.
-
-Normal stop/resume:
-
-```sh
-docker compose stop
-docker compose up --detach --wait --wait-timeout 180
-```
-
-Stop grace is 45 seconds; the application host drains accepted work for 30 seconds, including independently bounded cleanup. `docker compose down` removes containers/network while retaining named volumes, if container recreation is intended. Never use `down -v` for routine stopping. Broker/default-user configuration is initialization-only. Readiness/restarts do not repair unpublished business rows.
-
-## Host .NET development
-
-Install the stable SDK selected by `global.json` (10.0.101 or a compatible 10.0.1xx patch), then run from this application folder:
-
-```sh
-dotnet restore JobBoard.slnx --locked-mode
-dotnet tool restore
-dotnet build JobBoard.slnx --configuration Release --no-restore
-dotnet run --project tools/CoverageGate
-```
-
-The coverage gate runs isolated unit and separate bootstrap host suites; neither needs a running database/broker. The full integration suite independently creates its own disposable Docker resources:
-
-```sh
-dotnet test tests/JobPosting.Api.IntegrationTests --configuration Release --no-restore
-```
-
-To develop the API outside Docker, start only its dependencies and migrate:
-
-```sh
-docker compose up --detach --wait postgres rabbitmq
-docker compose build migrate
-docker compose run --rm --no-deps migrate
-```
-
-If the Compose API already occupies port 5000, run `docker compose stop job-posting-api` before the host API. Configure host credentials to match the initialized volumes. PowerShell, using the sample values:
+Then, from `API/job-posting-api` (PowerShell shown; use `export` on macOS/Linux):
 
 ```powershell
 $env:PostingDatabase__ConnectionString = 'Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting'
 $env:PGPASSWORD = 'local-development-only-change-me'
 $env:RabbitMq__HostName = '127.0.0.1'
-$env:RabbitMq__Port = '5672'
-$env:RabbitMq__UserName = 'jobposting'
+$env:RabbitMq__UserName = 'jobboard'
 $env:RabbitMq__Password = 'local-development-only-change-me'
 dotnet run --project src/JobPosting.Api --launch-profile http
 ```
 
-macOS/Linux:
-
-```sh
-export PostingDatabase__ConnectionString='Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting'
-export PGPASSWORD='local-development-only-change-me'
-export RabbitMq__HostName=127.0.0.1 RabbitMq__Port=5672
-export RabbitMq__UserName=jobposting RabbitMq__Password='local-development-only-change-me'
-dotnet run --project src/JobPosting.Api --launch-profile http
-```
-
-Match overrides to your actual host ports/credentials. The launch profile serves http://localhost:5000 in Development with `/openapi/v1.json`. Ctrl+C gracefully stops only the host API; dependency volumes persist. Alternatively, run `dotnet ef database update --project src/JobPosting.Api` after tool restore with the host connection environment set, instead of running the bundle. Do not run multiple administrative migration commands concurrently with application replicas.
+The Development profile listens on http://localhost:5000 and serves `/openapi/v1.json`. If the Compose posting API is running, stop it first with `docker compose stop job-posting-api`, since both use port 5000. Adjust the values if you changed them in a root `.env` file.
 
 ## POST, replay and conflict
 
@@ -130,42 +62,43 @@ $payload = @{
     closingDate=(Get-Date).AddDays(10).ToString('yyyy-MM-dd')
 } | ConvertTo-Json -Compress
 Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/jobs -ContentType application/json -Headers @{'Idempotency-Key'=$key} -Body $payload
-# Repeat with the SAME key/body: original saved response; no new insert or publish.
+# Repeat with the SAME key and body: the original saved response; nothing new is inserted or published.
 Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/jobs -ContentType application/json -Headers @{'Idempotency-Key'=$key} -Body $payload
 # Same key, different title: 409 idempotency_key_conflict.
 Invoke-WebRequest -Method Post -Uri http://localhost:5000/api/jobs -ContentType application/json -Headers @{'Idempotency-Key'=$key} -Body ($payload.Replace('Engineer','Other'))
 ```
 
-PowerShell treats non-success HTTP statuses as errors; inspect its status/Problem Details. For curl on macOS/Linux (or `curl.exe` with a UTF-8 `--data-binary @file.json` payload on Windows):
+curl:
 
 ```sh
-curl -i http://localhost:5000/api/jobs -H 'Content-Type: application/json' -H 'Idempotency-Key: first-posting-example' --data-binary '{"title":"Engineer","department":"Engineering","location":"Toronto","description":"Build a small API","salaryMin":100,"salaryMax":200,"closingDate":"2028-02-29"}'
+curl -i http://localhost:5000/api/jobs -H 'Content-Type: application/json' -H 'Idempotency-Key: first-posting-example' \
+  --data-binary '{"title":"Engineer","department":"Engineering","location":"Toronto","description":"Build a small API","salaryMin":100,"salaryMax":200,"closingDate":"2028-02-29"}'
 ```
 
-Choose a closing date later than today in the configured business timezone. A 202 returns all saved fields, stable UUID/UTC createdAt, status/message, after commit, confirmed/routable broker acceptance and persisted PublishedAt. It does not promise search visibility. The first request requires a UI-generated key; never replace the key on an unresolved retained attempt. See [API contract](api-contract.md) for 400/422/409/503 errors.
+The key may be 1–128 letters, digits, `_` or `-`. Choose a closing date after today in the business time zone (`America/Toronto` by default). A 202 returns every saved field plus the generated `id` and UTC `createdAt`, only after the database commit and RabbitMQ's publish confirmation; it does not wait for the search API. See the [API contract](api-contract.md) for the 400, 422, 409 and 503 responses.
 
-## Broker outage and investigation
+## Broker outage
 
-In your own local development stack, stop RabbitMQ, submit a NEW key/payload, then restore it:
+From the repository root, stop RabbitMQ, submit a **new** key, then restore it:
 
 ```sh
 docker compose stop rabbitmq
-# POST a new key: 503 publication_failed if exact-job compensation succeeds.
+# POST with a new key: 503 publication_failed once the saved row has been deleted again.
 docker compose start rabbitmq
 ```
 
-The created row is deleted after a publication exception, including an open circuit; a matching already-completed request can still replay 202 while the broker is offline. A failed/uncertain cleanup or confirmed-before-status write failure returns `publication_unresolved`, emits the corresponding safe Critical event and requires manual investigation. Inspect `docker compose logs job-posting-api` using its trace/job/event IDs; logs suppress raw keys, payloads and credentials. Broker management shows queue activity but no consumer/search processing is implemented. The breaker may remain open for its configured 15 seconds after the broker returns; readiness probes can then restore capability without republishing any rows.
+This also pauses the search API's consumer, which reconnects on its own. After a publication failure, the saved row is deleted (compensation). An already completed request can still replay its 202 while the broker is down. If cleanup fails or is uncertain, the API returns `publication_unresolved` and logs a Critical event for manual investigation; check `docker compose logs job-posting-api` using the trace, job and event IDs. Logs never contain raw keys, payloads or credentials. The circuit breaker may stay open for up to 15 seconds after the broker returns.
 
-Compensation cannot retract a message accepted without an observed acknowledgement. A later recreation after deletion can duplicate downstream delivery; forced termination can leave unresolved records with no Critical log. Restart/readiness does not repair those records. There is no outbox, scanner, recovery endpoint or automatic message/cleanup retry. See [workflow](post-workflow.md).
+Compensation cannot retract a message RabbitMQ accepted without the confirmation arriving, and a forced termination can leave unresolved rows. There is no outbox or automatic repair; see [POST workflow](post-workflow.md) and the trade-off discussion in the repository's [DECISIONS.md](../../../../../DECISIONS.md).
 
-## Disposable Compose verification
+## Stop
 
-From this application folder, Windows PowerShell 5.1 or PowerShell 7:
-
-```powershell
-./tools/Verify-Compose.ps1
+```sh
+docker compose stop        # stop, keeping containers and data
+docker compose down        # remove containers, keep data volumes
+docker compose down -v     # also delete the database and broker data
 ```
 
-The script always generates a new project name, uses dynamically assigned loopback ports, checks that it owns no preexisting volumes, and uses only committed sample config. It verifies empty-volume migrations/non-root/no-SDK runtime, POST/byte-for-byte replay/conflict/one queued event, retained metadata/messages after restart, broker outage compensation, graceful API exit, explicit migration rerun, and container recreation against retained named volumes. It then removes ONLY its newly owned verification containers/network/volumes/image tags. That disposable cleanup is intentionally different from the normal development stop path and never targets `job-posting-api` volumes. Build cache and downloaded base images may remain. On macOS/Linux, run the optional script with PowerShell 7; Docker startup itself needs no PowerShell.
+Services have a 45-second stop grace; the API drains in-flight requests for up to 30 seconds.
 
-References: [Compose startup sequencing](https://docs.docker.com/compose/how-tos/startup-order), [EF migration bundles](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying), [official .NET images](https://mcr.microsoft.com/en-us/product/dotnet/sdk/about).
+References: [Compose startup order](https://docs.docker.com/compose/how-tos/startup-order), [EF Core migration bundles](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying), [official .NET images](https://mcr.microsoft.com/en-us/product/dotnet/sdk/about).

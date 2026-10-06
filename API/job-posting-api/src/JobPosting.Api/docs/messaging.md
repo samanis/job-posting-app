@@ -28,33 +28,24 @@ Topology names must be nonempty, at most 255 UTF-8 bytes and not start with rese
 
 The current API adds circuit breaking, safe HTTP error mapping, compensation, readiness and a 30-second host drain. Async disposal waits for active serialized work and bounds resource reset. This local demo uses plain AMQP and local-only credentials; deployment security is not added here.
 
-## Optional local broker setup
+## Local broker
 
-The real integration fixture automatically creates/cleans up its own unique container and temporary credentials. For a separate persistent development broker, run from API/job-posting-api:
+The integration fixture creates and removes its own broker container. For a persistent local broker, use the root Compose service from the repository root:
 
 ```sh
-docker run --detach --name job-posting-broker --env-file .env.example --publish 127.0.0.1:5672:5672 --publish 127.0.0.1:15672:15672 --mount type=volume,source=job-posting-broker-data,target=/var/lib/rabbitmq rabbitmq:4.3.6-management@sha256:8dd6e3570ddaa2ef82a6c3a8950e79c1f73893adfbdddbc374fc1f1ac8a0f5dd
+docker compose up -d rabbitmq
 ```
 
-These manual persistent commands were documented, not executed. Use free loopback ports if occupied. The example creates local user jobposting; match application credentials explicitly, since RabbitMQ restricts guest remote connections:
+Then point a host-run API at it (PowerShell shown; use `export` on macOS/Linux):
 
 ```powershell
 $env:RabbitMq__HostName = '127.0.0.1'
-$env:RabbitMq__UserName = 'jobposting'
+$env:RabbitMq__UserName = 'jobboard'
 $env:RabbitMq__Password = 'local-development-only-change-me'
 dotnet run --project src/JobPosting.Api --launch-profile http
 ```
 
-macOS/Linux:
-
-```sh
-export RabbitMq__HostName='127.0.0.1'
-export RabbitMq__UserName='jobposting'
-export RabbitMq__Password='local-development-only-change-me'
-dotnet run --project src/JobPosting.Api --launch-profile http
-```
-
-The container management UI is http://localhost:15672 with local sample credentials. POST is implemented; configure and migrate PostgreSQL as well. Use ignored .env/secret configuration for actual passwords. Normal stop/resume: docker stop job-posting-broker / docker start job-posting-broker. Do not remove data volumes for ordinary stopping. The implemented posting Compose subset is documented in [Docker/local development](docker-and-local-development.md).
+The management UI is http://localhost:15672 with the same local credentials. The API also needs PostgreSQL; see [Docker and local development](docker-and-local-development.md#run-the-api-on-the-host) for the full set of variables. Use a root `.env` file or secret configuration for real passwords.
 
 ## Verification and limitations
 

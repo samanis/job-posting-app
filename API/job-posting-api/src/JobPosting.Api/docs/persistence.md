@@ -32,31 +32,22 @@ Npgsql's process-wide `DisableDateTimeInfinityConversions` switch is set before 
 
 ## Local PostgreSQL and explicit migration
 
-The integration suite automatically manages its own database container. For a persistent local development database, these optional commands use the pinned PostgreSQL 18.6 image and local-only `.env.example` values; the implemented Compose setup is described in [Docker/local development](docker-and-local-development.md).
+The integration suite creates and removes its own database container. For a persistent local database, use the root Compose service and its migration container from the repository root:
 
 ```sh
-docker run --detach --name job-posting-db --env-file .env.example --publish 127.0.0.1:5432:5432 --mount type=volume,source=job-posting-db-data,target=/var/lib/postgresql postgres:18.6@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722
+docker compose up -d postgres job-posting-migrate
 ```
 
-Use a free loopback port if 5432 is occupied and match it in the connection override. This command creates a dedicated development container/volume; rerunning against the same name requires starting that existing container, not creating another one. Real `.env` files remain ignored; the committed example has intentionally public local defaults.
-
-PowerShell:
+Alternatively, apply migrations from this application folder with the EF Core tool (PowerShell shown; use `export` on macOS/Linux):
 
 ```powershell
-$env:PostingDatabase__ConnectionString = 'Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting;Password=local-development-only-change-me'
+dotnet tool restore
+$env:PostingDatabase__ConnectionString = 'Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting'
+$env:PGPASSWORD = 'local-development-only-change-me'
 dotnet ef database update --project src/JobPosting.Api
-dotnet run --project src/JobPosting.Api --launch-profile http
 ```
 
-macOS/Linux:
-
-```sh
-export PostingDatabase__ConnectionString='Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting;Password=local-development-only-change-me'
-dotnet ef database update --project src/JobPosting.Api
-dotnet run --project src/JobPosting.Api --launch-profile http
-```
-
-Use external configuration/secret management for real credentials; never put them in a migration, tracked connection file or command example. Migration is an explicit administrative step; API replicas never run migrations automatically. Normal stop is `docker stop job-posting-db`; resume with `docker start job-posting-db`. These commands retain the volume; do not use volume deletion for routine stopping.
+Use external configuration or secret management for real credentials; never put them in a migration, tracked connection file or command example. Migration is an explicit administrative step; API replicas never run migrations automatically. `docker compose stop` keeps the data volume; do not delete volumes for routine stopping.
 
 Schema verification and review:
 
