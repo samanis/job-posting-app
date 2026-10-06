@@ -30,6 +30,8 @@ Posting is low-volume (a few jobs per day); search is high-volume (many candidat
 - **Consistency.** Search is eventually consistent, as the brief allows. A new posting normally appears within a few seconds.
 - **Scaling.** Each API can be scaled and deployed independently. The search API is stateless, so it can be scaled out horizontally.
 
+The reasoning behind these choices, the trade-offs accepted, and what a strict 4-hour version would look like are in [DECISIONS.md](DECISIONS.md).
+
 ## Quick start
 
 ### Prerequisites
