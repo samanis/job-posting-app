@@ -1,50 +1,88 @@
-> **Revision status:** Stages 1-9 are implemented and verified. POST returns 202 only after PostgreSQL commit, confirmed/routable RabbitMQ publication and durable publication status. Circuit breaking, health, metrics and bounded graceful shutdown are implemented. The Docker/local posting subset is implemented. Stage 9 verification and client handoff are complete; see docs/verification-and-handoff.md and docs/client-integration-handoff.md.
+# Job Posting API
 
+.NET 10 Web API behind the [Job Posting app](../../apps/job-posting). It validates new job postings, stores them in PostgreSQL through EF Core, and publishes a `JobPostingCreated` event to RabbitMQ for the [Job Search API](../job-search.api).
 
-# Job posting API application
+For the overall architecture and the one-command Docker setup, see the [root README](../../README.md).
 
-All source and supporting files for the job posting API live together here:
+## Endpoint
 
-```text
-job-posting-api/
-  src/JobPosting.Api/
-  src/JobBoard.Persistence/
-  tests/JobPosting.Api.Tests/
-  tools/CoverageGate/
-  ai-log/
-  JobBoard.slnx
-  global.json
-  Directory.Build.props
-  NuGet.Config
-  01-dotnet10-foundation.md ... 09-integration-verification-and-handoff.md
-```
+`POST /api/jobs` with a JSON body and an `Idempotency-Key` header containing a UUID.
 
-`src/JobPosting.Api` is the C# project within this application. Source, persistence, tests, tools, prompts and configuration belong to the same application root. Frontends and the unimplemented search API remain separate.
+- **202** — saved *and* the event confirmed by the broker. The body is the saved record.
+- **400 / 422** — validation errors as Problem Details with an `errors` map.
+- **409** — the key was reused with a different body, or the first request is still in progress.
+- **503** — database or broker unavailable; `Retry-After` is set.
 
-From the repository root:
+Health: `GET /health/live`, `GET /health/ready`. Full contract: [api-contract.md](src/JobPosting.Api/docs/api-contract.md).
+
+## How a request is processed
+
+1. The body is parsed strictly and validated: required fields, `salaryMin < salaryMax`, and `closingDate` after today in the business time zone (`America/Toronto` by default).
+2. The job and its idempotency metadata are committed in one transaction. A repeated key with the same body replays the original response instead of creating a duplicate.
+3. The event is published with RabbitMQ publisher confirms. The API returns 202 only after the broker confirms. If publication fails, the saved row is compensated so callers never see a success that search will not receive.
+4. A circuit breaker stops calling the broker while it is failing, and shutdown drains in-flight requests.
+
+## Run
+
+The normal way to run it is the root Compose file, which also starts PostgreSQL, RabbitMQ and the migrations:
 
 ```sh
-cd API/job-posting-api
-dotnet restore JobBoard.slnx --locked-mode
-dotnet build JobBoard.slnx --no-restore
-dotnet run --project tools/CoverageGate
+docker compose up --build          # from the repository root
+```
+
+To run the API on the host (for debugging), start the infrastructure and migrations from the repository root, then run the API from this folder:
+
+```sh
+docker compose up -d postgres rabbitmq job-posting-migrate
+```
+
+```powershell
+$env:PostingDatabase__ConnectionString = 'Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting'
+$env:PGPASSWORD = 'local-development-only-change-me'
+$env:RabbitMq__HostName = '127.0.0.1'
+$env:RabbitMq__UserName = 'jobboard'
+$env:RabbitMq__Password = 'local-development-only-change-me'
 dotnet run --project src/JobPosting.Api --launch-profile http
 ```
 
-Run backend commands from this directory so its SDK/configuration apply. See the [service guide](src/JobPosting.Api/README.md), [API contract](src/JobPosting.Api/docs/api-contract.md) and [prompt index](PROMPTS.md).
+The development profile listens on http://localhost:5000, the same port the Angular proxy uses, and serves OpenAPI at `/openapi/v1.json`.
 
-Stages 1-9 are implemented, including posting-owned PostgreSQL persistence/migrations and durable idempotency. See the [persistence guide](src/JobPosting.Api/docs/persistence.md) for explicit migration commands and the separate real PostgreSQL test command (requires Docker), and the [idempotency guide](src/JobPosting.Api/docs/idempotency.md) for concurrent requests, replay and uncertain commit behavior. POST `/api/jobs` and direct publication/compensation are implemented. Resilience and the posting Compose subset are implemented; search/client integration remains later-stage work. Future infrastructure must stay inside this application folder. `src/JobBoard.Persistence` remains a placeholder; no shared database implementation was added.
+## Test
 
-See the [messaging guide](src/JobPosting.Api/docs/messaging.md) for configuration, broker tests and optional local setup. See the [POST workflow guide](src/JobPosting.Api/docs/post-workflow.md) for compensation and failure windows.
-
-See [resilience and shutdown](src/JobPosting.Api/docs/resilience-and-shutdown.md) for circuit settings, readiness, metrics, safe logs and Linux signal evidence.
-
-Docker-only start (from this folder):
+Run from this folder:
 
 ```sh
-docker compose up --build --detach --wait --wait-timeout 180
+dotnet test tests/JobPosting.Api.Tests                # unit and in-process host tests; no services needed
+dotnet test tests/JobPosting.Api.IntegrationTests     # real PostgreSQL and RabbitMQ; needs Docker running
+dotnet run --project tools/CoverageGate               # fails unless unit and host coverage are 100%
 ```
 
-See [Docker/local development](src/JobPosting.Api/docs/docker-and-local-development.md) for fresh checkout, migration sequencing, host-mode development, POST examples, safe stop and disposable Compose verification.
+The integration tests start and remove their own containers.
 
-See the [client integration handoff](docs/client-integration-handoff.md) and [final verification and operational handoff](docs/verification-and-handoff.md). Angular integration, search services, authentication and genuine transcript export remain deferred.
+## Project layout
+
+```text
+src/JobPosting.Api/
+  Posting/         POST controller and save → publish → compensate workflow
+  Validation/      strict request parsing, validation rules, request fingerprint
+  Idempotency/     duplicate detection and response replay
+  Persistence/     EF Core DbContext, store and migrations
+  Messaging/       JobPostingCreated event and RabbitMQ publisher
+  Resilience/      circuit breaker, health endpoints, graceful shutdown
+  Diagnostics/     structured logs, metrics, safe error responses
+  docs/            detailed design notes for each area
+tests/
+  JobPosting.Api.Tests/              unit and host tests
+  JobPosting.Api.IntegrationTests/   PostgreSQL and RabbitMQ tests
+  JobPosting.ShutdownHarness/        process used by the shutdown-signal tests
+tools/CoverageGate/                  coverage enforcement
+```
+
+## Further reading
+
+- [Persistence and migrations](src/JobPosting.Api/docs/persistence.md)
+- [Idempotency](src/JobPosting.Api/docs/idempotency.md)
+- [Messaging](src/JobPosting.Api/docs/messaging.md) and [POST workflow](src/JobPosting.Api/docs/post-workflow.md)
+- [Resilience and shutdown](src/JobPosting.Api/docs/resilience-and-shutdown.md)
+- [Service README](src/JobPosting.Api/README.md): configuration, logging and coverage-gate details
+- [Implementation prompts](PROMPTS.md) used to build this API with AI
