@@ -14,7 +14,7 @@ Transcripts of the AI-assisted sessions that built this repository, in order, pl
 |---|---|---|---|
 | 1 | [01-analysis-and-client-apps.md](01-analysis-and-client-apps.md) | 4 Oct 2026 | Analysis of the brief, solution layout, and building both Angular apps prompt by prompt. 260 KB. |
 | 2 | [02-client-polish-posting-api-search-api.md](02-client-polish-posting-api-search-api.md) | 4–6 Oct 2026 | Angular Material and Playwright for the clients, then the whole Job Posting API, then the whole Job Search API. 1 MB, because it includes every command and file the AI wrote. |
-| 3 | [03-review-compose-docs-caching.md](03-review-compose-docs-caching.md) | 6 Oct 2026 | Claude Code session: a hiring-manager-style review of the submission, then the root `docker-compose.yml`, README rewrites, `DECISIONS.md` and search caching. Tool output is shortened. |
+| 3 | [03-review-compose-docs-caching.md](03-review-compose-docs-caching.md) | 6 Oct 2026 | Claude Code session: a hiring-manager-style review of the submission, then the root `docker-compose.yml`, README rewrites, `DECISIONS.md`, search caching, code cleanup and a clean-clone test. Tool output is shortened. |
 
 The transcripts are unedited exports, apart from the third, where an email address is redacted. They are long because they include every command the AI ran. The line numbers below lead straight to the conversations that matter.
 
@@ -50,6 +50,8 @@ The transcripts are unedited exports, apart from the third, where an email addre
 - The AI reviews the repository as a hiring manager would, and finds the missing root `docker-compose.yml`, stale READMEs and the scope overrun.
 - I propose loading every job into Redis at startup and updating it alongside the database. The AI shows, using the repository's own performance measurements, why that wouldn't make search much faster. We implement HTTP and output caching instead, then measure the result.
 - I ask whether to replace the signed pagination cursors with plain `(createdAt, id)` keyset paging. We keep them, and document why in `DECISIONS.md`.
+- The dense search API code is split to one statement per line by three subagents working in parallel. Their changes are accepted only after a verifier proves them whitespace-only, and after the coverage gate passes.
+- The finished branch is cloned fresh from GitHub and run exactly as the README describes, ending with a real browser test that posts a job and finds it in search.
 
 ## Work notes
 
