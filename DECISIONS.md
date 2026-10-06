@@ -40,6 +40,20 @@ These need manual investigation; they are logged and measured, but not repaired 
 - **List responses omit the description**; it is only returned by the detail endpoint.
 - **Idempotent consumer**: redelivered events are ignored, and malformed or conflicting events go to a quarantine queue instead of blocking the queue.
 - **Stateless API**, so replicas can be added behind a load balancer and compete on the same queue.
+- **Response caching** (see below).
+
+**Caching.** Jobs never change once ingested, and the brief accepts eventual consistency, so responses are cached by time alone:
+
+| Response | Server-side output cache | `Cache-Control` |
+|---|---|---|
+| Job detail (200) | 1 hour | `public, max-age=86400, immutable` |
+| List page with a cursor | 15 s | `public, max-age=60` (the cursor pins its snapshot, so the page never changes) |
+| First list page | 15 s | `public, max-age=15` |
+| 404, 400, 409, 503 | not cached | `no-store` (a missing job may be ingested moments later) |
+
+The headers let browsers, proxies and a CDN absorb repeat traffic before it reaches the API; the output cache covers requests that do arrive. On the bundled read workload, which repeats a small set of popular URLs, the median latency fell from 6.9 ms to 0.2 ms and throughput rose from about 490 to 14,900 requests/second ([measurements](API/job-search.api/docs/performance/README.md#output-caching-before-and-after)). That is a best case for popular pages; unique searches still go to PostgreSQL, which handles them in about 1 ms.
+
+The trade-off is staleness: a new job can take up to 15 seconds to appear on a cached first page. I chose short lifetimes over eviction deliberately. Eviction would need a cache shared between replicas, because only one replica consumes each event; that means Redis. **Redis was considered and deferred**: I would add it as the output cache's backing store (not as a hand-synchronized copy of the data) once there are several replicas and new jobs must appear immediately. I also considered loading every job into Redis at startup and updating it alongside the database; I rejected that because search results change even without writes (jobs close at midnight), Redis cannot run the substring searches without a second search engine, and writing to two stores is not atomic.
 
 Pagination cursors are HMAC-signed and pin a snapshot (the highest ingested sequence number and the UTC date when browsing started), so every page of one browsing session sees the same set of jobs. This is more than the exercise needs. Plain `(createdAt, id)` keyset paging already delivers almost all of the benefit: it never shows a job twice when new jobs are inserted, and costs the same at any depth. The snapshot only adds that new jobs don't appear in later pages mid-browse, and that a job doesn't disappear at midnight mid-browse; the signature only adds tamper-proofing to a query that is already fully parameterized. In a real product I would start with the plain version and add the snapshot only if users reported a problem. I kept it here because it is correct and tested, and because a pinned snapshot makes every page after the first safe to cache. See also section 6.
 
@@ -64,7 +78,7 @@ I'm aware this solution took much longer than four hours. I treated the exercise
 
 ## 7. Known gaps and next steps
 
-- **HTTP caching on search.** No `Cache-Control` headers or output caching yet. List and detail responses are good candidates for short-lived caching, and a CDN in front of the search API. This is the next change I would make for read volume.
+- **CDN and shared cache.** Put a CDN in front of the search API to make use of the `Cache-Control` headers, and back the output cache with Redis once there are several replicas (see section 4).
 - **Transactional outbox** in the posting API (see section 2).
 - **One definition of "open".** Posting validates the closing date in the business time zone (`America/Toronto`), while search stops listing a job once its closing date arrives in UTC. Near midnight the two can disagree, and a job disappears from search on its closing day rather than after it. They should share one rule.
 - **Authentication and authorization** for the posting side. Out of scope here.

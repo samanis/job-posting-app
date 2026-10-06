@@ -27,7 +27,8 @@ Posting is low-volume (a few jobs per day); search is high-volume (many candidat
 
 - **Write side.** The posting API validates the request, saves it, and returns `202 Accepted` with the saved record only after the database commit *and* the broker's publish confirmation. An `Idempotency-Key` header makes retries safe, so a double-click or network retry cannot create a duplicate job.
 - **Read side.** The search API consumes events idempotently into its own denormalized table. It serves keyset-paginated lists (no `OFFSET` scans) and uses `pg_trgm` GIN indexes for text filters, so read load never touches the write database. Unprocessable messages go to a quarantine queue instead of blocking the consumer.
-- **Consistency.** Search is eventually consistent, as the brief allows. A new posting normally appears within a few seconds.
+- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, list pages for 15 seconds, and errors never. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On the bundled read workload this cut median latency from 6.9 ms to 0.2 ms.
+- **Consistency.** Search is eventually consistent, as the brief allows. A new posting normally reaches the search database within a few seconds; a cached list page can take up to 15 seconds more to show it.
 - **Scaling.** Each API can be scaled and deployed independently. The search API is stateless, so it can be scaled out horizontally.
 
 The reasoning behind these choices, the trade-offs accepted, and what a strict 4-hour version would look like are in [DECISIONS.md](DECISIONS.md).
@@ -79,7 +80,7 @@ On Windows PowerShell, use `npm.cmd` if the execution policy blocks `npm`. Each 
 
 1. Open **http://localhost:4200** and submit a job. Try invalid values first to see client-side validation, such as a minimum salary above the maximum or a closing date in the past.
 2. The confirmation panel shows the record exactly as the API returned it, including its generated `id` and `createdAt`.
-3. Open **http://localhost:4201**. The new job appears in the list; click it to see the full details.
+3. Open **http://localhost:4201**. The new job appears in the list; click it to see the full details. If the search page was already open, list pages are briefly cached, so wait up to about 15 seconds and refresh.
 
 ### Stop
 
@@ -174,7 +175,7 @@ Transcripts are in [`ai-log/`](ai-log). The API work notes are in [`API/job-post
 
 Out of scope for this exercise, but the natural next steps:
 
-- HTTP caching (`Cache-Control` / output caching) on the search endpoints, and a CDN in front of them
+- A CDN in front of the search API, and Redis as a shared output-cache store once there are several replicas
 - Authentication for the posting app and API
 - Edit and close operations for postings, which the event-driven read model would need to handle as update events
 - CI pipeline running all four test suites and the Compose smoke test

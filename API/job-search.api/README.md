@@ -20,7 +20,8 @@ Full details: [search.md](docs/search.md) and [contracts.md](docs/contracts.md).
 - **Indexed filtering.** Text filters use `ILIKE` backed by `pg_trgm` GIN indexes. Sorting has matching B-tree indexes.
 - **Keyset pagination.** Pages continue from the last row instead of using `OFFSET`, so deep pages cost the same as the first. The cursor is HMAC-signed and pins a snapshot, so new jobs arriving mid-browse don't shift or duplicate results.
 - **Idempotent consumer.** Redelivered events are detected and ignored. Malformed or conflicting events go to a quarantine queue instead of blocking the consumer.
-- **Stateless.** Replicas can be scaled out and compete on the same queue; they share only the cursor signing key.
+- **Response caching.** Job details are cached for 1 hour and list pages for 15 seconds using ASP.NET Core output caching; errors and 404s are never cached. `Cache-Control` headers (`immutable` for details, `max-age=15` or `60` for lists, `no-store` for errors) let browsers and CDNs cache too. See [SearchCaching.cs](src/JobSearch.Api/Search/SearchCaching.cs) and the [before/after measurement](docs/performance/README.md#output-caching-before-and-after).
+- **Stateless.** Replicas can be scaled out and compete on the same queue; they share only the cursor signing key. Each replica has its own in-memory cache.
 
 ## Run
 
