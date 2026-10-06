@@ -2,6 +2,16 @@
 
 Both routes use only the separately configured search PostgreSQL database. No posting code/database/HTTP dependency or in-memory fallback exists. Query records are immutable create-only projections. No public POST/PUT/DELETE route is implemented.
 
+Successful first-page responses use the local output cache for at most 15 seconds,
+capped at the next UTC midnight. The cache key includes the UTC day so a new day's
+request cannot reuse yesterday's availability snapshot. New ingestion is visible
+after this short freshness window. Requests already in flight across midnight may
+finish with their captured day, but are marked no-store and are not stored.
+Continuation responses are no-store and bypass output-cache lookup/storage: every
+request validates the cursor, including its expiry. Immutable successful details
+remain cached for one hour on the server and one day downstream. Errors are not cached.
+The low-cardinality search.cache.hits counter distinguishes list and detail hits.
+
 GET /api/jobs accepts q (title OR description substring, up to200 trimmed UTF16 characters), department/location (up to100), limit1..50(default20), sort=newest(default) or closing-soon, and optional cursor<=2048. Filters combine with AND. Blank filters are omitted; unknown/duplicate parameters, controls, invalid limit/sort and malformed cursors return400. Percent, underscore and backslash are literal text: parameterized ILIKE uses explicit backslash escaping. SQL predicates/order/projection run on the server with AsNoTracking and LIMIT+1; there is no OFFSET or total count. List rows do not retrieve descriptions.
 
 Availability is closingDate strictly greater than captured TODAY UTC. This is a deliberate existing client alignment, not a PDF timezone requirement; posting's Toronto validation can differ. Details accept a nonzero D-format UUID, return400 for malformed,404 for missing, and200 for existing closed records. Source IDs and source created timestamps are authoritative. Response dates are yyyy-MM-dd; timestamps are UTC ISO with exactly3 fractional digits, truncating display precision only. Original source ticks remain unchanged in persistence and fingerprinting. Summaries omit description; details include it. Currency remains unspecified.

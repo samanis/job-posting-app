@@ -11,6 +11,9 @@ public static class SearchMetrics
     private static readonly Counter<long> Quarantines = Meter.CreateCounter<long>("search.quarantines");
     private static readonly Counter<long> Connections = Meter.CreateCounter<long>("search.consumer.transitions");
     private static readonly Histogram<double> Requests = Meter.CreateHistogram<double>("search.request.duration", "ms");
+    private static readonly Counter<long> CacheHits = Meter.CreateCounter<long>("search.cache.hits");
+
+    public static void CacheHit(string route) => CacheHits.Add(1, new KeyValuePair<string, object?>("route", route));
 
     public static void Projection(DeliveryOutcome outcome) =>
         Projections.Add(1, new KeyValuePair<string, object?>("outcome", outcome.ToString()));

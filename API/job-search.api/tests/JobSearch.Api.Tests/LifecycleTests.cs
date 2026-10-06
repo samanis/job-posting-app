@@ -23,9 +23,9 @@ public sealed class LifecycleTests
     {
         var names = new System.Collections.Concurrent.ConcurrentDictionary<string, byte>(); using var listener = new System.Diagnostics.Metrics.MeterListener();
         listener.InstrumentPublished = (instrument, l) => { if (instrument.Meter.Name == SearchMetrics.MeterName) l.EnableMeasurementEvents(instrument); };
-        listener.SetMeasurementEventCallback<long>((instrument, value, tags, state) => { names.TryAdd(instrument.Name, 0); foreach (var tag in tags) Assert.Contains(tag.Key, new[] { "outcome", "state" }); });
+        listener.SetMeasurementEventCallback<long>((instrument, value, tags, state) => { names.TryAdd(instrument.Name, 0); foreach (var tag in tags) { Assert.Contains(tag.Key, new[] { "outcome", "state", "route" }); if (tag.Key == "route") Assert.Contains((string)tag.Value!, new[] { "list", "detail" }); } });
         listener.SetMeasurementEventCallback<double>((instrument, value, tags, state) => { names.TryAdd(instrument.Name, 0); foreach (var tag in tags) { Assert.Equal("status_class", tag.Key); Assert.InRange((int)tag.Value!, 1, 5); } }); listener.Start();
-        SearchMetrics.Redelivery(); SearchMetrics.Projection(DeliveryOutcome.Inserted); SearchMetrics.Quarantine("confirmed"); SearchMetrics.Connection(ConsumerState.Running); SearchMetrics.Request(202, 5); Assert.Equal(5, names.Count);
+        SearchMetrics.Redelivery(); SearchMetrics.Projection(DeliveryOutcome.Inserted); SearchMetrics.Quarantine("confirmed"); SearchMetrics.Connection(ConsumerState.Running); SearchMetrics.Request(202, 5); SearchMetrics.CacheHit("list"); Assert.Equal(6, names.Count);
     }
     [Fact]
     public void BackoffAndClassificationAreBounded()

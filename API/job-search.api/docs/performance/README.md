@@ -7,13 +7,60 @@ dotnet restore JobSearch.slnx --locked-mode
 dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 10
 ```
 
+## Cache comparison (2026-10-06)
+
+The list and detail endpoints use ASP.NET Core output caching (in memory; first page at most 15 s and capped at UTC midnight, detail 1 h; only 200 responses). Continuations bypass caching and send no-store so expiry is checked every time. See [SearchCaching.cs](../../src/JobSearch.Api/Search/SearchCaching.cs). The workload host registers the same policies; cached mode enables the middleware and uncached mode bypasses it.
+
+The runner accepts a fourth argument, cached (default) or uncached. It records
+separate cache-cached.json and cache-uncached.json reports; the historical latest.json
+is preserved. Each mode owns and removes its own PostgreSQL fixture.
+
+```powershell
+dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 30 uncached
+dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 30 cached
+```
+
+Both runs used 10,000 jobs, four concurrent clients and 30 seconds. Traffic includes
+80% requests across six popular search/detail routes, 10% numbered substring searches,
+and 10% rotating detail IDs. All groups eventually repeat; workers overlap their keys.
+Popular routes are warmed before timing. This is an explicit synthetic workload,
+not production traffic or a claim about its hit rate. No continuation traffic or
+concurrent ingestion is included. The fixed clock avoids midnight during the benchmark;
+expiry and midnight correctness are verified separately in HTTP tests.
+
+| Measurement | Uncached | Local output cache |
+| --- | ---: | ---: |
+| Requests | 14,100 | 232,915 |
+| Cache hit rate | 0% | 99.09% |
+| Actual database reader commands | 24,913 | 4,120 |
+| Database reads per request | 1.767 | 0.0177 |
+| p95 HTTP latency | 20.33 ms | 1.12 ms |
+| Requests per second | 469.70 | 7,760.74 |
+| Errors | 0 | 0 |
+
+Database reader commands are counted by an EF command interceptor on the HTTP host;
+fixture setup, plans, and warmup are excluded. Cache hits are counted from output-cache
+policy hit callbacks. Latencies include full response-body reads. The runs are sequential
+with different owned databases and are closed-loop, so faster responses produce more
+requests and more repeated keys. These measurements demonstrate cache benefits on
+repeated reads, not a controlled production speedup or capacity guarantee.
+
+Decision: keep the local output cache. There is no supplied production replica count,
+cache memory pressure, or cross-replica miss evidence to justify Redis. Reconsider a
+shared Redis output cache when multiple replicas materially duplicate work or cache
+capacity becomes a measured limitation. Consider a Redis search projection only if
+representative cache-miss query plans and latency show PostgreSQL search is the bottleneck.
+
+Redis acceptance testing must include cache-outage behavior, shared-key versioning,
+and the same cursor/midnight correctness checks. Redis deployment is deferred.
+
 Arguments are seed rows1000..100000, concurrency1..32, duration1..60seconds. Defaults10000/4/10. There is no user connection string or external target argument. The tool creates a GUID-named owned PostgreSQL container, a new owned database, applies existing migrations and removes the container/volumes on disposal, including setup failures. Docker operations have2-minute bounds. Database commands and HTTP calls are bounded; new requests stop at duration and in-flight calls can drain up to the5-second HTTP timeout. A hard process kill can bypass disposal; inspect only the named jobsearch-workload-* fixture container if cleaning up manually. Never apply this seeder to a user database.
 
 The tool bulk-seeds deterministic IDs with four roles/departments/locations, varied source creation minutes/ties, salaries and closing dates (about80% available), long repeated descriptions, uncommon title nebula (1/97) and description rarequasar (1/101). Direct bulk fixture seeding is for read workload only; it does not verify event fingerprinting/ingestion. VACUUM (ANALYZE) jobs runs after seeding so GIN pending inserts/statistics reflect a maintained database. This does not change migration history or production settings.
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) runs actual EF-generated parameterized first-page commands, not hand-interpolated filter SQL. Both orders, rare title/description substrings and broad Engineer filters are captured. After warming each route, Kestrel loopback traffic mixes newest, closing-soon, rare title, rare description, AND department/location filters and detail GETs. Actual controllers, read store, cursor codec, JSON serializer and request/error middleware are used. The tool host disables logging and has no consumer; it is not a benchmark of the full deployed Program, production logging, ingestion contention or a remote network. Pagination correctness/commit boundaries and real broker isolation are tested separately.
 
-latest.json is the full latest report: UTC capture, host/runtime/CPU count, pinned PostgreSQL image, arguments, elapsed time, request count, p50/p95/p99, attempts per second, error classifications, bytes and complete query plans/buffer evidence. Percentiles include attempted requests (including errors); these runs had none. Reruns overwrite this application-local report. Never put secrets or connection strings in reports.
+Each cache comparison report includes UTC capture, host/runtime/CPU count, pinned PostgreSQL image, arguments, elapsed time, request count, cache hits, actual database reader commands, p50/p95/p99, attempts per second, error classifications, bytes and complete query plans/buffer evidence. Percentiles include attempted requests (including errors); these runs had none. Reruns overwrite only the selected mode's report. latest.json preserves the earlier Stage 7 run below. Never put secrets or connection strings in reports.
 
 ## Actual final run
 
@@ -33,9 +80,11 @@ Unfiltered queries use their existing order indexes. Selective title/description
 
 These are short warmed local measurements, not an SLA, sustained-load test or production capacity claim. Dataset text is repetitive and its distribution is synthetic; short substrings can have poor selectivity; real distributions, cold caches, logging, network/TLS, concurrent ingestion, hardware and autovacuum may alter plans/results. Test representative production-like data before tuning. EXPLAIN adds measurement overhead. Later operations must monitor table statistics/GIN pending lists and preserve automatic maintenance, rather than force a planner choice or rebuild indexes on assumption.
 
-## Output caching: before and after
+## Output caching: earlier quick run
 
-The list and detail endpoints use ASP.NET Core output caching (in memory; list 15 s, detail 1 h; only 200 responses) and send `Cache-Control` headers for browsers, proxies and CDNs. See [SearchCaching.cs](../../src/JobSearch.Api/Search/SearchCaching.cs). The workload host now registers the same caching as the API, so `latest.json` is the cached run.
+> Superseded by the [cache comparison](#cache-comparison-2026-10-06) above, which uses a mixed workload and measures cache hits and database reads. This earlier run repeated six fixed URLs and is kept for the record.
+
+This run used the earlier policy, under which pages with a cursor were also cached.
 
 Both runs on 2026-10-06, same machine and command (`10000 4 10`), back to back:
 
