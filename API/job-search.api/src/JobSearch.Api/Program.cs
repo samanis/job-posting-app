@@ -24,6 +24,7 @@ builder.Services.AddSearchPersistence(builder.Configuration);
 builder.Logging.AddFilter("RabbitMQ.Client",LogLevel.None);
 builder.Services.AddSearchMessaging(builder.Configuration);
 JobSearch.Api.Search.SearchReads.AddSearchReads(builder.Services,builder.Configuration,builder.Environment);
+JobSearch.Api.Search.SearchCaching.AddSearchCaching(builder.Services);
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
 builder.Services.AddExceptionHandler<UnexpectedExceptionHandler>();
@@ -36,6 +37,8 @@ app.UseMiddleware<RequestDiagnosticsMiddleware>();
 app.UseExceptionHandler();
 app.UseRouting();
 app.UseStatusCodePages();
+// After routing so the [OutputCache] endpoint policies are visible.
+app.UseOutputCache();
 app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
