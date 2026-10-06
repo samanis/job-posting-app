@@ -32,14 +32,14 @@ The AI first proposed a transactional outbox. With an outbox, the job and the me
 
 Compensation has two weak spots:
 
-- RabbitMQ may store the message, but its confirmation may get lost. The API then deletes the job, while the message stays in the queue. The API logs this case as a critical error.
+- RabbitMQ may store the message, but its confirmation may get lost. The API then deletes the job, while the message stays in the queue. Search will still show the job. If the user retries, the API creates a second job with a new ID, so search can show the job twice. The API logs this as an ordinary error and counts it in a metric. From the API's side, it looks the same as any failed send.
 - The application may crash after saving the job but before sending the message. The job then stays in the database, but search never receives it. Nothing is logged, because the application has stopped.
 
 Also, nobody can post a job while RabbitMQ is down. The API returns `503`, and the user can try again later.
 
 I would keep compensation in production. At a few postings per day, these failures are rare and easy to fix by hand. An outbox would add a background process to build, run and monitor. I would add two safeguards instead:
 
-- An alert on the critical error from the first case.
+- An alert on the `jobposting.compensations` metric, which counts every deleted job. Each one should be checked, because it may be the first case.
 - A scheduled check for jobs whose `PublishedAt` field is still empty after a few minutes. The API fills in `PublishedAt` only after RabbitMQ confirms the message. So this check finds jobs from the second case.
 
 I would switch to an outbox in two situations. The first is if posting volume grew a lot. The second is if posting had to work while RabbitMQ is down.
