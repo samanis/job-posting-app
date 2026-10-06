@@ -1,6 +1,8 @@
 # Job search app
 
-Angular 22 client. Requires Node.js 22.22.3 or later in the Node 22 series and npm.
+Angular 22 app where job seekers browse open positions, filter and sort them, page through results, and open a job to see its full details. It reads from the [Job Search API](../../API/job-search.api), so jobs posted in the Job Posting app appear here within a few seconds. The filters and page are kept in the URL, so links and the back button work.
+
+Requires Node.js 22.22.3 or later in the Node 22 series and npm. For the whole system, see the [root README](../../README.md).
 
 The UI uses Angular Material 22 with a Material 3 azure theme in `src/styles.scss`, matching the posting app. Fonts use the local system stack; no external font or icon service is needed.
 
@@ -15,14 +17,12 @@ npm.cmd --prefix .\apps\job-search start
 
 Keep the terminal running and open http://localhost:4201/jobs. Stop the server with **Ctrl+C**. On macOS/Linux, use `npm` instead of `npm.cmd`.
 
-To connect a running search API, set its origin before starting (replace the example address):
+To see live jobs, start the backend first with `docker compose up --build` from the repository root. The development proxy forwards `/api/**` to that search API at http://localhost:5101. To use a different origin (for example, the API running on the host at port 5100), set it before starting:
 
 ```powershell
-$env:JOB_SEARCH_API_URL = 'http://localhost:5101'
+$env:JOB_SEARCH_API_URL = 'http://localhost:5100'
 npm.cmd --prefix .\apps\job-search start
 ```
-
-The development proxy forwards `/api/**` to that API. The proxy defaults to the local Docker search API at http://localhost:5101; JOB_SEARCH_API_URL overrides it. Start the API first to display live jobs.
 
 If installation reports `EPERM` for `esbuild.exe`, stop running development servers before retrying `ci`. Use the `--prefix` commands above to avoid missing `package.json` errors at the repository root.
 

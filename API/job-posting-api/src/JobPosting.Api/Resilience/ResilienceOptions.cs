@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 namespace JobPosting.Api.Resilience;
+
 public sealed class ResilienceOptions
 {
     public const string SectionName = "Resilience";

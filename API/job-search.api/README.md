@@ -1,44 +1,89 @@
-# Job search API
+# Job Search API
 
-Stages 1-9 foundation, contracts, separate search PostgreSQL persistence, RabbitMQ consumption/lifecycle and read endpoints are implemented. All application source, tests, tools, configuration and prompts live here. There are no references to posting projects/source/database/HTTP endpoints. DI registration opens no connection; the enabled hosted consumer connects asynchronously at startup. Projection operations use only the separate search database. GET /api/jobs provides available listings with signed keyset pagination; GET /api/jobs/{id} returns full details, including closed jobs. Dependency-free liveness and separate DB read readiness/broker ingestion health are implemented.
+.NET 10 Web API behind the [Job Search app](../../apps/job-search). It consumes `JobPostingCreated` events from RabbitMQ into its own PostgreSQL read model and serves the high-volume list and detail queries. It never calls the posting API or reads its database.
 
-## Build, verify and run
+For the overall architecture and the one-command Docker setup, see the [root README](../../README.md).
 
-From the repository root:
+## Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/jobs` | Open jobs (closing date after today, UTC). Optional parameters: `q` (title or description), `department`, `location`, `sort` (`newest` or `closing-soon`), `limit` (1–50, default 20), `cursor`. Returns `{ items, nextCursor }`. List items omit the description. |
+| `GET /api/jobs/{id}` | Full details of one job, including the description. Returns 404 if the job is unknown. |
+| `GET /health/live`, `/health/ready`, `/health/ingestion` | Liveness, database readiness, and consumer state. |
+
+Full details: [search.md](docs/search.md) and [contracts.md](docs/contracts.md).
+
+## Design for read-heavy load
+
+- **Separate read model.** Jobs are projected into a denormalized `job_search` database, so search traffic never touches the write database.
+- **Indexed filtering.** Text filters use `ILIKE` backed by `pg_trgm` GIN indexes. Sorting has matching B-tree indexes.
+- **Keyset pagination.** Pages continue from the last row instead of using `OFFSET`, so deep pages cost the same as the first. The cursor is HMAC-signed and pins a snapshot, so new jobs arriving mid-browse don't shift or duplicate results.
+- **Idempotent consumer.** Redelivered events are detected and ignored. Malformed or conflicting events go to a quarantine queue instead of blocking the consumer.
+- **Response caching.** Job details are cached for 1 hour and list pages for 15 seconds using ASP.NET Core output caching; errors and 404s are never cached. `Cache-Control` headers (`immutable` for details, `max-age=15` or `60` for lists, `no-store` for errors) let browsers and CDNs cache too. See [SearchCaching.cs](src/JobSearch.Api/Search/SearchCaching.cs) and the [before/after measurement](docs/performance/README.md#output-caching-before-and-after).
+- **Stateless.** Replicas can be scaled out and compete on the same queue; they share only the cursor signing key. Each replica has its own in-memory cache.
+
+## Run
+
+The normal way to run it is the root Compose file:
 
 ```sh
-cd API/job-search.api
-dotnet restore JobSearch.slnx --locked-mode
-dotnet build JobSearch.slnx --configuration Release --no-restore
-dotnet run --project tools/CoverageGate
+docker compose up --build          # from the repository root
+```
+
+To run the API on the host (for debugging), start the infrastructure and migrations from the repository root, then run the API from this folder:
+
+```sh
+docker compose up -d postgres rabbitmq job-search-migrate
+```
+
+```powershell
+$env:SearchDatabase__ConnectionString = 'Host=127.0.0.1;Port=5432;Database=job_search;Username=jobsearch'
+$env:PGPASSWORD = 'local-development-only-change-me'
+$env:RabbitMq__HostName = '127.0.0.1'
+$env:RabbitMq__UserName = 'jobboard'
+$env:RabbitMq__Password = 'local-development-only-change-me'
 dotnet run --project src/JobSearch.Api --launch-profile http
 ```
 
-Development listens on http://localhost:5100 and serves /openapi/v1.json (including both read routes). Production/Staging do not expose OpenAPI or test endpoints. Test-only fault controllers belong to the test assembly and are registered only by an explicitly opted-in test factory.
+The development profile listens on http://localhost:5100 and serves OpenAPI at `/openapi/v1.json`. In Development a built-in, non-production cursor signing key is used, and Production refuses to start with it. To point the Angular app at this port, set `JOB_SEARCH_API_URL=http://localhost:5100` before `npm start`.
 
-.NET SDK10.0.101 is pinned with latestPatch roll-forward. NuGet.Config explicitly selects the official source; all projects have package locks and warnings are errors. Versions are a verified baseline, not a claim of latest servicing. Real secrets go in environment variables or secret configuration, never committed files. Supply search database credentials externally for projection/migrations; configure the existing broker credentials externally; production cursor signing keys must also be configured externally (see docs/search.md).
+## Test
 
-Search:MaximumEventBodyBytes defaults to65536 and validates1..1048576 at startup; the ingestion reader enforces it. Environment override: Search__MaximumEventBodyBytes. TimeProvider.System is injected and replaceable in tests. Host shutdown timeout is30s; consumer drain defaults to24 seconds with6 seconds reserved for resource cleanup.
+Run from this folder:
 
-## Diagnostics and verification
+```sh
+dotnet test tests/JobSearch.Api.Tests                 # unit and in-process host tests; no services needed
+dotnet test tests/JobSearch.Api.IntegrationTests      # real PostgreSQL and RabbitMQ; needs Docker running
+dotnet run --project tools/CoverageGate               # fails unless unit and host coverage are 100%
+```
 
-Central IExceptionHandler returns generic application/problem+json500 with traceId and X-Trace-Id, including a JSON fallback for callers requesting HTML. The response never includes raw exception details. Structured UTC JSON application logs contain safe failure type, generated trace ID, method, matched route template, status and duration; not raw path/query/header/body or exception stacks. ASP.NET framework logs are suppressed to avoid duplicate unsafe request/exception detail. Application logging remains enabled. Any later driver logging needs an explicit safe policy.
+The integration tests start and remove their own containers. `tools/ReadWorkload` measures list and detail latency and captures PostgreSQL query plans; see [performance](docs/performance/README.md).
 
-Isolated unit coverage and host bootstrap coverage are separate exact100% line/branch/method gates. Authored source and declared types are checked using the SDK Roslyn parser. Unit excludes Program only; host covers Program separately. Generated obj/bin output is excluded; coverage-exclusions.json contains two hash-checked unmodified EF designer/snapshot files; authored migration Up/Down remains covered. Negative checks reject missing/empty reports, uncovered line/branch/method and omitted source/type/module. Reports under tests/JobSearch.Api.Tests/TestResults are ignored. These checks cannot establish broker/database correctness; external PostgreSQL integration evidence is separate from the coverage score.
+## Project layout
 
-[Ordered prompts](prompt/README.md). The selected independent API stages are complete; see [final verification](docs/final-verification.md), [design](docs/design.md), [runbook](docs/runbook.md), and [client integration handoff](docs/client-integration-handoff.md). Frontend integration and full exercise submission remain separate work.
+```text
+src/JobSearch.Api/
+  Search/          list and detail endpoints, read store, signed cursors
+  Messaging/       RabbitMQ consumer, event handler, quarantine publisher
+  Persistence/     EF Core DbContext, projection store and migrations
+  Contracts/       event and query parsing and validation
+  Diagnostics/     health endpoints, structured logs, metrics, safe errors
+tests/
+  JobSearch.Api.Tests/               unit and host tests
+  JobSearch.Api.IntegrationTests/    PostgreSQL and RabbitMQ tests
+tools/
+  CoverageGate/    coverage enforcement
+  ReadWorkload/    read-performance measurement
+  BrokerFixture/   publishes test events to a broker
+```
 
-Official references: [ASP.NET Core error handling](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0), [Coverlet package](https://www.nuget.org/packages/coverlet.msbuild/10.0.1).
+## Further reading
 
-See [event/query contracts](docs/contracts.md) for ingestion validation, canonical identity, query boundaries and implemented HTTP serialization.
+- [Design](docs/design.md) and [runbook](docs/runbook.md)
+- [Persistence and migrations](docs/persistence.md)
+- [Consumer lifecycle and quarantine](docs/messaging.md)
+- [Search, cursors and signing-key rotation](docs/search.md)
+- [Implementation prompts](prompt/README.md) used to build this API with AI
 
-See [search persistence](docs/persistence.md) for explicit setup/migrations, write concurrency, commit uncertainty and real PostgreSQL verification.
-
-See [consumer lifecycle and quarantine](docs/messaging.md). Migrate the separate search database before enabling ingestion. Stage5 provides confirmed quarantine, bounded reconnect/drain and separate read/ingestion health.
-
-See [search endpoints and signing-key setup](docs/search.md) for filters, cursor expiry/rotation, UTC availability and errors. Development uses an explicitly nonproduction key only when no keys are configured; Production/Staging refuse missing keys or that development key.
-
-See [measured read performance and operational checks](docs/performance/README.md). The bounded tools/ReadWorkload runner owns disposable resources and records actual HTTP percentiles and PostgreSQL plans; its results are local observations, not production guarantees.
-
-See [Docker and host setup](docs/docker.md): independent non-root images, explicit migrations, separate persistent search PostgreSQL and existing external RabbitMQ. Run tools/Verify-Compose.ps1 for isolated clean-checkout verification; normal Compose never starts another broker.
-
+`docker-compose.yml` in this folder is a standalone setup that attaches to an existing broker. Use the root Compose file unless you specifically need that.

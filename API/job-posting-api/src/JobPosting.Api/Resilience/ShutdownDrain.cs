@@ -1,4 +1,5 @@
 namespace JobPosting.Api.Resilience;
+
 public sealed class ShutdownDrain(TimeProvider clock)
 {
     private readonly object gate = new();

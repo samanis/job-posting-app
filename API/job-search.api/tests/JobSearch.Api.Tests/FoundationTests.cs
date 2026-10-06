@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 namespace JobSearch.Api.Tests;
+
 [Trait("Category", "Host")]
 public sealed class FoundationTests
 {
@@ -21,7 +22,7 @@ public sealed class FoundationTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.StartsWith("3.", body.RootElement.GetProperty("openapi").GetString());
-        Assert.Equal(5,body.RootElement.GetProperty("paths").EnumerateObject().Count());
+        Assert.Equal(5, body.RootElement.GetProperty("paths").EnumerateObject().Count());
     }
 
     [Theory]
@@ -114,20 +115,20 @@ public sealed class FoundationTests
     [Theory]
     [InlineData("SearchDatabase:ConnectionString", "private-secret=invalid")]
     [InlineData("SearchDatabase:CommandTimeoutSeconds", "0")]
-    public void InvalidDatabaseConfigurationFailsStartupSafely(string key,string value)
+    public void InvalidDatabaseConfigurationFailsStartupSafely(string key, string value)
     {
-        using var factory=new ApiFactory(settings:new(){[key]=value});
-        var error=Assert.Throws<OptionsValidationException>(()=>factory.CreateClient());
-        Assert.Contains(key,error.Message);Assert.DoesNotContain("private-secret",error.Message);
+        using var factory = new ApiFactory(settings: new() { [key] = value });
+        var error = Assert.Throws<OptionsValidationException>(() => factory.CreateClient());
+        Assert.Contains(key, error.Message); Assert.DoesNotContain("private-secret", error.Message);
     }
     [Theory]
     [InlineData("RabbitMq:HostName", " ")]
     [InlineData("RabbitMq:Prefetch", "0")]
     [InlineData("RabbitMq:Concurrency", "11")]
-    public void InvalidConsumerConfigurationFailsStartup(string key,string value)
+    public void InvalidConsumerConfigurationFailsStartup(string key, string value)
     {
-        using var factory=new ApiFactory(settings:new(){[key]=value});
-        var error=Assert.Throws<OptionsValidationException>(()=>factory.CreateClient());Assert.Contains(key,error.Message);
+        using var factory = new ApiFactory(settings: new() { [key] = value });
+        var error = Assert.Throws<OptionsValidationException>(() => factory.CreateClient()); Assert.Contains(key, error.Message);
     }
     private sealed class FixedClock : TimeProvider { }
 }

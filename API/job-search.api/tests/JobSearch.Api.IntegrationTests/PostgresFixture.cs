@@ -28,8 +28,14 @@ public sealed class PostgresFixture : IAsyncLifetime
             var port = int.Parse(address.Split(':')[^1], CultureInfo.InvariantCulture);
             adminConnection = new NpgsqlConnectionStringBuilder
             {
-                Host = "127.0.0.1", Port = port, Database = "search_admin", Username = "jobsearch",
-                Password = password, Timeout = 2, CommandTimeout = 10, IncludeErrorDetail = false
+                Host = "127.0.0.1",
+                Port = port,
+                Database = "search_admin",
+                Username = "jobsearch",
+                Password = password,
+                Timeout = 2,
+                CommandTimeout = 10,
+                IncludeErrorDetail = false
             }.ConnectionString;
             var deadline = Stopwatch.StartNew();
             while (true)
@@ -67,8 +73,8 @@ public sealed class PostgresFixture : IAsyncLifetime
         return options;
     }
 
-    public Task PauseAsync()=>DockerAsync(["pause",container]);
-    public Task ResumeAsync()=>DockerAsync(["unpause",container]);
+    public Task PauseAsync() => DockerAsync(["pause", container]);
+    public Task ResumeAsync() => DockerAsync(["unpause", container]);
     public Task DisposeAsync() => DockerAsync(["rm", "--force", "--volumes", container], allowMissing: true);
 
     private static async Task<string> DockerAsync(string[] arguments, string? password = null, bool allowMissing = false)

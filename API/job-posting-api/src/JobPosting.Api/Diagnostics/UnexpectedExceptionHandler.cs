@@ -25,13 +25,13 @@ public sealed class UnexpectedExceptionHandler(
         }
         else
         {
-        problem = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An unexpected error occurred.",
-            Detail = "The request could not be completed. Contact support with the trace identifier.",
-            Type = "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.1"
-        };
+            problem = new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An unexpected error occurred.",
+                Detail = "The request could not be completed. Contact support with the trace identifier.",
+                Type = "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.1"
+            };
         }
         httpContext.Response.StatusCode = problem.Status!.Value;
         problem.Extensions["traceId"] = httpContext.TraceIdentifier;

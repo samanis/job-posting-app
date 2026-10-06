@@ -1,8 +1,8 @@
-# Backend applications
+# Backend APIs
 
-Each backend application owns its source, persistence, tests, tools, configuration and infrastructure within its own folder.
+Two independent .NET 10 APIs. Each owns its own source, database, migrations, tests and Dockerfile.
 
-- [job-posting-api](job-posting-api/README.md): implemented .NET 10 Stages 1-8 with POST, confirmed RabbitMQ publication, compensation, resilience, shutdown and Docker/local setup, including job-row idempotency storage, all posting tests/tools/prompts, PostgreSQL migrations and SDK/build settings.
-- `job-search.api/`: existing unimplemented search placeholder, outside the posting application.
+- [job-posting-api](job-posting-api/README.md): write side. Validates and stores job postings, then publishes `JobPostingCreated` to RabbitMQ.
+- [job-search.api](job-search.api/README.md): read side. Consumes those events into a search read model and serves list and detail queries.
 
-Frontend applications remain independent under `../apps/`. Use the [posting application guide](job-posting-api/README.md) for build, run and verification commands.
+They share no code or database; the only contract between them is the event on RabbitMQ. To run both together with PostgreSQL and RabbitMQ, use `docker compose up --build` from the repository root. See the [root README](../README.md).

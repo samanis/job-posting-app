@@ -1,5 +1,6 @@
 using JobSearch.Api.Configuration;
 namespace JobSearch.Api.Tests;
+
 [Trait("Category", "Unit")]
 public sealed class ConfigurationTests
 {

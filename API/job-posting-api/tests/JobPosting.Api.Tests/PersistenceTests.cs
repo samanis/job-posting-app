@@ -22,8 +22,13 @@ public sealed class PersistenceTests
     {
         var normalized = new JobRequestValidator().Normalize(new CreateJobRequest
         {
-            Title = "Engineer", Department = "Engineering", Location = "Toronto", Description = "Plain text\nDescription",
-            SalaryMin = 0m, SalaryMax = 999999999.99m, ClosingDate = new DateOnly(2028, 2, 29)
+            Title = "Engineer",
+            Department = "Engineering",
+            Location = "Toronto",
+            Description = "Plain text\nDescription",
+            SalaryMin = 0m,
+            SalaryMax = 999999999.99m,
+            ClosingDate = new DateOnly(2028, 2, 29)
         }).Request!;
         return PendingPosting.Create(normalized, digest, Guid.NewGuid(), Guid.NewGuid(),
             new DateTimeOffset(2026, 10, 5, 14, 0, 0, TimeSpan.FromHours(-4)).AddTicks(1234567), "trace-fixture");
@@ -127,7 +132,9 @@ public sealed class PersistenceTests
         var settings = new PostingDatabaseOptions
         {
             ConnectionString = "Host=localhost;Database=jobs;Username=jobposting;Include Error Detail=true",
-            CommandTimeoutSeconds = command, LockTimeoutMilliseconds = lockMilliseconds, IdleTransactionTimeoutSeconds = idle
+            CommandTimeoutSeconds = command,
+            LockTimeoutMilliseconds = lockMilliseconds,
+            IdleTransactionTimeoutSeconds = idle
         };
         Assert.True(new PostingDatabaseOptionsValidator().Validate(null, settings).Succeeded);
         using var context = new PostingDbContext(PostingPersistence.CreateOptions(settings));

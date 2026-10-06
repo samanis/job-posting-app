@@ -18,10 +18,17 @@ public sealed class PendingPosting(JobPostingEntity job)
         var saved = SavedJobRecord.Create(request, jobId, databaseTime);
         var job = new JobPostingEntity
         {
-            Id = jobId, CreatedAt = saved.CreatedAt, Title = saved.Title, Department = saved.Department,
-            Location = saved.Location, Description = saved.Description, SalaryMin = saved.SalaryMin,
-            SalaryMax = saved.SalaryMax, ClosingDate = saved.ClosingDate,
-            IdempotencyKeyDigest = keyDigest, RequestFingerprint = JobRequestFingerprint.Compute(request),
+            Id = jobId,
+            CreatedAt = saved.CreatedAt,
+            Title = saved.Title,
+            Department = saved.Department,
+            Location = saved.Location,
+            Description = saved.Description,
+            SalaryMin = saved.SalaryMin,
+            SalaryMax = saved.SalaryMax,
+            ClosingDate = saved.ClosingDate,
+            IdempotencyKeyDigest = keyDigest,
+            RequestFingerprint = JobRequestFingerprint.Compute(request),
             ResponseJson = JsonSerializer.Serialize(JobAcceptedResponse.FromSaved(saved), JsonOptions)
         };
         job.CanonicalizationVersion = JobRequestFingerprint.Version;

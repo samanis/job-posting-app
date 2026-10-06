@@ -18,19 +18,19 @@ namespace JobPosting.Api.Tests;
 public sealed class FoundationTests
 {
     private sealed class HealthDependency : JobPosting.Api.Resilience.IDatabaseProbe, JobPosting.Api.Resilience.IPublisherProbe
-    { public bool Ready=true; public Task<bool> CheckAsync(CancellationToken t)=>Task.FromResult(Ready); public Task ProbeAsync(CancellationToken t)=>Task.CompletedTask; }
+    { public bool Ready = true; public Task<bool> CheckAsync(CancellationToken t) => Task.FromResult(Ready); public Task ProbeAsync(CancellationToken t) => Task.CompletedTask; }
     [Fact]
     public async Task HealthRoutesAndShutdownBoundsAreWiredWithoutExternalIo()
     {
-        var dependency=new HealthDependency();await using var factory=new ApiFactory(configureServices:services=>{services.AddSingleton<JobPosting.Api.Resilience.IDatabaseProbe>(dependency);services.AddSingleton<JobPosting.Api.Resilience.IPublisherProbe>(dependency);});using var client=factory.CreateClient();
-        Assert.Equal(TimeSpan.FromSeconds(30),factory.Services.GetRequiredService<IOptions<Microsoft.Extensions.Hosting.HostOptions>>().Value.ShutdownTimeout);
-        Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/health/live")).StatusCode);Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/health/ready")).StatusCode);
-        dependency.Ready=false;Assert.Equal(HttpStatusCode.ServiceUnavailable,(await client.GetAsync("/health/ready")).StatusCode);
-        factory.Services.GetRequiredService<JobPosting.Api.Resilience.ShutdownDrain>().BeginStop();Assert.Equal(HttpStatusCode.ServiceUnavailable,(await client.GetAsync("/health/ready")).StatusCode);
+        var dependency = new HealthDependency(); await using var factory = new ApiFactory(configureServices: services => { services.AddSingleton<JobPosting.Api.Resilience.IDatabaseProbe>(dependency); services.AddSingleton<JobPosting.Api.Resilience.IPublisherProbe>(dependency); }); using var client = factory.CreateClient();
+        Assert.Equal(TimeSpan.FromSeconds(30), factory.Services.GetRequiredService<IOptions<Microsoft.Extensions.Hosting.HostOptions>>().Value.ShutdownTimeout);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/live")).StatusCode); Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/ready")).StatusCode);
+        dependency.Ready = false; Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.GetAsync("/health/ready")).StatusCode);
+        factory.Services.GetRequiredService<JobPosting.Api.Resilience.ShutdownDrain>().BeginStop(); Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.GetAsync("/health/ready")).StatusCode);
     }
     [Fact]
     public async Task InvalidResilienceConfigurationFailsStartupSafely()
-    {await using var factory=new ApiFactory(settings:new(){["Resilience:FailureRatio"]="0"});var exception=Assert.Throws<OptionsValidationException>(()=>factory.CreateClient());Assert.Contains("Resilience:FailureRatio",exception.Message);}
+    { await using var factory = new ApiFactory(settings: new() { ["Resilience:FailureRatio"] = "0" }); var exception = Assert.Throws<OptionsValidationException>(() => factory.CreateClient()); Assert.Contains("Resilience:FailureRatio", exception.Message); }
     [Fact]
     public async Task JobPostRejectsMissingKeyAndCannotReturnAcceptance()
     {

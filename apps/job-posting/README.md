@@ -1,6 +1,8 @@
 # Job posting app
 
-Angular 22 client. Requires Node.js 22.22.3 or later in the Node 22 series and npm.
+Angular 22 app where a hiring manager posts a new job opening. It validates the form on the client, submits it to the [Job Posting API](../../API/job-posting-api) with an idempotency key so retries can't create duplicates, shows the API's field-level validation errors on the form, and on success shows the saved record exactly as the API returned it.
+
+Requires Node.js 22.22.3 or later in the Node 22 series and npm. For the whole system, see the [root README](../../README.md).
 
 The UI uses Angular Material 22 with a Material 3 azure theme in `src/styles.scss`. Fonts use the local system stack; no external font or icon service is needed.
 
@@ -15,7 +17,7 @@ npm.cmd --prefix .\apps\job-posting start
 
 Keep the terminal running and open the URL printed by Angular (usually http://localhost:4200). On macOS/Linux, use `npm` instead of `npm.cmd`.
 
-The proxy defaults to the local Docker posting API at http://localhost:5000. To override its origin before starting:
+To save jobs, start the backend first with `docker compose up --build` from the repository root. The proxy defaults to that posting API at http://localhost:5000. To use a different origin, set it before starting:
 
 ```powershell
 $env:JOB_POSTING_API_URL = 'http://localhost:5000'
@@ -44,7 +46,7 @@ Tests enforce 100% coverage for production TypeScript. The production build is w
 3. Configure the host to serve `index.html` for frontend routes such as `/jobs/new`.
 4. Configure a reverse proxy for `/api/**` to the deployed job posting API, preserving the path and `Idempotency-Key` header. API requests must reach the backend rather than the frontend fallback.
 
-`JOB_POSTING_API_URL` configures local development only. The backend must implement the [API contract](docs/api-contract.md), including atomic idempotency. Backend deployment is separate.
+`JOB_POSTING_API_URL` configures local development only. The client expects the [API contract](docs/api-contract.md), including atomic idempotency, which the Job Posting API implements. The API is deployed separately.
 
 ## Browser E2E tests (Playwright)
 

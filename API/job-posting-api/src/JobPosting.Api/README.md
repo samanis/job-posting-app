@@ -1,6 +1,6 @@
 # Job posting API
 
-Revised Stage 3 now uses job-row PostgreSQL idempotency metadata with a data-preserving upgrade migration. Revised Stage 4 distinguishes new creators from completed and unresolved duplicate submissions. See the [API contract](docs/api-contract.md), [persistence guide](docs/persistence.md) and [Stage 4 status](docs/idempotency.md). **POST `/api/jobs` is implemented.** The [RabbitMQ producer](docs/messaging.md) is implemented; HTTP save/publish/compensation coordination is implemented; resilience, health, metrics and shutdown are implemented; the posting Docker/Compose subset is implemented. See [Docker/local development](docs/docker-and-local-development.md). See [operations](docs/resilience-and-shutdown.md). See the [workflow guide](docs/post-workflow.md). No ledger/outbox or dispatcher is planned.
+Developer reference for the service project: build baseline, coverage gate, configuration and logging. For an overview, endpoint summary and run instructions, start with the [application README](../../README.md).
 
 ## Build and test
 
@@ -30,8 +30,6 @@ Reports (generated and Git-ignored):
 - `tests/JobPosting.Api.Tests/TestResults/unit/coverage.json`
 - `tests/JobPosting.Api.Tests/TestResults/host/coverage.json`
 
-Current Stage 5 measurements: 178 isolated unit tests, lines 876/876, branches 254/254, methods 147/147 across 32 authored files/37 types; 19 host tests, lines 43/43, branches 4/4, methods 1/1. Separately, 22 real PostgreSQL and 3 real RabbitMQ tests pass without contributing to coverage. Counts are instrumenter entries, not source declaration counts.
-
 Exact exclusions and reasons:
 
 - The unit scope assigns only `Program.cs` to the separate host gate because executing application bootstrap requires an in-process host; it is still required and must reach 100%.
@@ -48,7 +46,7 @@ To check an existing report independently: `dotnet run --project tools/CoverageG
 dotnet run --project src/JobPosting.Api --launch-profile http
 ```
 
-The Development profile listens on http://localhost:5000. Its document is at http://localhost:5000/openapi/v1.json; the document has no job operation yet. No Swagger UI is installed. Stop with Ctrl+C. This host/port matches the posting client's documented proxy example; it cannot save jobs until later API stages are implemented.
+The Development profile listens on http://localhost:5000, the port the posting client's proxy uses. The OpenAPI document is at http://localhost:5000/openapi/v1.json; no Swagger UI is installed. Stop with Ctrl+C. The API needs PostgreSQL and RabbitMQ; see the [application README](../../README.md#run) for the environment variables.
 
 Production-like local run (no development documentation):
 

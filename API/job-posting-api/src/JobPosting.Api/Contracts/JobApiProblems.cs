@@ -17,7 +17,7 @@ public static class JobApiProblems
         {
             Status = status,
             Title = status == 400 ? "Invalid request." : "Validation failed.",
-            Type = $"https://www.rfc-editor.org/rfc/rfc9110.html#section-15.{(status == 400 ? "5.1" : "5.21") }"
+            Type = $"https://www.rfc-editor.org/rfc/rfc9110.html#section-15.{(status == 400 ? "5.1" : "5.21")}"
         };
         problem.Extensions["traceId"] = traceId;
         return problem;
@@ -39,7 +39,7 @@ public static class JobApiProblems
             Status = status,
             Title = title,
             Detail = detail,
-            Type = $"https://www.rfc-editor.org/rfc/rfc9110.html#section-15.{(status == 409 ? "5.10" : "6.4") }"
+            Type = $"https://www.rfc-editor.org/rfc/rfc9110.html#section-15.{(status == 409 ? "5.10" : "6.4")}"
         };
         problem.Extensions["code"] = code;
         problem.Extensions["traceId"] = traceId;

@@ -160,29 +160,33 @@ public sealed class MessagingTests
         Assert.Equal("job-posting-api", factory.ClientProvidedName);
         Assert.Equal(TimeSpan.FromSeconds(3), factory.RequestedConnectionTimeout);
         Assert.IsType<JobPosting.Api.Resilience.PublicationCircuit>(provider.GetRequiredService<IJobEventPublisher>());
-        Assert.Same(provider.GetRequiredService<IJobEventPublisher>(),provider.GetRequiredService<JobPosting.Api.Resilience.IPublisherProbe>());
+        Assert.Same(provider.GetRequiredService<IJobEventPublisher>(), provider.GetRequiredService<JobPosting.Api.Resilience.IPublisherProbe>());
     }
     [Theory]
-    [InlineData("success")] [InlineData("failure")] [InlineData("cancel")] [InlineData("disposed")] [InlineData("queued")]
+    [InlineData("success")]
+    [InlineData("failure")]
+    [InlineData("cancel")]
+    [InlineData("disposed")]
+    [InlineData("queued")]
     public async Task ReadinessProbeNeverPublishesAndRepairsOrFailsSafely(string mode)
     {
-        var wire=new Wire();await using var publisher=wire.Publisher();
-        using var cancellation=new CancellationTokenSource();
-        if(mode=="failure")wire.SetupFailure="connect";
-        if(mode=="cancel")wire.Passive=()=>{cancellation.Cancel();return Task.FromCanceled(cancellation.Token);};
-        if(mode=="disposed")await publisher.DisposeAsync();
-        if(mode=="queued")cancellation.Cancel();
-        if(mode=="success") {await publisher.ProbeAsync(default);await publisher.ProbeAsync(default);Assert.Equal(1,wire.Connections);}
-        else if(mode is "cancel" or "queued")await Assert.ThrowsAnyAsync<OperationCanceledException>(()=>publisher.ProbeAsync(cancellation.Token));
-        else await Assert.ThrowsAsync<JobPublicationException>(()=>publisher.ProbeAsync(default));
-        Assert.Equal(0,wire.Publications);
+        var wire = new Wire(); await using var publisher = wire.Publisher();
+        using var cancellation = new CancellationTokenSource();
+        if (mode == "failure") wire.SetupFailure = "connect";
+        if (mode == "cancel") wire.Passive = () => { cancellation.Cancel(); return Task.FromCanceled(cancellation.Token); };
+        if (mode == "disposed") await publisher.DisposeAsync();
+        if (mode == "queued") cancellation.Cancel();
+        if (mode == "success") { await publisher.ProbeAsync(default); await publisher.ProbeAsync(default); Assert.Equal(1, wire.Connections); }
+        else if (mode is "cancel" or "queued") await Assert.ThrowsAnyAsync<OperationCanceledException>(() => publisher.ProbeAsync(cancellation.Token));
+        else await Assert.ThrowsAsync<JobPublicationException>(() => publisher.ProbeAsync(default));
+        Assert.Equal(0, wire.Publications);
     }
     [Fact]
     public async Task OverallBudgetAlsoBoundsUnresponsiveConfirmationAndResourceReset()
     {
-        var wire=new Wire {Publish=_=>new ValueTask(Task.Delay(Timeout.Infinite))};await using var publisher=wire.Publisher(new(){PublishBudgetSeconds=1,ConfirmTimeoutSeconds=1});
-        var watch=System.Diagnostics.Stopwatch.StartNew();var failure=await Assert.ThrowsAsync<JobPublicationException>(()=>publisher.PublishAsync(Event(),default));Assert.Equal(PublicationFailure.AcceptanceUnknown,failure.Failure);
-        Assert.InRange(watch.Elapsed.TotalSeconds,0.8,1.8);Assert.Equal(1,wire.Publications);
+        var wire = new Wire { Publish = _ => new ValueTask(Task.Delay(Timeout.Infinite)) }; await using var publisher = wire.Publisher(new() { PublishBudgetSeconds = 1, ConfirmTimeoutSeconds = 1 });
+        var watch = System.Diagnostics.Stopwatch.StartNew(); var failure = await Assert.ThrowsAsync<JobPublicationException>(() => publisher.PublishAsync(Event(), default)); Assert.Equal(PublicationFailure.AcceptanceUnknown, failure.Failure);
+        Assert.InRange(watch.Elapsed.TotalSeconds, 0.8, 1.8); Assert.Equal(1, wire.Publications);
     }
     public class ApiProxy : DispatchProxy
     {
@@ -196,7 +200,7 @@ public sealed class MessagingTests
         public int Connections, Channels, Publications, ChannelDisposals, ConnectionDisposals;
         public bool ChannelOpen = true, ConnectionOpen = true, DisposalFails;
         public string SetupFailure = "";
-        public Func<Task> Passive=()=>Task.CompletedTask;
+        public Func<Task> Passive = () => Task.CompletedTask;
         public Func<CancellationToken, ValueTask> Publish = _ => ValueTask.CompletedTask;
         public CreateChannelOptions? ChannelOptions;
         public string? Exchange, ExchangeType, Queue, Binding;
@@ -211,7 +215,7 @@ public sealed class MessagingTests
                 {
                     case "get_IsOpen": return ChannelOpen;
                     case "ExchangeDeclarePassiveAsync": return Passive();
-                    case "QueueDeclarePassiveAsync": return Task.FromResult(new QueueDeclareOk("queue",0,0));
+                    case "QueueDeclarePassiveAsync": return Task.FromResult(new QueueDeclareOk("queue", 0, 0));
                     case "ExchangeDeclareAsync":
                         Exchange = (string)args[0]!; ExchangeType = (string)args[1]!; DurableExchange = (bool)args[2]!;
                         return SetupFailure == "topology" ? Task.FromException(new IOException()) : Task.CompletedTask;

@@ -11,7 +11,9 @@ public sealed class UnexpectedExceptionHandler(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         logger.LogError(new EventId(1001, "UnhandledException"),
-            "Unhandled request exception; trace {TraceId}; failure {Failure}", httpContext.TraceIdentifier, exception.GetType().Name);
+            "Unhandled request exception; trace {TraceId}; failure {Failure}",
+            httpContext.TraceIdentifier,
+            exception.GetType().Name);
 
         var problem = new ProblemDetails
         {

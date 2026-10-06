@@ -29,9 +29,26 @@ Captured 2026-10-05T23:36:47.0778188+00:00; 10000 rows; concurrency4; requested1
 | closing-soon:rarequasar | 1.326 | Limit, Sort, Bitmap Heap Scan, BitmapOr, ix_jobs_title_trgm, ix_jobs_description_trgm |
 | newest:Engineer | 0.485 | Limit, ix_jobs_newest |
 
-Unfiltered queries use their existing order indexes. Selective title/description searches use the existing trigram indexes combined by BitmapOr and a small sort. Broad Engineer filtering uses the order index plus filter. No new index or migration was justified by these maintained local plans; no cache/search engine was added. An earlier unmaintained bulk seed chose an order scan/sequence scan for rare filters (22.473/89.085ms); after explicit fixture maintenance, the existing GIN indexes were chosen. Other concurrent test activity and cache state differed between runs, so that comparison is diagnostic evidence, not a controlled causal performance claim.
+Unfiltered queries use their existing order indexes. Selective title/description searches use the existing trigram indexes combined by BitmapOr and a small sort. Broad Engineer filtering uses the order index plus filter. No new index or migration was justified by these maintained local plans; response caching was added later (see below), and no search engine was added. An earlier unmaintained bulk seed chose an order scan/sequence scan for rare filters (22.473/89.085ms); after explicit fixture maintenance, the existing GIN indexes were chosen. Other concurrent test activity and cache state differed between runs, so that comparison is diagnostic evidence, not a controlled causal performance claim.
 
 These are short warmed local measurements, not an SLA, sustained-load test or production capacity claim. Dataset text is repetitive and its distribution is synthetic; short substrings can have poor selectivity; real distributions, cold caches, logging, network/TLS, concurrent ingestion, hardware and autovacuum may alter plans/results. Test representative production-like data before tuning. EXPLAIN adds measurement overhead. Later operations must monitor table statistics/GIN pending lists and preserve automatic maintenance, rather than force a planner choice or rebuild indexes on assumption.
+
+## Output caching: before and after
+
+The list and detail endpoints use ASP.NET Core output caching (in memory; list 15 s, detail 1 h; only 200 responses) and send `Cache-Control` headers for browsers, proxies and CDNs. See [SearchCaching.cs](../../src/JobSearch.Api/Search/SearchCaching.cs). The workload host now registers the same caching as the API, so `latest.json` is the cached run.
+
+Both runs on 2026-10-06, same machine and command (`10000 4 10`), back to back:
+
+| | Before caching | After caching |
+| --- | ---: | ---: |
+| Requests in 10 s | 4,929 | 148,836 |
+| Requests/second | 493 | 14,874 |
+| p50 | 6.93 ms | 0.19 ms |
+| p95 | 17.20 ms | 0.69 ms |
+| p99 | 21.12 ms | 1.11 ms |
+| Errors | 0 | 0 |
+
+**Read this as a best case.** The workload cycles through six fixed URLs, so after the first request for each almost every request is a cache hit and never reaches PostgreSQL. It shows what caching does for popular pages, such as the unfiltered first page, which most visitors load. Long-tail searches with unique filters miss the cache and perform like the "before" column. The client ran in the same process with only 4 concurrent requests, so the cached throughput figure may reflect the load generator as much as the API; it is not a capacity claim.
 
 ## Read and operational review
 
