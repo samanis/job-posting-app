@@ -1,0 +1,9 @@
+# Generated backend build and test outputs
+**/bin/
+**/obj/
+**/TestResults/
+
+# Backend local secrets; safe examples are build/run inputs
+.env
+.env.*
+!.env.example

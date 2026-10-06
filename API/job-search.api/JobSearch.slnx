@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="src/JobSearch.Api/JobSearch.Api.csproj" />
+  <Project Path="tests/JobSearch.Api.Tests/JobSearch.Api.Tests.csproj" />
+  <Project Path="tools/CoverageGate/CoverageGate.csproj" />
+  <Project Path="tests/JobSearch.Api.IntegrationTests/JobSearch.Api.IntegrationTests.csproj" />
+  <Project Path="tools/ReadWorkload/ReadWorkload.csproj" />
+  <Project Path="tools/BrokerFixture/BrokerFixture.csproj" />
+</Solution>

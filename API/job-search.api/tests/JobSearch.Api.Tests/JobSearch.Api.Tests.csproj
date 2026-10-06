@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(CollectCoverage)' == 'true'">
+    <CoverletOutput>$(MSBuildProjectDirectory)/TestResults/coverage/</CoverletOutput>
+    <CoverletOutputFormat>json</CoverletOutputFormat>
+    <Include>[JobSearch.*]*</Include>
+    <Exclude Condition="'$(CoverageSuite)' == 'Unit'">[JobSearch.Api]Program*</Exclude>
+    <Include Condition="'$(CoverageSuite)' == 'Host'">[JobSearch.*]Program*</Include>
+    <ExcludeByFile>**/obj/**,**/Persistence/Migrations/20261005224236_InitialSearch.Designer.cs,**/Persistence/Migrations/SearchDbContextModelSnapshot.cs</ExcludeByFile>
+    <IncludeTestAssembly>false</IncludeTestAssembly>
+    <SkipAutoProps>false</SkipAutoProps>
+    <Threshold>100</Threshold>
+    <ThresholdType>line,branch,method</ThresholdType>
+    <ThresholdStat>minimum</ThresholdStat>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="10.0.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/JobSearch.Api/JobSearch.Api.csproj" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+<ItemGroup><None Update="Fixtures/*.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup></Project>

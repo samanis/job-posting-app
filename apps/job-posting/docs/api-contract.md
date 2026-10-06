@@ -24,9 +24,9 @@ Proposed validation: trim required text and reject whitespace-only values; salar
 
 ## Saved record
 
-Proposed 201 creation or 200 idempotent replay returns every request field plus nonblank string `id` and ISO `createdAt` with timezone, e.g. `2026-10-04T15:00:00Z`. Any other successful 2xx with a complete valid record is also recognized, except 202. Runtime checks reject missing/blank strings, nonfinite/negative salaries, reversed/equal bounds, invalid calendar dates, and invalid timestamps. Additional response fields are permitted. An old closing date may be valid on replay, so transport validation does not reject it for being in the past.
+The implemented API returns 202 for creation and idempotent replay after durable save and broker confirmation, with every request field plus nonblank string `id` and ISO `createdAt` with timezone, e.g. `2026-10-04T15:00:00Z`. Any successful 2xx with a complete valid record is recognized, including 202. Source timestamps may contain up to seven fractional digits. Runtime checks reject missing/blank strings, nonfinite/negative salaries, reversed/equal bounds, invalid calendar dates, and invalid timestamps. Additional response fields are permitted. An old closing date may be valid on replay, so transport validation does not reject it for being in the past.
 
-The returned record is authoritative; confirmation must display it rather than reconstructing the request. 202 means accepted/pending even if a record is present. 204 or incomplete/malformed 2xx, including HttpClient JSON parsing failures, is unconfirmed. No status endpoint is assumed.
+The returned record is authoritative; confirmation must display it rather than reconstructing the request. A complete 202 record confirms saving/publication; it may take a few moments to appear in search. An incomplete 202 remains accepted/pending. 204 or incomplete/malformed 2xx, including HttpClient JSON parsing failures, is unconfirmed. No status endpoint is assumed.
 
 ## Outcomes
 
@@ -34,8 +34,8 @@ PostingOutcome is a discriminated union keyed by `kind`:
 
 | HTTP/transport result | Client kind | Data and workflow behavior |
 | --- | --- | --- |
-| Complete saved 2xx except 202 | saved | Actual record and HTTP status; confirm completion |
-| 202 | pending | reason accepted; retain attempt |
+| Complete saved 2xx including 202 | saved | Actual record and HTTP status; confirm completion |
+| Incomplete 202 | pending | reason accepted; retain attempt |
 | Empty/malformed 2xx | unknown | reason invalid-success; retain attempt |
 | 400/422 with usable errors | validation | fieldErrors, formErrors, status; display messages |
 | 400/422 without usable errors | rejected | safe fallback and status |
@@ -93,3 +93,4 @@ The client uses sessionStorage for recovery in one tab; independently entered su
 PostingWorkflow acquires a persisted attempt before dispatch, uses its caller key and payload unchanged, and subscribes once. It renders outcomes through the page, preserves unresolved snapshots for explicit same-key retries, and displays the actual saved API record. Definite validation/client rejection permits a corrected attempt with a new key. Pending/unknown/throttled outcomes keep the original identity; key conflicts require explicit reconciliation, never silent key replacement. Post another job explicitly clears confirmed saved state before a fresh attempt. Corrupt/unavailable sessionStorage blocks posting. No request is sent automatically after refresh.
 
 Backend key retention remains unspecified; the client never automatically expires unresolved attempts. The server must replay the original result before applying changed current-date validation to an already-completed key. A stored payload may have an expired closing date by retry time. Agree how pending processing resolves and how outcomes can be reconciled before deploying, since no lookup/status endpoint is presently defined. Browser tab storage is not durable cross-device recovery.
+

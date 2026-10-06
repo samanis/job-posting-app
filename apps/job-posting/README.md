@@ -15,7 +15,7 @@ npm.cmd --prefix .\apps\job-posting start
 
 Keep the terminal running and open the URL printed by Angular (usually http://localhost:4200). On macOS/Linux, use `npm` instead of `npm.cmd`.
 
-To connect a running job posting API, set its origin before starting (replace the example address):
+The proxy defaults to the local Docker posting API at http://localhost:5000. To override its origin before starting:
 
 ```powershell
 $env:JOB_POSTING_API_URL = 'http://localhost:5000'
@@ -56,3 +56,4 @@ npm.cmd --prefix .\apps\job-posting run test:e2e
 ```
 
 The suite starts/stops its own Angular server on port 4300 and runs desktop/mobile Chromium with mocked API responses. No backend is required. Keep port 4300 free. Run `test:e2e:headed` to see the browser, `test:e2e:report` to open the HTML report, or `test:e2e:check` to type-check the tests. E2E tests complement the separate 100% unit coverage gate.
+
