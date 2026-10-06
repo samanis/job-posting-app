@@ -1,6 +1,6 @@
 # Posting-owned PostgreSQL persistence (Stage 3)
 
-All source, migrations, tests, tooling and configuration belong to `API/job-posting-api`. Run the commands below from that application root. The DbContext is `src/JobPosting.Api/Persistence/PostingDbContext.cs`; the existing JobBoard.Persistence placeholder is not a shared posting/search database implementation.
+All source, migrations, tests, tooling and configuration belong to `API/job-posting-api`. Run the commands below from that application root. The DbContext is `src/JobPosting.Api/Persistence/PostingDbContext.cs`. The posting and search APIs do not share a database.
 
 Revised Stage 3 implements one job table and persistence helpers. Revised Stage 4 now distinguishes creators, completed replay and unresolved duplicates. POST `/api/jobs` coordinates direct RabbitMQ publication and compensating deletion; no outbox or recovery dispatcher is planned.
 

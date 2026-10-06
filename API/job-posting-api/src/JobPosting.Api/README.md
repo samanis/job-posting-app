@@ -33,7 +33,7 @@ Reports (generated and Git-ignored):
 Exact exclusions and reasons:
 
 - The unit scope assigns only `Program.cs` to the separate host gate because executing application bootstrap requires an in-process host; it is still required and must reach 100%.
-- Test assemblies and dependencies are outside the posting production assembly filters `[JobPosting.*]*,[JobBoard.Persistence]*`. All production projects under src are checked; Program bootstrap is assigned to the separate host gate.
+- Test assemblies and dependencies are outside the posting production assembly filter `[JobPosting.*]*`. All production projects under src are checked; Program bootstrap is assigned to the separate host gate.
 - `**/obj/**/OpenApiXmlCommentSupport.generated.cs` is unmodified output from Microsoft's OpenAPI source generator, not authored service logic. Three exact unmodified EF metadata files are also excluded: `Persistence/Migrations/20261005172328_InitialPosting.Designer.cs` `Persistence/Migrations/20261005203934_JobRowIdempotency.Designer.cs` and `Persistence/Migrations/PostingDbContextModelSnapshot.cs`; their reasons/content hashes are checked using `coverage-exclusions.json`, with CRLF/LF normalized. Authored migration Up/Down remains covered. `bin`/`obj` are generated build outputs and are excluded from the source inventory.
 - `ITimeZoneResolver` consists only of an interface declaration and has no executable sequence points; its concrete `SystemTimeZoneResolver` is covered. Declaration-only interfaces/enums have no executable coverage metric. Compiler-generated code implementing authored logic remains included.
 - `tools/CoverageGate` is development verification tooling, outside the production API/service scope.
