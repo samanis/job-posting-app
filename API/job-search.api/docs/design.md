@@ -20,4 +20,4 @@ Unknown database commit outcomes are resolved by a fresh durable read where poss
 
 Read queries use PostgreSQL keyset pagination, bounded projections and limit+1, with B-tree ordering indexes and pg_trgm substring indexes. HMAC cursors bind query, day, watermark and lifetime. Central exception handling and safe structured logging avoid exposing payloads or production exception detail. Consumer admission, drain and cleanup are bounded; read readiness is independent of ingestion health.
 
-See [contracts](contracts.md), [persistence](persistence.md), [messaging lifecycle](messaging.md), [search semantics](search.md), and [measured performance](performance/README.md) for implementation details and tradeoffs.
+See [contracts](contracts.md), [persistence](persistence.md), [messaging lifecycle](messaging.md), [search semantics](search.md), and [measured performance](performance/read-performance.md) for implementation details and tradeoffs.

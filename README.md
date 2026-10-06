@@ -110,7 +110,7 @@ curl -i -X POST http://localhost:5000/api/jobs \
 | `409` | The idempotency key was reused with a different body, or the original request is still in progress. |
 | `503` | The database or broker is unavailable (`Retry-After` is set). |
 
-Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be after today in the business time zone (`America/Toronto` by default). The same rules are enforced in the Angular form and in the API.
+Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be in the future. The Angular form checks these rules using the browser's date. The API checks them again using today's date in the business time zone (`America/Toronto` by default).
 
 ### Job Search API
 
@@ -132,8 +132,8 @@ Each project has its own test suite.
 | Job Posting API | `dotnet test API/job-posting-api/tests/JobPosting.Api.Tests` |
 | Job Search API | `dotnet test API/job-search.api/tests/JobSearch.Api.Tests` |
 
-- **Unit tests** need no running services. The Angular suites enforce 100% coverage.
-- **API integration tests** (`tests/*.IntegrationTests`) run against real PostgreSQL and RabbitMQ containers, which they start and remove themselves. Docker must be running.
+- **Unit tests** need no running services. All four projects require 100% coverage. For the APIs, run the coverage check from the API's folder, for example `cd API/job-search.api` then `dotnet run --project tools/CoverageGate`. It fails if any line, branch or method is not covered.
+- **API integration tests** run against real PostgreSQL and RabbitMQ containers, which they start and remove themselves. Docker must be running. Run them with `dotnet test API/job-posting-api/tests/JobPosting.Api.IntegrationTests` or `dotnet test API/job-search.api/tests/JobSearch.Api.IntegrationTests`.
 - **Browser end-to-end tests** use Playwright with mocked APIs. Install Chromium once, then run the suite:
 
   ```sh
@@ -145,10 +145,19 @@ Each project has its own test suite.
 
 ## Running an API outside Docker
 
-To debug an API on the host, start only the infrastructure with `docker compose up postgres rabbitmq`, then follow that project's README:
+To debug an API on your machine, start its database, RabbitMQ and migration in Docker, then run the API with `dotnet run`. The exact commands and environment variables are in each API's Docker guide:
 
-- [Job Posting API](API/job-posting-api/README.md)
-- [Job Search API](API/job-search.api/README.md)
+- [Job Posting API](API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md#run-the-api-on-the-host)
+- [Job Search API](API/job-search.api/docs/docker.md#run-the-api-on-the-host)
+
+## Project documentation
+
+Each project keeps its detailed notes in a `docs/` folder. The most useful ones:
+
+- **Job Posting API:** [API contract](API/job-posting-api/src/JobPosting.Api/docs/api-contract.md), [idempotency](API/job-posting-api/src/JobPosting.Api/docs/idempotency.md), [POST workflow and compensation](API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md)
+- **Job Search API:** [search, paging and caching](API/job-search.api/docs/search.md), [read performance and caching measurements](API/job-search.api/docs/performance/read-performance.md)
+- **Job Posting app:** [local development](apps/job-posting/docs/local-development.md), [client-side duplicate protection](apps/job-posting/docs/client-idempotency.md)
+- **Job Search app:** [list and detail pages](apps/job-search/docs/list-and-detail-experience.md), [filters and paging in the URL](apps/job-search/docs/url-query-state.md)
 
 ## Repository layout
 
@@ -165,7 +174,7 @@ To debug an API on the host, start only the infrastructure with `docker compose 
 └── ai-log/                   # AI chat transcripts and working notes
 ```
 
-Each project also has a `prompts/` (or `prompt/`) folder with the staged prompts used to build it, and a `docs/` folder with detailed design notes.
+Each project also has a `prompts/` (or `prompt/`) folder with the numbered prompts used to build it, and a `docs/` folder with detailed notes.
 
 ## AI usage
 

@@ -107,7 +107,7 @@ I measured the effect with a 30-second load test. 80% of requests asked for popu
 - The median response time fell from 7.2 ms to 0.2 ms.
 - The API handled about 7,760 requests per second instead of 470.
 
-The full results are in the [performance report](API/job-search.api/docs/performance/README.md#cache-comparison-2026-10-06). Most of the gain comes from popular pages. A one-off search still goes to the database, where the query takes about 1 ms.
+The full results are in the [performance report](API/job-search.api/docs/performance/read-performance.md#cache-comparison-2026-10-06). Most of the gain comes from popular pages. A one-off search still goes to the database, where the query takes about 1 ms.
 
 The cost of caching is a short delay. A new job can take up to 15 seconds to appear on the first page.
 
