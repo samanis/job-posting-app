@@ -20,6 +20,7 @@ public sealed class SearchJob
     public decimal SalaryMin { get; set; }
     public decimal SalaryMax { get; set; }
     public DateOnly ClosingDate { get; set; }
+
     public static SearchJob FromEvent(JobCreatedEvent e)
     {
         var j = e.Job;
@@ -42,5 +43,15 @@ public sealed class SearchJob
             ClosingDate = j.ClosingDate
         };
     }
-    public ProjectedJob ToJob() => new(Id, new DateTimeOffset(SourceCreatedAtTicks, TimeSpan.Zero), Title, Department, Location, Description, SalaryMin, SalaryMax, ClosingDate);
+
+    public ProjectedJob ToJob() => new(
+        Id,
+        new DateTimeOffset(SourceCreatedAtTicks, TimeSpan.Zero),
+        Title,
+        Department,
+        Location,
+        Description,
+        SalaryMin,
+        SalaryMax,
+        ClosingDate);
 }

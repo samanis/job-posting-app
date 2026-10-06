@@ -4,18 +4,23 @@ using Npgsql;
 namespace JobSearch.Api.Persistence;
 
 public enum ProjectionOutcome { Inserted, Duplicate, Conflict }
-public sealed class ProjectionCommitUncertainException(Exception failure) : Exception("Projection commit outcome is uncertain; no acknowledgment is authorized.", failure);
+
+public sealed class ProjectionCommitUncertainException(Exception failure)
+    : Exception("Projection commit outcome is uncertain; no acknowledgment is authorized.", failure);
+
 public interface ISearchProjection
 {
     Task<ProjectionOutcome> ProjectAsync(JobCreatedEvent message, CancellationToken token);
 }
+
 public sealed class ProjectionStore(IDbContextFactory<SearchDbContext> contexts) : ISearchProjection
 {
     public async Task<ProjectionOutcome> ProjectAsync(JobCreatedEvent message, CancellationToken token)
     {
         var row = SearchJob.FromEvent(message);
         try { return await InsertAsync(row, token); }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505", ConstraintName: "pk_jobs" or "ux_jobs_event_id" })
+        catch (DbUpdateException ex)
+            when (ex.InnerException is PostgresException { SqlState: "23505", ConstraintName: "pk_jobs" or "ux_jobs_event_id" })
         {
             var existing = await ReadIdentitiesAsync(row, token);
             if (existing.Count == 0) throw;
@@ -29,11 +34,13 @@ public sealed class ProjectionStore(IDbContextFactory<SearchDbContext> contexts)
             throw;
         }
     }
+
     private async Task<List<SearchJob>> ReadIdentitiesAsync(SearchJob row, CancellationToken token)
     {
         await using var fresh = await contexts.CreateDbContextAsync(token);
         return await fresh.FindIdentitiesAsync(row.Id, row.EventId, token);
     }
+
     private async Task<ProjectionOutcome> InsertAsync(SearchJob row, CancellationToken token)
     {
         await using var context = await contexts.CreateDbContextAsync(token);
@@ -48,9 +55,16 @@ public sealed class ProjectionStore(IDbContextFactory<SearchDbContext> contexts)
         catch (Exception failure) { throw new ProjectionCommitUncertainException(failure); }
         return ProjectionOutcome.Inserted;
     }
+
     public static ProjectionOutcome Classify(IReadOnlyList<SearchJob> existing, SearchJob row) =>
-        existing.Count == 1 && existing[0].Id == row.Id && existing[0].EventId == row.EventId && existing[0].PayloadHash == row.PayloadHash && existing[0].HashVersion == row.HashVersion
-            ? ProjectionOutcome.Duplicate : ProjectionOutcome.Conflict;
+        existing.Count == 1
+            && existing[0].Id == row.Id
+            && existing[0].EventId == row.EventId
+            && existing[0].PayloadHash == row.PayloadHash
+            && existing[0].HashVersion == row.HashVersion
+            ? ProjectionOutcome.Duplicate
+            : ProjectionOutcome.Conflict;
+
     public async Task<long> ReadWatermarkAsync(CancellationToken token)
     {
         await using var context = await contexts.CreateDbContextAsync(token);

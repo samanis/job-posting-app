@@ -18,6 +18,7 @@ public static class SearchMessaging
         services.AddSingleton<IConsumerSession, RabbitMqConsumerSession>();
         services.AddHostedService<SearchConsumerWorker>();
     }
+
     public static ConnectionFactory CreateFactory(ConsumerOptions o) => new()
     {
         HostName = o.HostName,

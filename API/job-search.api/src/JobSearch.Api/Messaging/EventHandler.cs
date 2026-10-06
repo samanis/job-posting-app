@@ -5,15 +5,21 @@ using Microsoft.Extensions.Options;
 namespace JobSearch.Api.Messaging;
 
 public enum DeliveryOutcome { Inserted, Duplicate }
+
 public sealed class PermanentDeliveryException(string code) : Exception("The event cannot be projected.")
 {
     public string Code { get; } = code;
 }
+
 public interface ISearchEventHandler
 {
     Task<DeliveryOutcome> HandleAsync(ReadOnlyMemory<byte> body, EventMetadata metadata, CancellationToken token);
 }
-public sealed class SearchEventHandler(EventReader reader, IOptions<SearchOptions> options, ISearchProjection projection) : ISearchEventHandler
+
+public sealed class SearchEventHandler(
+    EventReader reader,
+    IOptions<SearchOptions> options,
+    ISearchProjection projection) : ISearchEventHandler
 {
     public async Task<DeliveryOutcome> HandleAsync(ReadOnlyMemory<byte> body, EventMetadata metadata, CancellationToken token)
     {
