@@ -7,7 +7,7 @@
   <PropertyGroup Condition="'$(CollectCoverage)' == 'true'">
     <CoverletOutput>$(MSBuildProjectDirectory)/TestResults/coverage/</CoverletOutput>
     <CoverletOutputFormat>json</CoverletOutputFormat>
-    <Include>[JobPosting.*]*,[JobBoard.Persistence]*</Include>
+    <Include>[JobPosting.*]*</Include>
     <Exclude Condition="'$(CoverageSuite)' == 'Unit'">[JobPosting.Api]Program*</Exclude>
     <Include Condition="'$(CoverageSuite)' == 'Host'">[JobPosting.*]Program*</Include>
     <ExcludeByFile>**/obj/**/OpenApiXmlCommentSupport.generated.cs,**/Persistence/Migrations/20261005172328_InitialPosting.Designer.cs,**/Persistence/Migrations/20261005203934_JobRowIdempotency.Designer.cs,**/Persistence/Migrations/PostingDbContextModelSnapshot.cs</ExcludeByFile>

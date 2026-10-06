@@ -1,6 +1,6 @@
 # Stage 7: bounded resilience, diagnostics and shutdown
 
-Read `API/job-posting-api/shared-requirements.md` and `requirements-review.md` first. Inspect completed stages and applicable AGENTS.md. Implement only this stage; preserve unrelated work. Revised Stages 3-6 already implement job-row idempotency and direct publication/compensation. Verify that baseline before adding this stage; do not reintroduce the superseded ledger/outbox design.
+Read `API/job-posting-api/prompts/shared-requirements.md` and `requirements-review.md` first. Inspect completed stages and applicable AGENTS.md. Implement only this stage; preserve unrelated work. Revised Stages 3-6 already implement job-row idempotency and direct publication/compensation. Verify that baseline before adding this stage; do not reintroduce the superseded ledger/outbox design.
 
 ## Tasks
 

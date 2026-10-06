@@ -27,7 +27,7 @@ Posting is low-volume (a few jobs per day); search is high-volume (many candidat
 
 - **Write side.** The posting API validates the request, saves it, and returns `202 Accepted` with the saved record only after the database commit *and* the broker's publish confirmation. An `Idempotency-Key` header makes retries safe, so a double-click or network retry cannot create a duplicate job.
 - **Read side.** The search API consumes events idempotently into its own denormalized table. It serves keyset-paginated lists (no `OFFSET` scans) and uses `pg_trgm` GIN indexes for text filters, so read load never touches the write database. Unprocessable messages go to a quarantine queue instead of blocking the consumer.
-- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, list pages for 15 seconds, and errors never. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On the bundled read workload this cut median latency from 6.9 ms to 0.2 ms.
+- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, and first list pages for up to 15 seconds (never past UTC midnight). Pages with a cursor and errors are never cached. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On a synthetic read workload, 99% of requests were served from the cache and median latency fell from 7.2 ms to 0.2 ms.
 - **Consistency.** Search is eventually consistent, as the brief allows. A new posting normally reaches the search database within a few seconds; a cached list page can take up to 15 seconds more to show it.
 - **Scaling.** Each API can be scaled and deployed independently. The search API is stateless, so it can be scaled out horizontally.
 
@@ -110,7 +110,7 @@ curl -i -X POST http://localhost:5000/api/jobs \
 | `409` | The idempotency key was reused with a different body, or the original request is still in progress. |
 | `503` | The database or broker is unavailable (`Retry-After` is set). |
 
-Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be after today in the business time zone (`America/Toronto` by default). The same rules are enforced in the Angular form and in the API.
+Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be in the future. The Angular form checks these rules using the browser's date. The API checks them again using today's date in the business time zone (`America/Toronto` by default).
 
 ### Job Search API
 
@@ -132,8 +132,8 @@ Each project has its own test suite.
 | Job Posting API | `dotnet test API/job-posting-api/tests/JobPosting.Api.Tests` |
 | Job Search API | `dotnet test API/job-search.api/tests/JobSearch.Api.Tests` |
 
-- **Unit tests** need no running services. The Angular suites enforce 100% coverage.
-- **API integration tests** (`tests/*.IntegrationTests`) run against real PostgreSQL and RabbitMQ containers, which they start and remove themselves. Docker must be running.
+- **Unit tests** need no running services. All four projects require 100% coverage. For the APIs, run the coverage check from the API's folder, for example `cd API/job-search.api` then `dotnet run --project tools/CoverageGate`. It fails if any line, branch or method is not covered.
+- **API integration tests** run against real PostgreSQL and RabbitMQ containers, which they start and remove themselves. Docker must be running. Run them with `dotnet test API/job-posting-api/tests/JobPosting.Api.IntegrationTests` or `dotnet test API/job-search.api/tests/JobSearch.Api.IntegrationTests`.
 - **Browser end-to-end tests** use Playwright with mocked APIs. Install Chromium once, then run the suite:
 
   ```sh
@@ -145,10 +145,19 @@ Each project has its own test suite.
 
 ## Running an API outside Docker
 
-To debug an API on the host, start only the infrastructure with `docker compose up postgres rabbitmq`, then follow that project's README:
+To debug an API on your machine, start its database, RabbitMQ and migration in Docker, then run the API with `dotnet run`. The exact commands and environment variables are in each API's Docker guide:
 
-- [Job Posting API](API/job-posting-api/README.md)
-- [Job Search API](API/job-search.api/README.md)
+- [Job Posting API](API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md#run-the-api-on-the-host)
+- [Job Search API](API/job-search.api/docs/docker.md#run-the-api-on-the-host)
+
+## Project documentation
+
+Each project keeps its detailed notes in a `docs/` folder. The most useful ones:
+
+- **Job Posting API:** [API contract](API/job-posting-api/src/JobPosting.Api/docs/api-contract.md), [idempotency](API/job-posting-api/src/JobPosting.Api/docs/idempotency.md), [POST workflow and compensation](API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md)
+- **Job Search API:** [search, paging and caching](API/job-search.api/docs/search.md), [read performance and caching measurements](API/job-search.api/docs/performance/read-performance.md)
+- **Job Posting app:** [local development](apps/job-posting/docs/local-development.md), [client-side duplicate protection](apps/job-posting/docs/client-idempotency.md)
+- **Job Search app:** [list and detail pages](apps/job-search/docs/list-and-detail-experience.md), [filters and paging in the URL](apps/job-search/docs/url-query-state.md)
 
 ## Repository layout
 
@@ -165,7 +174,7 @@ To debug an API on the host, start only the infrastructure with `docker compose 
 └── ai-log/                   # AI chat transcripts and working notes
 ```
 
-Each project also has a `prompts/` (or `prompt/`) folder with the staged prompts used to build it, and a `docs/` folder with detailed design notes.
+Each project also has a `prompts/` (or `prompt/`) folder with the numbered prompts used to build it, and a `docs/` folder with detailed notes.
 
 ## AI usage
 

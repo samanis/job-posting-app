@@ -40,7 +40,7 @@ public sealed class JobsController(
             var items = rows.Take(query.Limit).ToList();
             var next = rows.Count > query.Limit ? cursors.Encode(snapshot with { Last = items[^1].Position() }) : null;
             Response.Headers.CacheControl = query.Cursor is null
-                ? SearchCaching.FirstPageHeader
+                ? SearchCaching.FirstPageCacheControl(now)
                 : SearchCaching.ContinuationPageHeader;
             return Ok(new JobPage(items.Select(x => x.Summary()).ToArray(), next));
         }

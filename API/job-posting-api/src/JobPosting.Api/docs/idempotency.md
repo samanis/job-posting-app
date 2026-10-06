@@ -1,37 +1,38 @@
-# Job-row idempotency (revised Stage 4)
+# Idempotency: how duplicate submissions are handled
 
-The coordinator accepts a strictly parsed request and all Idempotency-Key header values. Exactly one valid caller key is required on the first request. It hashes the exact UTF-8 key using SHA-256, normalizes the seven fields and computes the versioned canonical fingerprint. Neither current time nor generated IDs participates in the fingerprint. Different keys can intentionally create identical job content.
+Double-clicks, timeouts and retries can send the same job twice. An idempotency key makes sure each submission creates at most one job. The client creates a unique key for each new job and sends it in the `Idempotency-Key` header on every retry. The key rules are in the [API contract](api-contract.md#idempotency-key).
 
-It reads the saved job by digest before future-date validation. A different fingerprint conflicts; unknown canonicalization versions fail safely. Matching published jobs return their original job/event IDs and response snapshot even after closing date expiry. Matching unpublished jobs return an unresolved outcome, never permission to publish again. There is no polling, automatic publication recovery or claim about an active owner's status.
+## Where the key is stored
 
-| Application outcome | Meaning for the future endpoint |
-| --- | --- |
-| Created | This invocation inserted and confirmed commit of a new job; only this outcome may initiate direct publication |
-| Published | Known completed duplicate; replay stored response without insert/publish |
-| PublicationUnresolved | Existing or reconciled unpublished job; safe 503 publication_unresolved, no automatic repair |
-| InProgress | Bounded database insertion contention; 409 idempotency_in_progress with Retry-After: 1 |
-| Conflict | Same key, different payload; 409 idempotency_key_conflict |
-| DependencyUnavailable | Database/commit reconciliation unresolved, including unknown fingerprint version |
-| InvalidKey / InvalidRequest | Header or field failure without consuming a key |
+There is no separate table for keys. The API stores a SHA-256 hash of the key in the job's own row, never the raw key. A unique index on this hash lets each key belong to only one job.
 
-The POST endpoint maps these outcomes to HTTP responses. Created alone is never 202: the workflow must confirm routable RabbitMQ acceptance and save publication status first. See [POST workflow](post-workflow.md).
+The row also stores a fingerprint: a hash of the seven fields after trimming. It shows whether a retry carries the same job. Field order, JSON formatting and outer spaces do not matter, and `10` equals `10.00`. Any other difference, including letter case, counts as a different job.
 
-New valid work inserts one job, with PostgreSQL's unique digest as authority. Concurrent losers dispose their failed transaction and reread through a clean context. There is no reservation service, process-local lock, ledger/outbox or lease. SQL/lock settings bound insertion contention. All matching contenders converge on the winning job/event, but only one is Created.
+## What happens when a key arrives
 
-Uncertain commits receive at most one fresh diagnostic read. Finding an unpublished row returns PublicationUnresolved, not Created; missing/failed reads remain DependencyUnavailable. Never repeat creation in the same invocation or treat absence as rollback proof. Caller cancellation propagates. Recognized EF/Npgsql wrapper errors map safely; unexpected application exceptions reach central handling.
+The API first validates the fields. It then looks up the key before it checks the closing date.
 
-Keys remain for the lifetime of remaining jobs. Invalid new requests consume no key. Explicit compensation deletion removes the key with its exact job; a later attempt can recreate the posting and may duplicate an earlier uncertain broker delivery. No TTL or recovery scanner exists. Pending rows after crashes require manual investigation.
+| Situation | Result |
+|---|---|
+| New key | The API checks the closing date, saves the job and publishes it (see [POST workflow](post-workflow.md)) |
+| Known key, same job, already published | `202` with the original stored response. Nothing is saved or published again. |
+| Known key, different job | `409 idempotency_key_conflict` |
+| Known key, same job, not yet published | `503 publication_unresolved`. The API never publishes it again. |
+| Another request is saving the same key right now | `409 idempotency_in_progress` with `Retry-After: 1` |
+| The database fails, or the API cannot tell whether the save succeeded | `503 dependency_unavailable` with `Retry-After: 1` |
 
-## Verification
+Because the lookup comes first, a published job replays its `202` even after its closing date has passed. An invalid request does not use up a key, so the client can fix it and resend with the same key.
 
-Run from API/job-posting-api:
+## Two requests at the same moment
 
-```sh
-dotnet run --project tools/CoverageGate
-dotnet test tests/JobPosting.Api.IntegrationTests --configuration Release --no-restore
-dotnet build JobBoard.slnx --configuration Release --no-restore
-```
+Two requests with the same key may arrive together, even on different API instances. The unique index lets only one insert succeed. The other request reads the saved job and gets a result from the table above. If the first insert has not committed within 3 seconds, the other request gets `409 idempotency_in_progress`. Only the request that inserted the job publishes it.
 
-Revised Stage 4 passed 164 isolated unit tests (763/763 lines, 194/194 branches, 119/119 methods), 16 host tests (42/42 lines, 4/4 branches, 1/1 methods) and 22 separate real PostgreSQL cases. Coverage exclusions remain unchanged. PostgreSQL tests force eight independent service providers/DbContexts to race, establish exactly one creator, verify equivalent/conflicting payloads, unresolved restart, published expired replay, lost commit acknowledgment, lock bounds, distinct-key identical content and recreation after compensation deletion. Publication timestamps in these tests are explicit state setup, not evidence that a RabbitMQ producer exists.
+## When the save outcome is unknown
 
-See [persistence.md](persistence.md) for schema and upgrade instructions.
+If the connection fails during a commit, the API reads the row once more. If the job is there, it returns `503 publication_unresolved` and does not publish. If not, it returns `503 dependency_unavailable`, and the client should retry with the same key and body.
+
+## How long keys last
+
+A key lasts as long as its job. There is no expiry and no cleanup job.
+
+When publishing fails, the API deletes the saved job, and the key with it. This undo step is called compensation. A retry with the same key then creates the job again. If RabbitMQ did store the first message, search may show the job twice (see [POST workflow](post-workflow.md#known-weak-spots)). A job left unpublished after a crash keeps its key, and retries return `503 publication_unresolved`.
