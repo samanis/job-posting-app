@@ -1,6 +1,6 @@
 # Stage 5: broker abstraction and direct RabbitMQ producer
 
-Read `API/job-posting-api/shared-requirements.md` and `requirements-review.md` first. Inspect completed stages and applicable AGENTS.md. Implement only this stage; preserve unrelated work. Existing Stages 3-4 use the superseded ledger/outbox design: refactor them to these revised requirements before implementing dependent stages. Do not mistake earlier passing checks for verification of the revised design.
+Read `API/job-posting-api/prompts/shared-requirements.md` and `requirements-review.md` first. Inspect completed stages and applicable AGENTS.md. Implement only this stage; preserve unrelated work. Existing Stages 3-4 use the superseded ledger/outbox design: refactor them to these revised requirements before implementing dependent stages. Do not mistake earlier passing checks for verification of the revised design.
 
 ## Tasks
 

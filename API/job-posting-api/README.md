@@ -85,4 +85,4 @@ tools/CoverageGate/                  coverage enforcement
 - [Messaging](src/JobPosting.Api/docs/messaging.md) and [POST workflow](src/JobPosting.Api/docs/post-workflow.md)
 - [Resilience and shutdown](src/JobPosting.Api/docs/resilience-and-shutdown.md)
 - [Service README](src/JobPosting.Api/README.md): configuration, logging and coverage-gate details
-- [Implementation prompts](PROMPTS.md) used to build this API with AI
+- [Implementation prompts](prompts/README.md) used to build this API with AI

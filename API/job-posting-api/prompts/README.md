@@ -5,7 +5,7 @@
 
 Run these prompts individually, in order, using their repository-relative paths. All posting source, persistence, tests, tools and configuration are under API/job-posting-api; run .NET and Compose commands from that application directory. These files are implementation instructions, not implemented backend capabilities.
 
-Start with: `Run API/job-posting-api/01-dotnet10-foundation.md`.
+Start with: `Run API/job-posting-api/prompts/01-dotnet10-foundation.md`.
 
 Read [requirements-review.md](requirements-review.md) for the review of the PDF, design image, and user requirements. Every implementation prompt also requires [shared-requirements.md](shared-requirements.md).
 

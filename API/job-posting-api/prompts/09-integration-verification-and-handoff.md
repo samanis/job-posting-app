@@ -1,6 +1,6 @@
 # Stage 9: verification, documentation and client handoff
 
-Read `API/job-posting-api/shared-requirements.md` and `requirements-review.md` first. Inspect completed stages and applicable AGENTS.md. Implement only this stage; preserve unrelated work. Revised Stages 3-8 already implement job-row idempotency, direct publication/compensation and the Docker posting subset. Verify that baseline; do not reintroduce the superseded ledger/outbox design.
+Read `API/job-posting-api/prompts/shared-requirements.md` and `requirements-review.md` first. Inspect completed stages and applicable AGENTS.md. Implement only this stage; preserve unrelated work. Revised Stages 3-8 already implement job-row idempotency, direct publication/compensation and the Docker posting subset. Verify that baseline; do not reintroduce the superseded ledger/outbox design.
 
 ## Tasks
 

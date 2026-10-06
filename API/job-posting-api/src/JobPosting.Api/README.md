@@ -71,4 +71,4 @@ One JSON console logger configuration includes UTC timestamps and trace scopes. 
 - `Resilience`: circuit breaker, health routes and bounded shutdown drain.
 - `Diagnostics`: safe JSON request/error logs and standard metrics.
 
-Isolated unit and in-process host tests live under `tests/JobPosting.Api.Tests`; real dependency/signal tests and a test-only Linux harness live alongside it under this application root. Test hooks are never registered in the deployed API. Stage prompts are in [implementation prompts](../../PROMPTS.md).
+Isolated unit and in-process host tests live under `tests/JobPosting.Api.Tests`; real dependency/signal tests and a test-only Linux harness live alongside it under this application root. Test hooks are never registered in the deployed API. Stage prompts are in [implementation prompts](../../prompts/README.md).
