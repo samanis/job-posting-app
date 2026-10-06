@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 namespace JobSearch.Api.Contracts;
+
 public static class EventFingerprint
 {
     public const int Version = 1;

@@ -15,8 +15,17 @@ public sealed class RabbitMqFixture : IAsyncLifetime
     public ConsumerOptions Settings()
     {
         var suffix = Guid.NewGuid().ToString("N");
-        return new() { HostName = "127.0.0.1", Port = port, UserName = "jobsearch", Password = password,
-            Exchange = "job-post-exchange-" + suffix, Queue = "job-post-queue-" + suffix,QuarantineExchange="quarantine-exchange-"+suffix,QuarantineQueue="quarantine-queue-"+suffix };
+        return new()
+        {
+            HostName = "127.0.0.1",
+            Port = port,
+            UserName = "jobsearch",
+            Password = password,
+            Exchange = "job-post-exchange-" + suffix,
+            Queue = "job-post-queue-" + suffix,
+            QuarantineExchange = "quarantine-exchange-" + suffix,
+            QuarantineQueue = "quarantine-queue-" + suffix
+        };
     }
     public async Task InitializeAsync()
     {
@@ -34,8 +43,8 @@ public sealed class RabbitMqFixture : IAsyncLifetime
         }
         catch { await DisposeAsync(); throw; }
     }
-    public Task StopBrokerAsync()=>DockerAsync(["exec",container,"rabbitmqctl","stop_app"]);
-    public async Task StartBrokerAsync(){await DockerAsync(["exec",container,"rabbitmqctl","start_app"]);await WaitReadyAsync();}
+    public Task StopBrokerAsync() => DockerAsync(["exec", container, "rabbitmqctl", "stop_app"]);
+    public async Task StartBrokerAsync() { await DockerAsync(["exec", container, "rabbitmqctl", "start_app"]); await WaitReadyAsync(); }
     public async Task RestartAsync() { await DockerAsync(["restart", container]); await WaitReadyAsync(); }
     private async Task WaitReadyAsync()
     {

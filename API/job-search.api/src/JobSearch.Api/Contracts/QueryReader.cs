@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Extensions.Primitives;
 namespace JobSearch.Api.Contracts;
+
 public sealed class QueryReader(TimeProvider clock)
 {
     public DateOnly TodayUtc() => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);

@@ -14,9 +14,9 @@ public static class SearchPersistence
         services.AddOptions<SearchDatabaseOptions>().Bind(configuration.GetSection(SearchDatabaseOptions.SectionName)).ValidateOnStart();
         services.AddDbContextFactory<SearchDbContext>((provider, builder) => Configure(builder,
             provider.GetRequiredService<IOptions<SearchDatabaseOptions>>().Value));
-        services.AddSingleton<JobSearch.Api.Diagnostics.IDatabaseProbe,JobSearch.Api.Diagnostics.SearchDatabaseProbe>();
+        services.AddSingleton<JobSearch.Api.Diagnostics.IDatabaseProbe, JobSearch.Api.Diagnostics.SearchDatabaseProbe>();
         services.AddScoped<ProjectionStore>();
-        services.AddScoped<ISearchProjection>(p=>p.GetRequiredService<ProjectionStore>());
+        services.AddScoped<ISearchProjection>(p => p.GetRequiredService<ProjectionStore>());
 
     }
 

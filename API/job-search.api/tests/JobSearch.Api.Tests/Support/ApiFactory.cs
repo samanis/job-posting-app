@@ -23,7 +23,7 @@ public sealed class ApiFactory(
         builder.UseEnvironment(environment);
         builder.ConfigureAppConfiguration((_, configuration) =>
         {
-            configuration.AddInMemoryCollection(new Dictionary<string,string?> { ["RabbitMq:Enabled"]="false",["Cursor:Keys:current"]=Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("test-only-secret-signing-key-at-least-thirty-two-bytes")) });
+            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RabbitMq:Enabled"] = "false", ["Cursor:Keys:current"] = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("test-only-secret-signing-key-at-least-thirty-two-bytes")) });
             if (settings is not null)
             {
                 configuration.AddInMemoryCollection(settings);
@@ -32,7 +32,7 @@ public sealed class ApiFactory(
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<ILoggerProvider>(Logs);
-            services.AddSingleton<JobSearch.Api.Diagnostics.IDatabaseProbe,ReadyProbe>();
+            services.AddSingleton<JobSearch.Api.Diagnostics.IDatabaseProbe, ReadyProbe>();
             configureServices?.Invoke(services);
             if (clock is not null)
             {
@@ -88,4 +88,4 @@ public sealed class CapturedLoggerProvider : ILoggerProvider
     }
 }
 
-public sealed class ReadyProbe:JobSearch.Api.Diagnostics.IDatabaseProbe { public Task<bool> ReadyAsync(CancellationToken token)=>Task.FromResult(true); }
+public sealed class ReadyProbe : JobSearch.Api.Diagnostics.IDatabaseProbe { public Task<bool> ReadyAsync(CancellationToken token) => Task.FromResult(true); }

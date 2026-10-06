@@ -1,4 +1,5 @@
 namespace JobSearch.Api.Contracts;
+
 public sealed record ProjectedJob(Guid Id, DateTimeOffset CreatedAt, string Title, string Department, string Location, string Description, decimal SalaryMin, decimal SalaryMax, DateOnly ClosingDate);
 public sealed record JobCreatedEvent(Guid EventId, DateTimeOffset OccurredAt, string CorrelationId, ProjectedJob Job);
 public sealed record JobSummary(Guid Id, DateTimeOffset CreatedAt, string Title, string Department, string Location, decimal SalaryMin, decimal SalaryMax, DateOnly ClosingDate);

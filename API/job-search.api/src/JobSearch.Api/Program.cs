@@ -21,9 +21,9 @@ builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = Tim
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.None);
 builder.Logging.AddFilter("Npgsql", LogLevel.None);
 builder.Services.AddSearchPersistence(builder.Configuration);
-builder.Logging.AddFilter("RabbitMQ.Client",LogLevel.None);
+builder.Logging.AddFilter("RabbitMQ.Client", LogLevel.None);
 builder.Services.AddSearchMessaging(builder.Configuration);
-JobSearch.Api.Search.SearchReads.AddSearchReads(builder.Services,builder.Configuration,builder.Environment);
+JobSearch.Api.Search.SearchReads.AddSearchReads(builder.Services, builder.Configuration, builder.Environment);
 JobSearch.Api.Search.SearchCaching.AddSearchCaching(builder.Services);
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
