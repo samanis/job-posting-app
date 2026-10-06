@@ -169,7 +169,11 @@ Each project also has a `prompts/` (or `prompt/`) folder with the staged prompts
 
 ## AI usage
 
-Transcripts are in [`ai-log/`](ai-log). The API work notes are in [`API/job-posting-api/ai-log`](API/job-posting-api/ai-log) and [`API/job-search.api/ai-log`](API/job-search.api/ai-log). Each project was built from a sequence of small, reviewed prompts rather than one large request; the prompts are committed alongside each project.
+All transcripts and AI work notes are in [`ai-log/`](ai-log/README.md). Its README has a guided tour with line numbers for the points where I steered or simplified the AI's design. Each project was built from a sequence of small, reviewed prompts rather than one large request; the prompts are committed alongside each project.
+
+## Commit history
+
+The early history (4–6 October) contains a few large commits with terse messages such as `done` and `version 0`, where whole prompt stages were committed at once. Later commits are small and each describes one change. I've left the early history as it is rather than rewriting it.
 
 ## Next steps
 

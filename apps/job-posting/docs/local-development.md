@@ -50,7 +50,7 @@ Optional interactive commands: npm.cmd run test:watch and npm.cmd run watch. Cov
 - tests: mirrors source organization; all client specs live here.
 - docs: development, proposed API contract, idempotency and test coverage notes.
 - prompts: staged implementation prompts and shared requirements.
-- ../../ai-log: truthful work notes; an actual chat transcript is still required.
+- ../../ai-log: AI chat transcripts and work notes for the whole repository; see its README.
 
 ## Angular and user behavior
 
@@ -66,13 +66,13 @@ One logical attempt contains a UUID key, immutable normalized payload and versio
 
 This protects one tab's attempt/retry lifecycle; it does not identify independently entered duplicate jobs across tabs/devices. At-most-once saves require backend key/payload enforcement, response replay and sufficient retention. See client-idempotency.md.
 
-## Genuine AI transcript
+## AI transcripts
 
-Save an actual export/capture of this conversation under ../../ai-log with a meaningful .md or .txt filename, preserving the real user/assistant messages and their order. Include the prompts, decisions, accepted/rejected suggestions and relevant results. If exported in multiple parts, label them in sequence. Work notes are summaries and do not satisfy the exercise's transcript requirement. Do not invent messages or present notes as an export. Review the actual capture for unrelated private information before committing it to a public repository.
+The chat transcripts and work notes for this app and the rest of the repository are in [ai-log](../../../ai-log/README.md).
 
-## Remaining work
+## Integration
 
-Client unit/build verification is complete; actual backend integration and browser visual validation are still required. The full exercise additionally needs the search Angular app, separate posting/search .NET 10 APIs, EF Core persistence with a migration, root Docker Compose for the APIs/database, inter-app availability, real AI transcripts, and submission through the user's repository/recruiter workflow. This stage does not publish, push, or contact anyone.
+This client runs against the Job Posting API started by the repository's root `docker compose up`; see the [root README](../../../README.md).
 
 ## Final verification (October 4, 2026)
 
