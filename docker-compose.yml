@@ -1,0 +1,132 @@
+# Starts the whole backend: PostgreSQL, RabbitMQ, both migrations and both APIs.
+#   docker compose up --build
+# Every value has a public LOCAL DEVELOPMENT default, so no .env file is required.
+# Override them in an ignored root .env before the FIRST start (database roles and
+# passwords are fixed once the volume is initialized).
+#
+# Posting API  -> http://localhost:5000   (ng serve apps/job-posting proxies here)
+# Search API   -> http://localhost:5101   (ng serve apps/job-search proxies here)
+# RabbitMQ UI  -> http://localhost:15672
+name: job-board
+
+x-search-db: &search-db
+  PGPASSWORD: ${SEARCH_POSTGRES_PASSWORD:-local-development-only-change-me}
+  SearchDatabase__ConnectionString: Host=postgres;Port=5432;Database=job_search;Username=jobsearch
+
+x-posting-db: &posting-db
+  PGPASSWORD: ${POSTGRES_PASSWORD:-local-development-only-change-me}
+  PostingDatabase__ConnectionString: Host=postgres;Port=5432;Database=${POSTGRES_DB:-job_postings};Username=${POSTGRES_USER:-jobposting}
+
+services:
+  # One PostgreSQL server with two databases: job_postings (write side, owned by the
+  # posting API) and job_search (read model, owned by the search API).
+  postgres:
+    image: postgres:18.6@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobposting}
+      POSTGRES_DB: ${POSTGRES_DB:-job_postings}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-development-only-change-me}
+      SEARCH_POSTGRES_PASSWORD: ${SEARCH_POSTGRES_PASSWORD:-local-development-only-change-me}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./infra/database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # TCP only: the temporary server that runs init scripts listens on the socket alone,
+      # so this stays unhealthy until job_search exists and the real server is up.
+      test: ["CMD-SHELL", 'pg_isready --host=127.0.0.1 --username="$$POSTGRES_USER" --dbname="$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    stop_grace_period: 45s
+
+  rabbitmq:
+    image: rabbitmq:4.3.6-management@sha256:8dd6e3570ddaa2ef82a6c3a8950e79c1f73893adfbdddbc374fc1f1ac8a0f5dd
+    # The Erlang node name must stay stable when a container is recreated against this volume.
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-jobboard}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-local-development-only-change-me}
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    stop_grace_period: 45s
+
+  job-posting-migrate:
+    image: job-board-posting-migrations:local
+    build:
+      context: ./API/job-posting-api
+      target: migrations
+    environment: *posting-db
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  job-search-migrate:
+    image: job-board-search-migrations:local
+    build:
+      context: ./API/job-search.api
+      target: migrations
+    environment: *search-db
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  job-posting-api:
+    image: job-board-posting-api:local
+    build:
+      context: ./API/job-posting-api
+      target: api
+    environment:
+      <<: *posting-db
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      JobPosting__BusinessTimeZone: ${JOB_POSTING_TIME_ZONE:-America/Toronto}
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-jobboard}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-local-development-only-change-me}
+    ports:
+      - "127.0.0.1:${JOB_POSTING_API_PORT:-5000}:8080"
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+      job-posting-migrate: {condition: service_completed_successfully}
+    stop_grace_period: 45s
+
+  job-search-api:
+    image: job-board-search-api:local
+    build:
+      context: ./API/job-search.api
+      target: api
+    environment:
+      <<: *search-db
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Cursor__ActiveKeyId: current
+      # Local-only default; set CURSOR_SIGNING_KEY to a fresh 32-byte base64 key for anything shared.
+      Cursor__Keys__current: ${CURSOR_SIGNING_KEY:-ZI36NDNN6PM44gGUxX3pMocKJfIAAWFYdpTPJ9o/QUk=}
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-jobboard}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-local-development-only-change-me}
+      RabbitMq__VirtualHost: /
+    ports:
+      - "127.0.0.1:${SEARCH_API_PORT:-5101}:8080"
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+      job-search-migrate: {condition: service_completed_successfully}
+    stop_grace_period: 45s
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
