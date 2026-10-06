@@ -18,11 +18,11 @@ Keep the terminal running and open http://localhost:4201/jobs. Stop the server w
 To connect a running search API, set its origin before starting (replace the example address):
 
 ```powershell
-$env:JOB_SEARCH_API_URL = 'http://localhost:5001'
+$env:JOB_SEARCH_API_URL = 'http://localhost:5101'
 npm.cmd --prefix .\apps\job-search start
 ```
 
-The development proxy forwards `/api/**` to that API. No backend is implemented yet; displaying live jobs requires an API matching the [query contract](docs/api-contract.md).
+The development proxy forwards `/api/**` to that API. The proxy defaults to the local Docker search API at http://localhost:5101; JOB_SEARCH_API_URL overrides it. Start the API first to display live jobs.
 
 If installation reports `EPERM` for `esbuild.exe`, stop running development servers before retrying `ci`. Use the `--prefix` commands above to avoid missing `package.json` errors at the repository root.
 
@@ -49,3 +49,4 @@ Run from the repository root. Tests start their own server on port 4302 and use 
 ## Deploy
 
 Upload the production build's `browser/` contents to a static host. Configure frontend routes (`/jobs` and `/jobs/:id`) to fall back to `index.html`, and route `/api/**` to the deployed search API before applying that fallback. `JOB_SEARCH_API_URL` configures local development only.
+

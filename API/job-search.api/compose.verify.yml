@@ -1,0 +1,18 @@
+# Explicit disposable verification overlay, never enabled in normal development.
+services:
+  rabbitmq:
+    image: rabbitmq:4.3.6-management@sha256:8dd6e3570ddaa2ef82a6c3a8950e79c1f73893adfbdddbc374fc1f1ac8a0f5dd
+    hostname: verify-broker
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports: ["127.0.0.1:${VERIFY_BROKER_PORT}:5672"]
+    networks:
+      broker:
+        aliases: [verify-broker]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    stop_grace_period: 45s

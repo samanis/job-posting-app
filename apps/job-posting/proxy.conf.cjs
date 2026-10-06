@@ -1,3 +1,3 @@
-// Set JOB_POSTING_API_URL before npm start when an API is available.
-const target = process.env.JOB_POSTING_API_URL;
-module.exports = target ? { '/api/**': { target, changeOrigin: true } } : {};
+// Local Docker API by default; override for another development backend.
+const target = process.env.JOB_POSTING_API_URL || 'http://localhost:5000';
+module.exports = { '/api/**': { target, changeOrigin: true } };

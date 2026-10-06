@@ -1,0 +1,12 @@
+[
+  {
+    "path": "src/JobSearch.Api/Persistence/Migrations/20261005224236_InitialSearch.Designer.cs",
+    "sha256": "aae75d6973fdca08668d01fe2357d0ac14f1a5102e00f492528c41274cb14191",
+    "reason": "Unmodified EF-generated model metadata; authored migration Up/Down remains covered."
+  },
+  {
+    "path": "src/JobSearch.Api/Persistence/Migrations/SearchDbContextModelSnapshot.cs",
+    "sha256": "c3056791abb2b1f44ee0358da2c8e5a6f4f126bcf5bd9f36c7253b9b44e83810",
+    "reason": "Unmodified EF-generated model metadata; authored migration Up/Down remains covered."
+  }
+]

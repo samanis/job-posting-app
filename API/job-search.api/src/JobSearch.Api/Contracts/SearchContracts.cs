@@ -1,0 +1,10 @@
+namespace JobSearch.Api.Contracts;
+public sealed record ProjectedJob(Guid Id, DateTimeOffset CreatedAt, string Title, string Department, string Location, string Description, decimal SalaryMin, decimal SalaryMax, DateOnly ClosingDate);
+public sealed record JobCreatedEvent(Guid EventId, DateTimeOffset OccurredAt, string CorrelationId, ProjectedJob Job);
+public sealed record JobSummary(Guid Id, DateTimeOffset CreatedAt, string Title, string Department, string Location, decimal SalaryMin, decimal SalaryMax, DateOnly ClosingDate);
+public sealed record JobDetail(Guid Id, DateTimeOffset CreatedAt, string Title, string Department, string Location, string Description, decimal SalaryMin, decimal SalaryMax, DateOnly ClosingDate);
+public sealed record JobPage(IReadOnlyList<JobSummary> Items, string? NextCursor);
+public sealed record EventMetadata(string? MessageId = null, string? Type = null, int? SchemaVersion = null, string? ContentType = null);
+public sealed record EventReadResult(JobCreatedEvent? Event, string? Error);
+public sealed record SearchQuery(string? Q, string? Department, string? Location, int Limit, string Sort, string? Cursor);
+public sealed record QueryReadResult(SearchQuery? Query, string? Error);

@@ -29,7 +29,7 @@ export function isSavedJob(value: unknown): value is SavedJob {
   if (!validDate(value['closingDate'])) return false;
   const createdAt = value['createdAt'];
   return typeof createdAt === 'string'
-    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(createdAt)
+    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})$/.test(createdAt)
     && validDate(createdAt.slice(0, 10)) && Number.isFinite(Date.parse(createdAt));
 }
 
@@ -68,8 +68,8 @@ function validation(body: unknown, status: number): PostingOutcome {
 }
 
 export function classifyResponse(response: HttpResponse<unknown>): PostingOutcome {
-  if (response.status === 202) return { kind: 'pending', reason: 'accepted', message: 'The submission was accepted, but saving is not yet confirmed.' };
   if (isSavedJob(response.body)) return { kind: 'saved', record: response.body, status: response.status };
+  if (response.status === 202) return { kind: 'pending', reason: 'accepted', message: 'The submission was accepted, but saving is not yet confirmed.' };
   return { kind: 'unknown', reason: 'invalid-success', message: unknownMessage };
 }
 
@@ -95,3 +95,4 @@ export function classifyFailure(error: unknown, now: number): PostingOutcome {
 function throttled(headers: HttpHeaders, now: number): PostingOutcome {
   return { kind: 'throttled', retryAt: parseRetryAfter(headers.get('Retry-After'), now), message: 'Too many requests. Wait before retrying this same submission.' };
 }
+

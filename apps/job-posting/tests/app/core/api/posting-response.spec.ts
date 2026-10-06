@@ -37,7 +37,8 @@ describe('Retry-After', () => {
 
 describe('Response classification', () => {
   it.each([200, 201, 203, 206])('recognizes complete saved response %s', status => expect(classifyResponse(new HttpResponse({ status, body: saved }))).toEqual({ kind: 'saved', status, record: saved }));
-  it('never interprets accepted as saved', () => expect(classifyResponse(new HttpResponse({ status: 202, body: saved }))).toMatchObject({ kind: 'pending', reason: 'accepted' }));
+  it('recognizes the API committed 202 record with source timestamp precision', () => expect(classifyResponse(new HttpResponse({ status: 202, body: { ...saved, createdAt: '2026-10-04T15:00:00.1234567+00:00' } }))).toMatchObject({ kind: 'saved', status: 202 }));
+  it('keeps an incomplete 202 unconfirmed', () => expect(classifyResponse(new HttpResponse({ status: 202, body: {} }))).toMatchObject({ kind: 'pending', reason: 'accepted' }));
   it.each([null, {}, 'bad'])('preserves uncertainty for malformed success %j', body => expect(classifyResponse(new HttpResponse({ status: 200, body }))).toMatchObject({ kind: 'unknown', reason: 'invalid-success' }));
   it('preserves uncertainty for no content', () => expect(classifyResponse(new HttpResponse({ status: 204 }))).toMatchObject({ kind: 'unknown' }));
   it.each([400, 422])('maps field and form validation for %s', status => {
@@ -66,3 +67,4 @@ describe('Response classification', () => {
     expect(classifyFailure(new TimeoutError(), now)).toMatchObject({ reason: 'timeout' });
   });
 });
+

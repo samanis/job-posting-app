@@ -1,0 +1,13 @@
+**
+!Dockerfile
+!global.json
+!Directory.Build.props
+!NuGet.Config
+!.config/
+!.config/dotnet-tools.json
+!src/
+!src/**
+**/bin/
+**/obj/
+**/TestResults/
+.env*
