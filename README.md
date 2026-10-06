@@ -27,7 +27,7 @@ Posting is low-volume (a few jobs per day); search is high-volume (many candidat
 
 - **Write side.** The posting API validates the request, saves it, and returns `202 Accepted` with the saved record only after the database commit *and* the broker's publish confirmation. An `Idempotency-Key` header makes retries safe, so a double-click or network retry cannot create a duplicate job.
 - **Read side.** The search API consumes events idempotently into its own denormalized table. It serves keyset-paginated lists (no `OFFSET` scans) and uses `pg_trgm` GIN indexes for text filters, so read load never touches the write database. Unprocessable messages go to a quarantine queue instead of blocking the consumer.
-- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, list pages for 15 seconds, and errors never. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On the bundled read workload this cut median latency from 6.9 ms to 0.2 ms.
+- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, and first list pages for up to 15 seconds (never past UTC midnight). Pages with a cursor and errors are never cached. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On a synthetic read workload, 99% of requests were served from the cache and median latency fell from 7.2 ms to 0.2 ms.
 - **Consistency.** Search is eventually consistent, as the brief allows. A new posting normally reaches the search database within a few seconds; a cached list page can take up to 15 seconds more to show it.
 - **Scaling.** Each API can be scaled and deployed independently. The search API is stateless, so it can be scaled out horizontally.
 
