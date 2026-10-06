@@ -2,7 +2,7 @@
 
 - **Tool:** Claude Code (VS Code extension), model Claude Opus 5.5
 - **Date:** 2026-10-06
-- **Scope:** reviewing the submission against the brief as a hiring manager would; adding the root `docker-compose.yml`; rewriting the READMEs; writing `DECISIONS.md`; discussing and implementing search API caching (including a rejected Redis design and a decision to keep the signed cursors); exporting this transcript; `dotnet format`; consolidating `ai-log/`; splitting dense search API code with verified whitespace-only changes; and a clean-clone end-to-end test.
+- **Scope:** reviewing the submission against the brief as a hiring manager would; adding the root `docker-compose.yml`; rewriting the READMEs; writing `DECISIONS.md`; discussing and implementing search API caching (including a rejected Redis design and a decision to keep the signed cursors); exporting this transcript; `dotnet format`; consolidating `ai-log/`; splitting dense search API code with verified whitespace-only changes; a clean-clone end-to-end test; removing leftover files; tightening the caching rules; cutting the repository to a single README and 11 docs; and rewriting `DECISIONS.md` and the docs in plain language, including correcting how the outbox decision and a lost RabbitMQ confirmation were described.
 
 Exported from the Claude Code session log. The candidate's messages and Claude's replies are complete. Tool calls are summarised, with inputs and outputs shortened; Claude's internal reasoning is omitted; the attached PDF is replaced by a placeholder; an email address is redacted. The export ends at the point the export was requested.
 
@@ -1294,6 +1294,10 @@ apps/job-search/node_modules
 ```
 
 </details>
+
+*[System: Background command "Run unit tests for all four projects" completed (exit code 0)]*
+
+## Claude
 
 Written for: the hiring panel reviewing your submission. They are engineers who will clone the repo and need to run and judge it quickly.
 
@@ -3095,6 +3099,10 @@ until [ -f /tmp/perf-before.json ] || grep -q -i "error\|exception\|fail" "C:/Us
 ```
 
 </details>
+
+*[System: Background command "Measure baseline read performance before caching" completed (exit code 0)]*
+
+## Claude
 
 **Tool: Bash** — Restore perf report and read controller unit tests
 
@@ -5904,6 +5912,10 @@ M API/job-search.api/src/JobSearch.Api/Contracts/EventFingerprint.cs
 
 </details>
 
+*[System: Agent "Reflow search API Search+Contracts" finished]*
+
+## Claude
+
 **Tool: Bash** — Spot-check the reformatted read store
 
 <details><summary>Input</summary>
@@ -6147,6 +6159,10 @@ Command did not complete within its 120s timeout and was moved to the background
 ```
 
 </details>
+
+*[System: Background command "Install apps and run .NET unit tests from clone" completed (exit code 0)]*
+
+## Claude
 
 The installs have now finished. Checking their results:
 
@@ -6425,6 +6441,10 @@ Your questions have been answered: "How should root-docker-compose (13 commits) 
 ```
 
 </details>
+
+*[System: Background command "Check whether npm installs are progressing" completed (exit code 0)]*
+
+## Claude
 
 Everything on the list is done except the merge, which you'll do through a pull request. Here's a title and description you can paste in.
 
@@ -6803,6 +6823,4703 @@ The file C:\Users\saman\source\repos\job-posting-app\ai-log\README.md has been u
 
 ```text
 The file C:\Users\saman\source\repos\job-posting-app\ai-log\README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+email traces: 0
+warning: in the working copy of 'ai-log/03-review-compose-docs-caching.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ai-log/README.md', LF will be replaced by CRLF the next time Git touches it
+   401a5c34..69504fe5  root-docker-compose -> root-docker-compose
+69504fe5 Re-export the review session transcript to its end
+```
+
+</details>
+
+I re-exported this session's transcript to [ai-log/03-review-compose-docs-caching.md](ai-log/03-review-compose-docs-caching.md), then committed and pushed it as `69504fe5` on `root-docker-compose`.
+
+**Changes in this export:**
+- **It now covers the whole session**, including the formatting, the `ai-log` reorganisation, the code reflow and the clean-clone test. It's about 300 KB.
+- **The three subagent reports are included** under a "Subagent report" heading. They were missing before because they're stored as internal messages. They show how the reflow was delegated and checked.
+- **Background notifications are labelled as system events.** The first version showed "Agent finished" notifications under **User**, as if you had typed them. They now read as one-line `[System: …]` notes.
+- **Your email address is still fully redacted.**
+- **The `ai-log` index** now mentions the parallel subagents and the clean-clone test for this transcript.
+
+The export ends at the moment it was taken, so this reply isn't in it.
+
+The pull request still needs opening and merging. If you've opened it already, it picks up this commit automatically: https://github.com/samanis/job-posting-app/compare/main...root-docker-compose
+
+## User
+
+> merged the code
+
+## Claude
+
+I'll check that `main` on GitHub has everything, and bring your local copy up to date.
+
+**Tool: Bash** — Verify merge and update local main
+
+<details><summary>Input</summary>
+
+```text
+git fetch -q origin && git log --oneline -3 origin/main | cat && echo "branch commits missing from main: $(git rev-list --count origin/main..origin/root-docker-compose)" && git status --short && git switch -q main && git pull -q --ff-only && git log --oneline -1 | cat && ls docker-compose.yml DECISIONS.md ai-log/README.md
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+d2b2726d Merge pull request #4 from samanis/root-docker-compose
+69504fe5 Re-export the review session transcript to its end
+401a5c34 Split dense search API code into one statement per line
+branch commits missing from main: 0
+d2b2726d Merge pull request #4 from samanis/root-docker-compose
+DECISIONS.md
+ai-log/README.md
+docker-compose.yml
+```
+
+</details>
+
+**Tool: Bash** — Check repository visibility without credentials
+
+<details><summary>Input</summary>
+
+```text
+curl -s -o /dev/null -w "%{http_code}\n" https://api.github.com/repos/samanis/job-posting-app; curl -s https://api.github.com/repos/samanis/job-posting-app | grep -m1 '"private"'
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+404
+```
+
+</details>
+
+**Tool: Bash** — Scan tracked files for email and secrets
+
+<details><summary>Input</summary>
+
+```text
+a=$(git config user.email) && echo "email in tracked files: $(git grep -l -i -F "$a" | wc -l)"; git grep -l -i -F "$a" | head; echo "--- .env files tracked:"; git ls-files | grep -E "(^|/)\.env($|\.)" ; echo "--- possible secrets:"; git grep -n -i -E "(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][^'\"]{12,}" -- ':!*.lock.json' ':!*package-lock.json' ':!ai-log' | grep -v -i "local-development-only\|test-only\|example\|replace-with" | head
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+email in tracked files: 0
+--- .env files tracked:
+API/job-posting-api/.env.example
+API/job-search.api/.env.example
+--- possible secrets:
+infra/database/init/01-create-search-database.sql:6:CREATE ROLE jobsearch LOGIN PASSWORD :'search_password';
+```
+
+</details>
+
+The merge is done and checked: pull request #4 is on `main`, every commit from the branch is included, and your local `main` is up to date.
+
+**The repository is still private, so the recruiter can't open it yet.** Without logging in, GitHub reports it as not found. To make it public, open the repository on GitHub, go to **Settings → General**, and under **Danger Zone** choose **Change visibility → Public**.
+
+I checked the files for anything you wouldn't want public:
+- **Your email address** doesn't appear in any file, including the transcripts.
+- **No real `.env` files** are committed; only the two `.env.example` templates are.
+- **No secrets.** The only passwords and signing key in the repository are local-development defaults, and they're labelled that way. The one line the scan flagged is a database script that reads its password from a variable.
+
+Your Git author email will still be visible in the commit details, as it is for every public repository on GitHub.
+
+After making it public, send the recruiter https://github.com/samanis/job-posting-app.
+
+The `root-docker-compose` branch is fully merged, so you can delete it on GitHub and locally whenever you like. I can do the local deletion if you want.
+
+## User
+
+> it is public now
+
+## Claude
+
+**Tool: Bash** — Confirm the repository is publicly accessible
+
+<details><summary>Input</summary>
+
+```text
+curl -s https://api.github.com/repos/samanis/job-posting-app | grep -E '"(private|visibility|default_branch)"'; curl -s -o /dev/null -w "repo page: %{http_code}\n" https://github.com/samanis/job-posting-app; curl -s -o /dev/null -w "raw docker-compose.yml on main: %{http_code}\n" https://raw.githubusercontent.com/samanis/job-posting-app/main/docker-compose.yml
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+"private": false,
+  "visibility": "public",
+  "default_branch": "main",
+repo page: 200
+raw docker-compose.yml on main: 200
+```
+
+</details>
+
+I confirmed it without logging in: GitHub reports the repository as public with `main` as the default branch, and both the repository page and `docker-compose.yml` on `main` open for anyone. You can send the recruiter **https://github.com/samanis/job-posting-app**.
+
+Against the brief, the submission now has:
+- **Both apps and both APIs**: Angular 22 and .NET 10, with EF Core migrations and unit tests in all four projects.
+- **A single root `docker-compose.yml`** that starts both APIs and the database. I tested it from a fresh clone, including a real browser run that posted a job and found it in search.
+- **A README** with run instructions, plus `DECISIONS.md` for the reasoning behind the design.
+- **An `/ai-log` folder** with all three transcripts and an index that points reviewers to where you steered the AI.
+
+If the interview covers this, the two topics most likely to come up are the ones `DECISIONS.md` addresses head-on: the scope overrun, and the 202-plus-compensation choice instead of a transactional outbox. Section 6, on why you went past the time box, is still in my wording, so make sure it matches your own reasons.
+
+## User
+
+> what is remained
+
+## Claude
+
+Everything the brief requires is done. What's left is either yours to do, optional cleanup, or deliberately left for later.
+
+**Yours to do**
+1. **Send the link to your recruiter:** https://github.com/samanis/job-posting-app
+2. **Read section 6 of [DECISIONS.md](DECISIONS.md)**, on why you went past the 4-hour box. The reason it gives is my wording. Make sure it matches yours, because it's a likely interview question.
+
+**Optional cleanup** (small; none affects whether the submission works)
+
+| Item | Why it matters |
+|---|---|
+| Delete the per-API `docker-compose.yml` files | The READMEs already point to the root file, but a reviewer could still try the old ones. The search one needs an external network and secrets set up first. |
+| Remove the stale `src/JobBoard.Persistence` placeholder | Its README says persistence "is not implemented yet", which is wrong. The coverage filter also names it, so that needs updating too. |
+| Move the posting API's `01-…09-*.md` prompts into a `prompts/` folder | The other three projects keep their prompts in a folder; this one has them loose in its root. |
+| Delete the merged `root-docker-compose` branch | Housekeeping. |
+| Reflow the search API's **test** code | I only reflowed the application code. The tests are still dense, but reviewers rarely read tests closely. |
+| Add a GitHub Actions workflow running all four test suites | Small, and it shows the team habits a Principal is expected to have. |
+
+**Deliberately left for later** (already written up in DECISIONS.md, so they're talking points rather than gaps)
+- A transactional outbox in place of compensation.
+- A CDN in front of search, and Redis as a shared cache once there are several replicas.
+- A single definition of when a job closes. Posting checks the closing date in Toronto time, while search drops a job at UTC midnight on its closing day.
+- Authentication, and edit/close operations for postings.
+
+One small thing I noticed and haven't written up: the API checks the closing date only *after* the other fields pass validation. A form with several errors can therefore take two submissions to show them all. The client checks everything at once, so users rarely hit this.
+
+I'd suggest the first three cleanup items plus the CI workflow, as small separate commits through one more pull request. Do you want those, or will you submit as it is?
+
+## User
+
+> Delete the per-API docker-compose.yml files , Remove the stale src/JobBoard.Persistence placeholder, Move the posting API's 01-…09-*.md prompts into a prompts/ folder, Delete the merged root-docker-compose branch,
+
+## Claude
+
+I'll do these on a new branch from `main` and bring them back in through one more pull request, as before. First, what refers to the files I'm about to delete or move:
+
+**Tool: Bash** — Create branch and find references to targets
+
+<details><summary>Input</summary>
+
+```text
+git switch -q -c cleanup-leftovers && echo "=== compose refs"; git grep -n -I -E "docker-compose\.yml|compose\.verify|Verify-Compose|docker compose" -- API ':!API/job-posting-api/0*.md' ':!API/job-search.api/prompt' | grep -v "^ai-log" | cut -c1-170; echo "=== JobBoard.Persistence refs"; git grep -n "JobBoard.Persistence" | cut -c1-170
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+=== compose refs
+API/README.md:8:They share no code or database; the only contract between them is the event on RabbitMQ. To run both together with PostgreSQL and RabbitMQ, use `docker co
+API/job-posting-api/README.md:30:docker compose up --build          # from the repository root
+API/job-posting-api/README.md:36:docker compose up -d postgres rabbitmq job-posting-migrate
+API/job-posting-api/docs/verification-and-handoff.md:13:powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
+API/job-posting-api/shared-requirements.md:14:- All backend applications and related infrastructure belong under `API/`, independently from the frontend; do not create or
+API/job-posting-api/shared-requirements.md:91:API/job-posting-api/docker-compose.yml starts posting, PostgreSQL and RabbitMQ with durable volumes/health checks and explic
+API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md:13:docker compose config --quiet
+API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md:14:docker compose up --build --detach --wait --wait-timeout 180
+API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md:15:docker compose ps --al
+… (7340 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read the posting API Docker guide
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API && sed -n 1,12p job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md; echo ...; sed -n 72,175p job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+# Docker and local development (Stage 8)
+
+All backend build, infrastructure and configuration inputs are under `API/job-posting-api`. This Compose subset starts only the posting API, its PostgreSQL database, RabbitMQ and an administrative one-shot migration container. It contains no search API/consumer/query database or frontend. Client integration remains a later task.
+
+## Start from a fresh checkout
+
+For the container route, install Docker with Linux containers and Docker Compose v2. Initial image/package downloads require internet access; no host .NET SDK, global EF tool, local database or untracked environment file is needed.
+
+From the repository root:
+
+'''sh
+cd API/job-posting-api
+...
+## Host .NET development
+
+Install the stable SDK selected by `global.json` (10.0.101 or a compatible 10.0.1xx patch), then run from this application folder:
+
+'''sh
+dotnet restore JobBoard.slnx --locked-mode
+dotnet tool restore
+dotnet build JobBoard.slnx --configuration Release --no-restore
+dotnet run --project tools/CoverageGate
+'''
+
+The coverage gate runs isolated unit and separate bootstrap host suites; neither needs a running database/broker. The full integration suite independently creates it
+… (6399 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read the search API Docker docs
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-search.api && sed -n 1,21p docs/docker.md; echo ...; sed -n 64,95p docs/docker.md; echo ====; sed -n 1,20p docs/runbook.md | cut -c1-300; echo ====; sed -n 5,12p docs/final-verification.md | cut -c1-300
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+# Independent Docker and local development (Stage 8)
+
+Normal docker-compose.yml contains search API, search PostgreSQL and a one-shot migration service only. Build context is this application directory: no posting folder, frontend, tests, development tools, generated output or secrets enter the image. Images are pinned by tag/digest to the verified baseline: SDK10.0.101, ASP.NET10.0.1, PostgreSQL18.6. Both API and migration targets run as APP_UID1654. Curl supplies a bounded DB-readiness health check. The curl apt package is resolved during build, so the whole resulting image is not claimed bit-for-bit reproducible solely from base digests. Build/restore uses existing NuGet locks and pinned EF tool10.0.4; runtime contains no SDK/tool restore.
+
+## Existing broker and Docker startup
+
+From API/job-search.api:
+
+'''powershell
+Copy-Item .env.example .env
+# Edit .env: random search DB password, actual existing broker credentials, network and DNS name.
+$keyBytes=New-Object byte[] 32
+$rng=[Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($keyBytes)
+$rng.Dispose()
+# Put this generated value into CURSOR_SIGNING_KEY in ignored .env, shared consistently across replicas.
+[Con
+… (6126 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Remove per-API Compose files and dependents
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && git rm -q API/job-posting-api/docker-compose.yml API/job-posting-api/.env.example API/job-posting-api/tools/Verify-Compose.ps1 API/job-search.api/docker-compose.yml API/job-search.api/compose.verify.yml API/job-search.api/.env.example API/job-search.api/tools/Verify-Compose.ps1 && git status --short
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+D  API/job-posting-api/.env.example
+D  API/job-posting-api/docker-compose.yml
+D  API/job-posting-api/tools/Verify-Compose.ps1
+D  API/job-search.api/.env.example
+D  API/job-search.api/compose.verify.yml
+D  API/job-search.api/docker-compose.yml
+D  API/job-search.api/tools/Verify-Compose.ps1
+```
+
+</details>
+
+Now I'll rewrite the posting API's Docker guide around the root Compose file. First, a check of the idempotency key rules, since the old guide used a non-UUID key in one example:
+
+**Tool: Bash** — Read idempotency key validation rules
+
+<details><summary>Input</summary>
+
+```text
+sed -n 1,30p API/job-posting-api/src/JobPosting.Api/Validation/IdempotencyKeyValidator.cs
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+namespace JobPosting.Api.Validation;
+
+public static class IdempotencyKeyValidator
+{
+    public static bool TryValidate(IReadOnlyList<string?> values, out string? key)
+    {
+        key = null;
+        if (values.Count != 1) return false;
+        var value = values[0];
+        if (string.IsNullOrEmpty(value) || value.Length > 128) return false;
+        foreach (var character in value)
+            if (!(char.IsAsciiLetterOrDigit(character) || character == '_' || character == '-')) return false;
+        key = value;
+        return true;
+    }
+}
+```
+
+</details>
+
+Any 1–128 letters, digits, `_` or `-` are accepted, so a UUID is just one valid choice. The guide:
+
+**Tool: Write** — C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md
+# Docker and local development
+
+The posting API runs in Docker through the repository's **root** [`docker-compose.yml`](../../../../../docker-compose.yml), which also starts PostgreSQL, RabbitMQ, both migrations and the search API. This guide covers what is specific to the posting API. For the overall quick start, see the [root README](../../../../../README.md).
+
+## Start
+
+From the repository root:
+
+'''sh
+docker compose up --build
+'''
+
+A successful start shows `postgres`, `rabbitmq` and `job-posting-api` healthy, and `job-posting-migrate` exited with code 0. The migration container runs the committed EF Core migration bundle once PostgreSQL is healthy; the API waits for it to complete and never migrates on startup. If it fails, inspect `docker compose logs job-posting-migrate` rather than skipping the dependency.
+
+| Endpoint | URL |
+|---|---|
+| Posting API | http://localhost:5000/api/jobs |
+| Liveness | http://localhost:5000/health/live |
+| Readiness (database and broker) | http://localhost:5000/health/ready |
+
+All published ports bind to 127.0.0.1. The Compose API runs in Production, so the OpenAPI document is not exposed; run the API on the host (below) to get it.
+
+## Image
+
+The [Dockerfile](../../../Dockerfile) has two targets built from this application folder only:
+
+- `api`: the published API on the ASP.NET 10 runtime image.
+- `migrations`: a self-contained EF Core migration bundle.
+
+Both run as the built-in non-root user (UID 1654) with exec-form entrypoints and no SDK at runtime. The SDK, runtime, PostgreSQL and RabbitMQ images are pinned by tag and digest; update tags and digests together. `curl` is installed for the bounded health check.
+
+## Run the API on the host
+
+To debug the API outside Docker, start its dependencies and migration from the repository root, then stop nothing else:
+
+'''sh
+docker compose up -d postgres rabbitmq job-postin
+… (4186 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+Two fixes: a leftover phrase ("then stop nothing else"), and an inaccurate claim. The migration bundle is framework-dependent, not self-contained.
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md
+--- old
+start its dependencies and migration from the repository root, then stop nothing else:
+--- new
+start its dependencies and migration from the repository root:
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md
+--- old
+- `migrations`: a self-contained EF Core migration bundle.
+--- new
+- `migrations`: an EF Core migration bundle, run once by the `job-posting-migrate` service.
+```
+
+</details>
+
+**Tool: Write** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\docker.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\docker.md
+# Docker and local development
+
+The search API runs in Docker through the repository's **root** [`docker-compose.yml`](../../../docker-compose.yml), which also starts PostgreSQL, RabbitMQ, both migrations and the posting API. This guide covers what is specific to the search API. For the overall quick start, see the [root README](../../../README.md).
+
+## Start
+
+From the repository root:
+
+'''sh
+docker compose up --build
+'''
+
+The search API uses its own `job_search` database and `jobsearch` role on the shared PostgreSQL server; an [init script](../../../infra/database/init/01-create-search-database.sql) creates them on first start. It never reads the posting database. `job-search-migrate` applies the committed EF Core migrations once the database is healthy, and the API waits for it to exit with code 0; the API never migrates on startup.
+
+| Endpoint | URL |
+|---|---|
+| Search API | http://localhost:5101/api/jobs |
+| Liveness (no dependencies) | http://localhost:5101/health/live |
+| Readiness (search database and schema) | http://localhost:5101/health/ready |
+| Consumer state | http://localhost:5101/health/ingestion |
+
+A broker outage shows up in `/health/ingestion` only; reads of already-projected jobs keep working.
+
+## Image
+
+The [Dockerfile](../Dockerfile) builds from this application folder only, with two targets: `api` and `migrations` (an EF Core migration bundle). Both run as the built-in non-root user (UID 1654) with no SDK at runtime. The SDK, runtime and PostgreSQL images are pinned by tag and digest. `curl` is installed for the bounded health check.
+
+## Cursor signing key
+
+Production requires an externally supplied cursor signing key: base64 of at least 32 random bytes, shared by every replica. The root Compose file provides a **local-only** default through `CURSOR_SIGNING_KEY`; set your own in a root `.env` for anything shared. To generate one in PowerShell:
+
+'''powershell
+[Convert
+… (2184 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\docker-and-local-development.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\docker.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+Now the remaining references: the search runbook, the two dated verification reports, and the search README's note about its old Compose file.
+
+**Tool: Bash** — Read the remaining stale references
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API && grep -n "docker.md\|Verify-Compose\|Normal Compose" job-search.api/docs/runbook.md | cut -c1-400; echo ===; sed -n 8,16p job-posting-api/docs/verification-and-handoff.md | cut -c1-300; echo ===; grep -n "Verify-Compose" job-search.api/docs/final-verification.md | cut -c1-80
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+3:Follow [Docker and host setup](docker.md) for external secrets, separate PostgreSQL, explicit migration execution, existing broker networking and ports. Normal Compose starts no broker and references no posting application. Preserve the normal search database volume when stopping; volume deletion destroys projection/idempotency history. Never use disposable test cleanup commands against develope
+13:Run `tools/Verify-Compose.ps1` only for its labelled disposable project/network/database/broker. It builds independent images and cleans its own resources. Use [final verification](final-verification.md) to interpret test evidence and limits; use [client handoff](client-integration-handoff.md) before connecting Angular.
+===
+
+'''sh
+dotnet run --project tools/CoverageGate
+dotnet build JobBoard.slnx --configuration Release --no-restore
+dotnet test tests/JobPosting.Api.IntegrationTests --configuration Release --no-build --no-restore
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
+'''
+
+The gate runs locked restore. Integration and Compose checks create isolated containers/volumes and delete only their owned resources. Do not replace these checks with deletion of
+… (123 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Update stale references and recheck
+
+<details><summary>Input</summary>
+
+```text
+node -e '
+const fs=require("fs");
+const edit=(f,from,to)=>{const s=fs.readFileSync(f,"utf8");const i=s.indexOf(from);if(i<0)throw new Error("not found in "+f+": "+from.slice(0,60));fs.writeFileSync(f,s.slice(0,i)+to+s.slice(i+from.length));console.log("edited "+f)};
+// Search runbook: point at the root Compose setup, drop the removed script.
+edit("job-search.api/docs/runbook.md","Follow [Docker and host setup](docker.md) for external secrets, separate PostgreSQL, explicit migration execution, existing broker networking and ports. Normal Compose starts no broker and references no posting application.","Follow [Docker and host setup](docker.md) for the root Compose stack, the separate search database, explicit migrations, the cursor signing key and ports.");
+edit("job-search.api/docs/runbook.md","Run `tools/Verify-Compose.ps1` only for its labelled disposable project/network/database/broker. It builds independent images and cleans its own resources. Use","Use");
+// Search README: the standalone Compose file no longer exists.
+edit("job-search.api/README.md","\n`docker-compose.yml` in this folder is a standalone setup that attaches to an existing broker. Use the root Compose file unless you specifically need that.\n","");
+// Dated verification records: keep the evidence, note the later removal.
+edit("job-search.api/docs/final-verification.md","`tools/Verify-Compose.ps1` passed:","`tools/Verify-Compose.ps1` passed (the script and this API's standalone Compose file were later removed in favour of the repository's root `docker-compose.yml`):");
+edit("job-posting-api/docs/verification-and-handoff.md","powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1\n'''\n","powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1\n'''\n\n> Later change: `tools/Verify-Compose.ps1` and this API's standalone Compose file were removed in favour of the repository's root `docker-compose.yml`. The record above describes the checks as run at the time
+… (305 more characters)
+```
+
+</details>
+
+<details><summary>Result (error)</summary>
+
+```text
+Exit code 1
+[eval]:10
+edit("job-search.api/docs/final-verification.md","`tools/Verify-Compose.ps1` passed:","`tools/Verify-Compose.ps1` passed (the script and this APIs
+                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Expected ',', got '<eof>'
+
+SyntaxError: Invalid or unexpected token
+    at makeContextifyScript (node:internal/vm:185:14)
+    at compileScript (node:internal/process/execution:383:10)
+    at evalTypeScript (node:internal/process/execution:256:22)
+    at node:internal/main/eval_string:74:3
+
+Node.js v22.23.2
+```
+
+</details>
+
+The shell's quoting broke on the apostrophes, so nothing was applied (it failed at parse time, before any edit). I'll put the script in a file instead:
+
+**Tool: Write** — C:\Users\saman\AppData\Local\Temp\fix-compose-refs.js
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\AppData\Local\Temp\fix-compose-refs.js
+// One-off edits for references to the removed per-API Compose files. Run from API/.
+const fs = require('fs');
+const edit = (file, from, to) => {
+  const text = fs.readFileSync(file, 'utf8');
+  const at = text.indexOf(from);
+  if (at < 0) throw new Error(`not found in ${file}: ${from.slice(0, 60)}`);
+  fs.writeFileSync(file, text.slice(0, at) + to + text.slice(at + from.length));
+  console.log(`edited ${file}`);
+};
+
+edit('job-search.api/docs/runbook.md',
+  'Follow [Docker and host setup](docker.md) for external secrets, separate PostgreSQL, explicit migration execution, existing broker networking and ports. Normal Compose starts no broker and references no posting application.',
+  'Follow [Docker and host setup](docker.md) for the root Compose stack, the separate search database, explicit migrations, the cursor signing key and ports.');
+edit('job-search.api/docs/runbook.md',
+  'Run `tools/Verify-Compose.ps1` only for its labelled disposable project/network/database/broker. It builds independent images and cleans its own resources. Use',
+  'Use');
+edit('job-search.api/README.md',
+  "\n`docker-compose.yml` in this folder is a standalone setup that attaches to an existing broker. Use the root Compose file unless you specifically need that.\n",
+  '');
+edit('job-search.api/docs/final-verification.md',
+  '`tools/Verify-Compose.ps1` passed:',
+  "`tools/Verify-Compose.ps1` passed (the script and this API's standalone Compose file were later removed in favour of the repository's root `docker-compose.yml`):");
+edit('job-posting-api/docs/verification-and-handoff.md',
+  'powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1\n'''\n',
+  "powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1\n'''\n\n> Later change: `tools/Verify-Compose.ps1` and this API's standalone Compose file were removed in favour of the repository's root `docker-compose.yml`. The record above describes the che
+… (29 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Apply reference fixes and recheck
+
+<details><summary>Input</summary>
+
+```text
+node C:/Users/saman/AppData/Local/Temp/fix-compose-refs.js && cd .. && echo "--- remaining refs outside historical prompts/logs:" && git grep -n -I -E "Verify-Compose|compose\.verify|\.env\.example" -- . ':!ai-log' ':!API/job-posting-api/0*.md' ':!API/job-posting-api/shared-requirements.md' ':!API/job-posting-api/requirements-review.md' ':!API/job-posting-api/PROMPTS.md' ':!API/job-search.api/prompt' | cut -c1-160
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+File created successfully at: C:\Users\saman\AppData\Local\Temp\fix-compose-refs.js (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result (error)</summary>
+
+```text
+Exit code 1
+edited job-search.api/docs/runbook.md
+edited job-search.api/docs/runbook.md
+C:\Users\saman\AppData\Local\Temp\fix-compose-refs.js:6
+  if (at < 0) throw new Error(`not found in ${file}: ${from.slice(0, 60)}`);
+              ^
+
+Error: not found in job-search.api/README.md: 
+`docker-compose.yml` in this folder is a standalone setup t
+    at edit (C:\Users\saman\AppData\Local\Temp\fix-compose-refs.js:6:21)
+    at Object.<anonymous> (C:\Users\saman\AppData\Local\Temp\fix-compose-refs.js:17:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.23.2
+```
+
+</details>
+
+The runbook edits applied. The README has Windows line endings, so the exact-match failed there. I'll do the last three with the editor:
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\API\\job-search.api\\README.md",
+  "offset": 84
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+84	- [Persistence and migrations](docs/persistence.md)
+85	- [Consumer lifecycle and quarantine](docs/messaging.md)
+86	- [Search, cursors and signing-key rotation](docs/search.md)
+87	- [Implementation prompts](prompt/README.md) used to build this API with AI
+88	
+89	`docker-compose.yml` in this folder is a standalone setup that attaches to an existing broker. Use the root Compose file unless you specifically need that.
+90
+```
+
+</details>
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\final-verification.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\API\\job-search.api\\docs\\final-verification.md",
+  "offset": 9,
+  "limit": 1
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+9	`tools/Verify-Compose.ps1` passed: independently built API/migration images, separate disposable PostgreSQL, queued fixture before startup, successful migration gate, list/detail identity, non-root runtime, broker restart/reconnection, normal API/database stop/resume with retained data, and owned-resource cleanup. The real developer queue was not consumed or populated.
+```
+
+</details>
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\docs\verification-and-handoff.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\API\\job-posting-api\\docs\\verification-and-handoff.md",
+  "offset": 9,
+  "limit": 8
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+9	'''sh
+10	dotnet run --project tools/CoverageGate
+11	dotnet build JobBoard.slnx --configuration Release --no-restore
+12	dotnet test tests/JobPosting.Api.IntegrationTests --configuration Release --no-build --no-restore
+13	powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
+14	'''
+15	
+16	The gate runs locked restore. Integration and Compose checks create isolated containers/volumes and delete only their owned resources. Do not replace these checks with deletion of a developer's normal Compose volumes.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md
+--- old
+- [Implementation prompts](prompt/README.md) used to build this API with AI
+
+`docker-compose.yml` in this folder is a standalone setup that attaches to an existing broker. Use the root Compose file unless you specifically need that.
+
+--- new
+- [Implementation prompts](prompt/README.md) used to build this API with AI
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\final-verification.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\final-verification.md
+--- old
+`tools/Verify-Compose.ps1` passed: independently
+--- new
+`tools/Verify-Compose.ps1` passed (the script and this API's standalone Compose file were later removed in favour of the repository's root `docker-compose.yml`): independently
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\docs\verification-and-handoff.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\docs\verification-and-handoff.md
+--- old
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
+'''
+
+--- new
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
+'''
+
+> Later change: `tools/Verify-Compose.ps1` and this API's standalone Compose file were removed in favour of the repository's root `docker-compose.yml`. The record above describes the checks as run at the time.
+```
+
+</details>
+
+**Tool: Bash** — Recheck references and links
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && echo "--- remaining refs (excluding historical prompts/logs/notes):" && git grep -n -I -E "Verify-Compose|compose\.verify|\.env\.example" -- . ':!ai-log' ':!API/job-posting-api/0*.md' ':!API/job-posting-api/shared-requirements.md' ':!API/job-posting-api/requirements-review.md' ':!API/job-posting-api/PROMPTS.md' ':!API/job-search.api/prompt' | grep -v "Later change\|later removed" | cut -c1-160; for f in API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md API/job-search.api/docs/docker.md; do d=$(dirname $f); grep -o '\]([^)#]*' $f | sed 's/^](//' | grep -v '^http' | while read -r l; do [ -e "$d/$l" ] || echo "BROKEN in $f: $l"; done; done; echo links-checked
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\final-verification.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\docs\verification-and-handoff.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+--- remaining refs (excluding historical prompts/logs/notes):
+.gitignore:16:!.env.example
+API/job-posting-api/.gitignore:9:!.env.example
+API/job-posting-api/docs/verification-and-handoff.md:13:powershell -NoProfile -ExecutionPolicy Bypass -File tools/Verify-Compose.ps1
+API/job-posting-api/docs/verification-and-handoff.md:57:- All 118 application inputs reported by Git (tracked plus untracked) were not ignored, including .env.e
+API/job-posting-api/src/JobPosting.Api/docs/messaging.md:36:docker run --detach --name job-posting-broker --env-file .env.example --publish 127.0.0.1:5672:5672 
+API/job-posting-api/src/JobPosting.Api/docs/persistence.md:35:The integration suite automatically manages its own database container. For a persistent local dev
+API/job-posting-api/src/JobPosting.Api/docs/persistence.md:38:docker run --detach --name job-posting-db --env-file .env.example --publish 127.0.0.1:5432:5432 --
+API/job-search.api/.gitignore:16:!.env.example
+API/job-search.api/docs/runbook.md:11:Configure production cursor keys externally and consistently across replicas. Rotate by distributing old/new keys, changin
+links-checked
+```
+
+</details>
+
+**Tool: Bash** — Read docs that use the removed env file
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API && sed -n 30,45p job-posting-api/src/JobPosting.Api/docs/messaging.md; echo ====; sed -n 32,48p job-posting-api/src/JobPosting.Api/docs/persistence.md; echo ====; sed -n 11p job-search.api/docs/runbook.md | grep -o ".\{80\}env.example.\{80\}"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+## Optional local broker setup
+
+The real integration fixture automatically creates/cleans up its own unique container and temporary credentials. For a separate persistent development broker, run from API/job-posting-api:
+
+'''sh
+docker run --detach --name job-posting-broker --env-file .env.example --publish 127.0.0.1:5672:5672 --publish 127.0.0.1:15672:15672 --mount type=volume,source=job-posting-broker-data,target=/var/lib/rabbitmq rabbitmq:4.3.6-management@sha256:8dd6e3570ddaa2ef82a6c3a8950e79c1f73893adfbdddbc374fc1f1ac8a0f5dd
+'''
+
+These manual persistent commands were documented, not executed. Use free loopback ports if occupied. The example creates local user jobposting; match application credentials explicitly, since RabbitMQ restricts guest remote connections:
+
+'''powershell
+$env:RabbitMq__HostName = '127.0.0.1'
+$env:RabbitMq__UserName = 'jobposting'
+$env:RabbitMq__Password = 'local-development-only-change-me'
+dotnet run --project src/JobPosting.Api --launch-profile http
+====
+
+## Local PostgreSQL and explicit migration
+
+The integration suite automatically manages its own database container. For a persistent local development database, these optional commands use the pinned Pos
+… (1080 more characters)
+```
+
+</details>
+
+Both sections will point at the root Compose services instead. Let me see where each one ends:
+
+**Tool: Bash** — Read the ends of the two sections
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-posting-api/src/JobPosting.Api/docs && sed -n 45,52p messaging.md; echo ====; sed -n 48,70p persistence.md
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+dotnet run --project src/JobPosting.Api --launch-profile http
+'''
+
+macOS/Linux:
+
+'''sh
+export RabbitMq__HostName='127.0.0.1'
+export RabbitMq__UserName='jobposting'
+====
+dotnet run --project src/JobPosting.Api --launch-profile http
+'''
+
+macOS/Linux:
+
+'''sh
+export PostingDatabase__ConnectionString='Host=127.0.0.1;Port=5432;Database=job_postings;Username=jobposting;Password=local-development-only-change-me'
+dotnet ef database update --project src/JobPosting.Api
+dotnet run --project src/JobPosting.Api --launch-profile http
+'''
+
+Use external configuration/secret management for real credentials; never put them in a migration, tracked connection file or command example. Migration is an explicit administrative step; API replicas never run migrations automatically. Normal stop is `docker stop job-posting-db`; resume with `docker start job-posting-db`. These commands retain the volume; do not use volume deletion for routine stopping.
+
+Schema verification and review:
+
+'''sh
+dotnet ef migrations has-pending-model-changes --project src/JobPosting.Api
+dotnet ef migrations script --idempotent --project src/JobPosting.Api
+'''
+
+The original migration `20261005172328_InitialPosting` is preserved unc
+… (922 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read rest of messaging section
+
+<details><summary>Input</summary>
+
+```text
+sed -n 52,60p messaging.md
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+export RabbitMq__UserName='jobposting'
+export RabbitMq__Password='local-development-only-change-me'
+dotnet run --project src/JobPosting.Api --launch-profile http
+'''
+
+The container management UI is http://localhost:15672 with local sample credentials. POST is implemented; configure and migrate PostgreSQL as well. Use ignored .env/secret configuration for actual passwords. Normal stop/resume: docker stop job-posting-broker / docker start job-posting-broker. Do not remove data volumes for ordinary stopping. The implemented posting Compose subset is documented in [Docker/local development](docker-and-local-development.md).
+
+## Verification and limitations
+```
+
+</details>
+
+I'll replace both sections with short versions that use the root Compose services:
+
+**Tool: Write** — C:\Users\saman\AppData\Local\Temp\fix-local-setup.js
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\AppData\Local\Temp\fix-local-setup.js
+// Replaces the manual `docker run --env-file .env.example` setup sections in two posting API docs
+// with instructions that use the root Compose services. Run from the posting API's docs folder.
+const fs = require('fs');
+
+const replaceSection = (file, startMarker, endMarker, replacement) => {
+  const text = fs.readFileSync(file, 'utf8');
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const start = text.indexOf(startMarker);
+  const end = text.indexOf(endMarker, start);
+  if (start < 0 || end < 0) throw new Error(`markers not found in ${file}`);
+  fs.writeFileSync(file, text.slice(0, start) + replacement.replace(/\n/g, eol) + text.slice(end));
+  console.log(`edited ${file}`);
+};
+
+replaceSection('messaging.md', '## Optional local broker setup', '## Verification and limitations',
+`## Local broker
+
+The integration fixture creates and removes its own broker container. For a persistent local broker, use the root Compose service from the repository root:
+
+\`\`\`sh
+docker compose up -d rabbitmq
+\`\`\`
+
+Then point a host-run API at it (PowerShell shown; use \`export\` on macOS/Linux):
+
+\`\`\`powershell
+$env:RabbitMq__HostName = '127.0.0.1'
+$env:RabbitMq__UserName = 'jobboard'
+$env:RabbitMq__Password = 'local-development-only-change-me'
+dotnet run --project src/JobPosting.Api --launch-profile http
+\`\`\`
+
+The management UI is http://localhost:15672 with the same local credentials. The API also needs PostgreSQL; see [Docker and local development](docker-and-local-development.md#run-the-api-on-the-host) for the full set of variables. Use a root \`.env\` file or secret configuration for real passwords.
+
+`);
+
+replaceSection('persistence.md', '## Local PostgreSQL and explicit migration', 'Schema verification and review:',
+`## Local PostgreSQL and explicit migration
+
+The integration suite creates and removes its own database container. For a persistent local database, use the root Compose service and its migration contai
+… (832 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Apply local setup fixes and recheck
+
+<details><summary>Input</summary>
+
+```text
+node C:/Users/saman/AppData/Local/Temp/fix-local-setup.js && cd /c/Users/saman/source/repos/job-posting-app && git grep -n -I -E "env-file \.env\.example|docker (stop|start) job-posting-(db|broker)" -- . ':!ai-log' ':!API/job-posting-api/0*.md' ':!API/job-posting-api/shared-requirements.md' | cut -c1-120; echo none-left; git diff --stat | tail -3
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+File created successfully at: C:\Users\saman\AppData\Local\Temp\fix-local-setup.js (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+edited messaging.md
+edited persistence.md
+none-left
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-search.api/docs/docker.md', LF will be replaced by CRLF the next time Git touches it
+ API/job-search.api/docs/final-verification.md      |   2 +-
+ API/job-search.api/docs/runbook.md                 |   4 +-
+ 8 files changed, 97 insertions(+), 200 deletions(-)
+```
+
+</details>
+
+No stale references are left. The root `docker-compose.yml` itself is unchanged. Committing this first item:
+
+**Tool: Bash** — Commit the per-API Compose removal
+
+<details><summary>Input</summary>
+
+```text
+docker compose config --quiet && echo compose-valid && git add -A API && git commit -q -F - <<'EOF'
+Remove the per-API Docker Compose setups in favour of the root file
+
+Delete each API's standalone docker-compose.yml together with the files
+that only served it: the .env.example files, the search API's
+compose.verify.yml overlay and both tools/Verify-Compose.ps1 scripts.
+The search one needed an external broker network and secrets before it
+could start, so leaving it invited reviewers to run the wrong setup.
+The Dockerfiles stay; the root Compose file builds from them.
+
+Rewrite both APIs' Docker guides around the root Compose file, point
+the posting messaging and persistence guides at the root rabbitmq and
+postgres services, and note the removal in the dated verification
+reports rather than altering their recorded results.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1 | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+compose-valid
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-search.api/docs/docker.md', LF will be replaced by CRLF the next time Git touches it
+13151132 Remove the per-API Docker Compose setups in favour of the root file
+```
+
+</details>
+
+**Tool: Bash** — Read placeholder references and contents
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-posting-api && sed -n 3p src/JobPosting.Api/docs/persistence.md; echo ===; sed -n 36p src/JobPosting.Api/README.md; echo ===; find src/JobBoard.Persistence; git ls-files src/JobBoard.Persistence
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+All source, migrations, tests, tooling and configuration belong to `API/job-posting-api`. Run the commands below from that application root. The DbContext is `src/JobPosting.Api/Persistence/PostingDbContext.cs`; the existing JobBoard.Persistence placeholder is not a shared posting/search database implementation.
+===
+- Test assemblies and dependencies are outside the posting production assembly filters `[JobPosting.*]*,[JobBoard.Persistence]*`. All production projects under src are checked; Program bootstrap is assigned to the separate host gate.
+===
+src/JobBoard.Persistence
+src/JobBoard.Persistence/Configurations
+src/JobBoard.Persistence/Entities
+src/JobBoard.Persistence/Migrations
+src/JobBoard.Persistence/README.md
+src/JobBoard.Persistence/README.md
+```
+
+</details>
+
+**Tool: Bash** — Remove placeholder and update its references
+
+<details><summary>Input</summary>
+
+```text
+git rm -q src/JobBoard.Persistence/README.md && rm -rf src/JobBoard.Persistence && sed -i 's|<Include>\[JobPosting\.\*\]\*,\[JobBoard\.Persistence\]\*</Include>|<Include>[JobPosting.*]*</Include>|' tests/JobPosting.Api.Tests/JobPosting.Api.Tests.csproj && sed -i 's|production assembly filters `\[JobPosting\.\*\]\*,\[JobBoard\.Persistence\]\*`|production assembly filter `[JobPosting.*]*`|' src/JobPosting.Api/README.md && sed -i 's|; the existing JobBoard.Persistence placeholder is not a shared posting/search database implementation\.|. The posting and search APIs do not share a database.|' src/JobPosting.Api/docs/persistence.md && git grep -n "JobBoard.Persistence" -- . ':!../../ai-log' ':!shared-requirements.md' | cut -c1-120; git diff --stat | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/persistence.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/tests/JobPosting.Api.Tests/JobPosting.Api.Tests.csproj', LF will be replaced by CRLF the next time Git touches it
+ API/job-posting-api/src/JobPosting.Api/README.md                        | 2 +-
+ API/job-posting-api/src/JobPosting.Api/docs/persistence.md              | 2 +-
+ .../tests/JobPosting.Api.Tests/JobPosting.Api.Tests.csproj              | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+```
+
+</details>
+
+Only the intended line changed in each file. Since the coverage filter changed, I'll run the posting API's coverage gate; it also verifies that every production source file is still covered:
+
+**Tool: Bash** — Run posting API coverage gate
+
+<details><summary>Input</summary>
+
+```text
+dotnet run --project tools/CoverageGate 2>&1 | grep -E "PASS|FAIL|error|Passed!|Failed!|Unit:|Host:" | tail -6
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Unit: lines 1126/1126, branches 344/344, methods 193/193; 39 authored files, 49 declared types. All 100% without rounding.
+Unit: negative checks passed (missing/empty report, uncovered line/branch/method, omitted source/type/module).
+Passed!  - Failed:     0, Passed:    28, Skipped:     0, Total:    28, Duration: 1 s - JobPosting.Api.Tests.dll (net10.0)
+Host: lines 55/55, branches 4/4, methods 1/1; 1 authored files, 1 declared types. All 100% without rounding.
+Host: negative checks passed (missing/empty report, uncovered line/branch/method, omitted source/type/module).
+PASS: complete authored source set; isolated unit and bootstrap host gates both passed.
+```
+
+</details>
+
+**Tool: Bash** — Commit placeholder removal
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && git add -A API/job-posting-api && git commit -q -F - <<'EOF'
+Remove the stale JobBoard.Persistence placeholder
+
+The folder held only a README saying persistence was not implemented
+yet, which has been wrong since the posting API gained its own EF Core
+persistence under src/JobPosting.Api/Persistence. Remove it, drop it
+from the coverage assembly filter, and update the two docs that
+mentioned it. Coverage gate passes: 100% line/branch/method.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1 | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/persistence.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/tests/JobPosting.Api.Tests/JobPosting.Api.Tests.csproj', LF will be replaced by CRLF the next time Git touches it
+bc0c7747 Remove the stale JobBoard.Persistence placeholder
+```
+
+</details>
+
+**Tool: Bash** — Map prompt cross-references
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-posting-api && ls *.md; echo "=== refs inside the prompt files:"; grep -o -h -E "(API/job-posting-api/)?(0[1-9]-[a-z0-9-]+\.md|PROMPTS\.md|shared-requirements\.md|requirements-review\.md)|\]\([^)]*\)" 0*.md PROMPTS.md shared-requirements.md requirements-review.md | sort | uniq -c | sort -nr | head -30; echo "=== refs from elsewhere:"; cd ../.. && git grep -n -E "PROMPTS\.md|job-posting-api/(0[1-9]-|shared-requirements|requirements-review)" -- . ':!ai-log' ':!API/job-posting-api/0*.md' ':!API/job-posting-api/PROMPTS.md' ':!API/job-posting-api/shared-requirements.md' ':!API/job-posting-api/requirements-review.md' | cut -c1-160
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+01-dotnet10-foundation.md
+02-contract-and-validation.md
+03-postgresql-and-migrations.md
+04-durable-idempotency.md
+05-rabbitmq-producer.md
+06-post-workflow-and-outbox.md
+07-resilience-and-graceful-shutdown.md
+08-docker-and-local-development.md
+09-integration-verification-and-handoff.md
+PROMPTS.md
+README.md
+requirements-review.md
+shared-requirements.md
+=== refs inside the prompt files:
+     11 requirements-review.md
+      9 API/job-posting-api/shared-requirements.md
+      6 shared-requirements.md
+      1 ](shared-requirements.md)
+      1 ](requirements-review.md)
+      1 ](https://www.rabbitmq.com/tutorials/tutorial-seven-dotnet)
+      1 ](https://www.rabbitmq.com/docs/reliability)
+      1 ](https://www.npgsql.org/efcore/release-notes/10.0.html)
+      1 ](https://learn.microsoft.com/en-us/ef/core/saving/transactions)
+      1 ](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services?view=aspnetcore-10.0)
+      1 ](09-integration-verification-and-handoff.md)
+      1 ](08-docker-and-local-development.md)
+      1 ](07-resilience-and-graceful-shutdown.md)
+      1 ](06-post-workflow-and-outbox.md)
+      1 ](05-rabbitmq-producer.md)
+      1 ](04-durable-idempotency.m
+… (467 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Move prompts into prompts folder and fix paths
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-posting-api && mkdir -p prompts && for f in 0*.md shared-requirements.md requirements-review.md; do git mv "$f" prompts/; done && git mv PROMPTS.md prompts/README.md && sed -i -E 's#API/job-posting-api/(0[1-9]-[a-z0-9-]+\.md|shared-requirements\.md|requirements-review\.md)#API/job-posting-api/prompts/\1#g' prompts/*.md && sed -i 's#\[Implementation prompts\](PROMPTS.md)#[Implementation prompts](prompts/README.md)#' README.md && sed -i 's#\.\./\.\./PROMPTS\.md#../../prompts/README.md#' src/JobPosting.Api/README.md && ls; ls prompts; echo "=== old-path mentions left:"; grep -n -E "API/job-posting-api/(0[1-9]-|shared-requirements|requirements-review)" prompts/*.md | cut -c1-120; grep -rn "PROMPTS.md" README.md src/JobPosting.Api/README.md prompts/ | cut -c1-140
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Directory.Build.props
+Dockerfile
+JobBoard.slnx
+NuGet.Config
+README.md
+coverage-exclusions.json
+docs
+global.json
+prompts
+src
+tests
+tools
+01-dotnet10-foundation.md
+02-contract-and-validation.md
+03-postgresql-and-migrations.md
+04-durable-idempotency.md
+05-rabbitmq-producer.md
+06-post-workflow-and-outbox.md
+07-resilience-and-graceful-shutdown.md
+08-docker-and-local-development.md
+09-integration-verification-and-handoff.md
+README.md
+requirements-review.md
+shared-requirements.md
+=== old-path mentions left:
+```
+
+</details>
+
+No old paths remain. One more check: the shared requirements contain the instruction "Prompts stay in `API/job-posting-api/`", which would now contradict the layout.
+
+**Tool: Bash** — Find statements about prompt location
+
+<details><summary>Input</summary>
+
+```text
+grep -n -o -E ".{0,40}Prompts stay in[^.]*\.|.{0,60}prompts? (index|live|are) in[^.]*\." prompts/*.md README.md | cut -c1-200
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+prompts/shared-requirements.md:14:ing/PostgreSQL/RabbitMQ infrastructure. Prompts stay in `API/job-posting-api/`.
+```
+
+</details>
+
+**Tool: Bash** — Fix location note, check links, stage
+
+<details><summary>Input</summary>
+
+```text
+sed -i 's#Prompts stay in `API/job-posting-api/`\.#Prompts stay in `API/job-posting-api/prompts/`.#' prompts/shared-requirements.md && grep -c "Prompts stay in \`API/job-posting-api/prompts/\`" prompts/shared-requirements.md && cd /c/Users/saman/source/repos/job-posting-app && for f in API/job-posting-api/README.md API/job-posting-api/src/JobPosting.Api/README.md API/job-posting-api/prompts/README.md; do d=$(dirname $f); grep -o '\]([^)#]*' $f | sed 's/^](//' | grep -v '^http' | while read -r l; do [ -e "$d/$l" ] || echo "BROKEN in $f: $l"; done; done; echo links-checked; git add -A API/job-posting-api && git status --short | head -20
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+1
+links-checked
+warning: in the working copy of 'API/job-posting-api/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/01-dotnet10-foundation.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/02-contract-and-validation.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/03-postgresql-and-migrations.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/04-durable-idempotency.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/05-rabbitmq-producer.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/06-post-workflow-and-outbox.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/prompts/07-resilience-and-graceful-shutdown.md', LF will be replaced by CRLF the next time Git touches it
+warning: in th
+… (2278 more characters)
+```
+
+</details>
+
+All twelve files moved as renames, so their history is kept, and every link still resolves. Committing:
+
+**Tool: Bash** — Commit prompt move and push the branch
+
+<details><summary>Input</summary>
+
+```text
+git commit -q -F - <<'EOF'
+Move the posting API prompts into a prompts folder
+
+The nine numbered prompts, the prompt index and the shared requirements
+and requirements review sat loose in the posting API's root; the other
+three projects keep theirs in a prompts folder. Move all twelve into
+API/job-posting-api/prompts (PROMPTS.md becomes prompts/README.md so
+GitHub shows it for the folder), update the path mentions inside the
+prompts, and fix the two README links. Relative links between the
+prompts are unchanged.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline main..HEAD | cat && git push -u origin cleanup-leftovers 2>&1 | tail -2
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+9762fea1 Move the posting API prompts into a prompts folder
+bc0c7747 Remove the stale JobBoard.Persistence placeholder
+13151132 Remove the per-API Docker Compose setups in favour of the root file
+ * [new branch]        cleanup-leftovers -> cleanup-leftovers
+branch 'cleanup-leftovers' set up to track 'origin/cleanup-leftovers'.
+```
+
+</details>
+
+**Tool: Bash** — Delete the merged branch locally and remotely
+
+<details><summary>Input</summary>
+
+```text
+git fetch -q origin && echo "commits not in main: $(git rev-list --count origin/main..origin/root-docker-compose)" && git branch -d root-docker-compose && git push origin --delete root-docker-compose 2>&1 | tail -1 && git branch -a | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+commits not in main: 0
+Deleted branch root-docker-compose (was 69504fe5).
+ - [deleted]           root-docker-compose
+* cleanup-leftovers
+  final-touch
+  job-posting-api
+  job-posting-app
+  job-seach-app
+  job-search-api
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/cleanup-leftovers
+  remotes/origin/job-posting-api
+  remotes/origin/job-posting-app
+  remotes/origin/job-seach-app
+  remotes/origin/job-search-api
+  remotes/origin/main
+```
+
+</details>
+
+All four are done. The cleanup work is on a new branch, `cleanup-leftovers`, ready for one more pull request.
+
+**1. Per-API Docker Compose files deleted** (`13151132`)
+- **Also deleted, because they only served those Compose files:** both `.env.example` files, the search API's `compose.verify.yml`, and both `tools/Verify-Compose.ps1` scripts. Leaving them would have meant broken scripts.
+- **Kept:** the Dockerfiles, since the root Compose file builds from them.
+- **Rewritten:** both APIs' Docker guides now use the root Compose file. The posting API's messaging and persistence guides also used the deleted env file to start a local broker and database, so they now use the root Compose services too.
+- **The two dated verification reports keep their recorded results.** Each gets a note that the script was later removed.
+- **Checked:** the root Compose file is still valid.
+
+**2. `JobBoard.Persistence` placeholder removed** (`bc0c7747`)
+- The placeholder is gone and its two doc mentions are updated.
+- It's also out of the coverage filter, and the posting API's coverage gate still passes at 100%.
+
+**3. Posting API prompts moved into `prompts/`** (`9762fea1`)
+- All twelve planning files moved as renames, so their history is kept. `PROMPTS.md` became `prompts/README.md`, so GitHub shows it when you open the folder.
+- Path mentions inside the prompts and both README links are updated, and every link resolves.
+
+**4. `root-docker-compose` deleted** locally and on GitHub, after confirming `main` contains every commit from it.
+
+**To finish, open and merge the pull request:** https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+Suggested title: `Remove per-API Compose setups, stale placeholder; move posting prompts`. The three commit messages explain each change, so a short description is enough.
+
+Your earlier branches (`job-posting-api`, `job-posting-app`, `job-seach-app`, `job-search-api`) and a local `final-touch` branch are still around. I left them alone, since I haven't checked whether each is fully merged. I can check and tidy them if you want.
+
+## User
+
+> Reflow the search API's test code
+
+## Claude
+
+Credit balance is too low
+
+## User
+
+> what?
+
+## Claude
+
+Credit balance is too low
+
+## User
+
+> what else needs improvement before final submit
+
+## Claude
+
+Credit balance is too low
+
+## User
+
+> what else is needed
+
+## Claude
+
+Your message has three parts: a request to reflow the search API's test code, then "what?", then a question about what else is needed. I'll answer the question first, then the reflow. First, a quick look at where things stand:
+
+**Tool: Bash** — Check merge state and test code density
+
+<details><summary>Input</summary>
+
+```text
+git fetch -q origin && echo "cleanup branch commits not on main: $(git rev-list --count origin/main..origin/cleanup-leftovers 2>/dev/null)"; git log --oneline -1 origin/main | cat; git status --short | head; echo "test files dense lines: $(find API/job-search.api/tests -name '*.cs' -not -path '*/obj/*' -not -path '*/bin/*' | xargs awk 'length>140' | wc -l) of $(find API/job-search.api/tests -name '*.cs' -not -path '*/obj/*' -not -path '*/bin/*' | xargs cat | wc -l) lines"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+cleanup branch commits not on main: 3
+d2b2726d Merge pull request #4 from samanis/root-docker-compose
+ M API/job-search.api/docs/performance/README.md
+ M API/job-search.api/docs/search.md
+ M API/job-search.api/src/JobSearch.Api/Diagnostics/SearchMetrics.cs
+ M API/job-search.api/src/JobSearch.Api/Search/JobsController.cs
+ M API/job-search.api/src/JobSearch.Api/Search/SearchCaching.cs
+ M API/job-search.api/tests/JobSearch.Api.Tests/LifecycleTests.cs
+ M API/job-search.api/tests/JobSearch.Api.Tests/SearchCachingTests.cs
+ M API/job-search.api/tools/ReadWorkload/Program.cs
+?? API/job-search.api/docs/performance/cache-cached.json
+?? API/job-search.api/docs/performance/cache-uncached.json
+test files dense lines: 304 of 2026 lines
+```
+
+</details>
+
+**Tool: Bash** — Inspect the uncommitted changes
+
+<details><summary>Input</summary>
+
+```text
+git branch --show-current && git diff --stat | cat && git diff API/job-search.api/src | head -120
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+cleanup-leftovers
+ API/job-search.api/docs/performance/README.md      |  49 ++++++++-
+ API/job-search.api/docs/search.md                  |  10 ++
+ .../src/JobSearch.Api/Diagnostics/SearchMetrics.cs |   3 +
+ .../src/JobSearch.Api/Search/JobsController.cs     |   2 +-
+ .../src/JobSearch.Api/Search/SearchCaching.cs      |  78 +++++++++++++--
+ .../tests/JobSearch.Api.Tests/LifecycleTests.cs    |   4 +-
+ .../JobSearch.Api.Tests/SearchCachingTests.cs      | 110 ++++++++++++++++++++-
+ API/job-search.api/tools/ReadWorkload/Program.cs   |  30 +++++-
+ 8 files changed, 267 insertions(+), 19 deletions(-)
+diff --git a/API/job-search.api/src/JobSearch.Api/Diagnostics/SearchMetrics.cs b/API/job-search.api/src/JobSearch.Api/Diagnostics/SearchMetrics.cs
+index 343c799c..5777a2c3 100644
+--- a/API/job-search.api/src/JobSearch.Api/Diagnostics/SearchMetrics.cs
++++ b/API/job-search.api/src/JobSearch.Api/Diagnostics/SearchMetrics.cs
+@@ -11,6 +11,9 @@ public static class SearchMetrics
+     private static readonly Counter<long> Quarantines = Meter.CreateCounter<long>("search.quarantines");
+     private static readonly Counter<long> Connections = Meter.CreateCounter<long>("search.consumer.transitions");
+   
+… (6562 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Run search tests against the in-progress changes
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-search.api && dotnet test tests/JobSearch.Api.Tests 2>&1 | grep -E "error|Passed!|Failed!|\[FAIL\]" | head -10
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Passed!  - Failed:     0, Passed:   184, Skipped:     0, Total:   184, Duration: 4 s - JobSearch.Api.Tests.dll (net10.0)
+```
+
+</details>
+
+The in-progress changes build, and all 184 tests pass, up from 175. Here's what's left, in priority order.
+
+## Must do before you submit
+
+1. **Finish and commit the in-progress caching changes.** They sit uncommitted on `cleanup-leftovers`, mixed in with my cleanup branch.
+   - Run the coverage gate, `dotnet run --project tools/CoverageGate`. Tests passing isn't enough, because the gate requires 100% coverage of the new policy class.
+   - Commit them as their own commit, separate from the cleanup.
+   - **Update the docs to match.** [DECISIONS.md](DECISIONS.md), the root README and the search API README all still say cursor pages are cached for 15 seconds with `max-age=60`. After this change, they're `no-store` and never cached. A reviewer comparing the docs with the code will spot that.
+2. **Merge `cleanup-leftovers` into `main`**, once item 1 is committed. Its three cleanup commits aren't on `main` yet.
+3. **Check section 6 of DECISIONS.md** is in your words.
+4. **Send the link** to your recruiter.
+
+## Reflowing the search API's test code
+
+I'd **skip it** unless you have time to spare. 304 of the 2,026 test lines are still dense. Reviewers rarely read test code line by line, and the application code, which they do read, is already done. If you want it anyway, the same verified approach works: parallel agents, the whitespace-only verifier, then the gate. It would be safe and take about 15 minutes. But do it **after** the caching work is committed. Two of the test files (`SearchCachingTests.cs`, `LifecycleTests.cs`) are among the in-progress changes, and reflowing them now would tangle with that work.
+
+## Nothing else is required
+
+Every requirement in the brief is met and was verified from a clean clone. Everything else is optional polish: a CI workflow, tidying old branches, the remaining known gaps already written up in DECISIONS.md.
+
+Do you want me to take item 1: run the gate, commit the caching changes on their own, and update the three docs to match?
+
+## User
+
+> go ahead
+
+## Claude
+
+I'll start by reading the rest of the in-progress changes (tests, load tool and docs) so the commit and the doc updates describe them accurately.
+
+**Tool: Bash** — Read in-progress doc, tool and test diffs
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && git diff API/job-search.api/docs API/job-search.api/tools API/job-search.api/tests/JobSearch.Api.Tests/LifecycleTests.cs | cat; ls -la API/job-search.api/docs/performance/
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+diff --git a/API/job-search.api/docs/performance/README.md b/API/job-search.api/docs/performance/README.md
+index 7060f35a..b4e41403 100644
+--- a/API/job-search.api/docs/performance/README.md
++++ b/API/job-search.api/docs/performance/README.md
+@@ -7,13 +7,58 @@ dotnet restore JobSearch.slnx --locked-mode
+ dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 10
+ '''
+ 
++## Cache comparison (2026-10-06)
++
++The runner accepts a fourth argument, cached (default) or uncached. It records
++separate cache-cached.json and cache-uncached.json reports; the historical latest.json
++is preserved. Each mode owns and removes its own PostgreSQL fixture.
++
++'''powershell
++dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 30 uncached
++dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 30 cached
++'''
++
++Both runs used 10,000 jobs, four concurrent clients and 30 seconds. Traffic includes
++80% requests across six popular search/detail routes, 10% numbered substring searches,
++and 10% rotating detail IDs. All groups eventually repeat; workers overlap their keys.
++Popular routes are warmed before timing. This is an explicit synthetic wor
+… (20282 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read new run results and latest.json history
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-search.api/docs/performance && for m in uncached cached; do node -e "const r=require('./cache-$m.json');console.log('$m', 'p50',r.p50Ms.toFixed(2),'p95',r.p95Ms.toFixed(2),'p99',r.p99Ms.toFixed(2),'rps',r.requestsPerSecond.toFixed(0),'hit',(r.cacheHitRate*100).toFixed(2)+'%','dbReads/req',r.databaseReadsPerRequest.toFixed(4),'reqs',r.requests,'secs',r.requestedSeconds)"; done; cd ../.. && git log --oneline -3 -- docs/performance/latest.json | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+uncached p50 7.20 p95 20.33 p99 25.90 rps 470 hit 0.00% dbReads/req 1.7669 reqs 14100 secs 30
+cached p50 0.21 p95 1.12 p99 7.55 rps 7761 hit 99.09% dbReads/req 0.0177 reqs 232915 secs 30
+500478b7 Measure read performance with output caching enabled
+d8f3fd71 version 0
+```
+
+</details>
+
+**Tool: Bash** — Restore the Stage 7 latest.json report
+
+<details><summary>Input</summary>
+
+```text
+git show d8f3fd71:API/job-search.api/docs/performance/latest.json | grep -m3 -E '"capturedUtc"|"requests"|"p50Ms"' && git checkout d8f3fd71 -- docs/performance/latest.json && git diff --cached --stat | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+"capturedUtc": "2026-10-05T23:36:47.0778188+00:00",
+  "requests": 4146,
+  "p50Ms": 8.1928,
+ API/job-search.api/docs/performance/latest.json | 114 ++++++++++++------------
+ 1 file changed, 57 insertions(+), 57 deletions(-)
+```
+
+</details>
+
+It matches: captured at 23:36:47 with 4,146 requests, which is exactly what that section describes. Now the coverage gate on the in-progress caching code:
+
+**Tool: Bash** — Run search coverage gate on caching changes
+
+<details><summary>Input</summary>
+
+```text
+dotnet run --project tools/CoverageGate 2>&1 | grep -E "PASS|FAIL|error|Passed!|Failed!|Unit:|Host:|Uncovered|uncovered" | grep -v "negative checks" | tail -8
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Passed!  - Failed:     0, Passed:   153, Skipped:     0, Total:   153, Duration: 4 s - JobSearch.Api.Tests.dll (net10.0)
+Unit: lines 1285/1285, branches 468/468, methods 236/236; 31 authored files, 56 declared types. All 100% without rounding.
+Passed!  - Failed:     0, Passed:    31, Skipped:     0, Total:    31, Duration: 841 ms - JobSearch.Api.Tests.dll (net10.0)
+Host: lines 39/39, branches 4/4, methods 1/1; 1 authored files, 1 declared types. All 100% without rounding.
+PASS: complete authored source set; isolated unit and bootstrap host gates both passed.
+```
+
+</details>
+
+The gate passes: 184 tests, 100% line, branch and method coverage, including the new policy class. Now the docs, starting with marking my older measurement as superseded:
+
+**Tool: Bash** — Find caching statements to update
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && grep -n "Output caching: before and after" -A4 API/job-search.api/docs/performance/README.md | cut -c1-160; grep -n -i "cach\|6.9\|0.2 ms\|max-age=60\|14,900\|490" DECISIONS.md README.md API/job-search.api/README.md | cut -c1-200
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+81:## Output caching: before and after
+82-
+83-The list and detail endpoints use ASP.NET Core output caching (in memory; first page at most 15 s and capped at UTC midnight, detail 1 h; only 200 responses)
+84-
+85-Both runs on 2026-10-06, same machine and command (`10000 4 10`), back to back:
+DECISIONS.md:43:- **Response caching** (see below).
+DECISIONS.md:45:**Caching.** Jobs never change once ingested, and the brief accepts eventual consistency, so responses are cached by time alone:
+DECISIONS.md:47:| Response | Server-side output cache | `Cache-Control` |
+DECISIONS.md:50:| List page with a cursor | 15 s | `public, max-age=60` (the cursor pins its snapshot, so the page never changes) |
+DECISIONS.md:52:| 404, 400, 409, 503 | not cached | `no-store` (a missing job may be ingested moments later) |
+DECISIONS.md:54:The headers let browsers, proxies and a CDN absorb repeat traffic before it reaches the API; the output cache covers requests that do arrive. On the bundled read workload, which repeat
+DECISIONS.md:56:The trade-off is staleness: a new job can take up to 15 seconds to appear on a cached first page. I chose short lifetimes over eviction deliberately. Eviction would need a cache 
+… (1524 more characters)
+```
+
+</details>
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\DECISIONS.md",
+  "offset": 43,
+  "limit": 16
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+43	- **Response caching** (see below).
+44	
+45	**Caching.** Jobs never change once ingested, and the brief accepts eventual consistency, so responses are cached by time alone:
+46	
+47	| Response | Server-side output cache | `Cache-Control` |
+48	|---|---|---|
+49	| Job detail (200) | 1 hour | `public, max-age=86400, immutable` |
+50	| List page with a cursor | 15 s | `public, max-age=60` (the cursor pins its snapshot, so the page never changes) |
+51	| First list page | 15 s | `public, max-age=15` |
+52	| 404, 400, 409, 503 | not cached | `no-store` (a missing job may be ingested moments later) |
+53	
+54	The headers let browsers, proxies and a CDN absorb repeat traffic before it reaches the API; the output cache covers requests that do arrive. On the bundled read workload, which repeats a small set of popular URLs, the median latency fell from 6.9 ms to 0.2 ms and throughput rose from about 490 to 14,900 requests/second ([measurements](API/job-search.api/docs/performance/README.md#output-caching-before-and-after)). That is a best case for popular pages; unique searches still go to PostgreSQL, which handles them in about 1 ms.
+55	
+56	The trade-off is staleness: a new job can take up to 15 s
+… (1610 more characters)
+```
+
+</details>
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\API\\job-search.api\\README.md",
+  "offset": 23,
+  "limit": 1
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+23	- **Response caching.** Job details are cached for 1 hour and list pages for 15 seconds using ASP.NET Core output caching; errors and 404s are never cached. `Cache-Control` headers (`immutable` for details, `max-age=15` or `60` for lists, `no-store` for errors) let browsers and CDNs cache too. See [SearchCaching.cs](src/JobSearch.Api/Search/SearchCaching.cs) and the [before/after measurement](docs/performance/README.md#output-caching-before-and-after).
+```
+
+</details>
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\README.md",
+  "offset": 30,
+  "limit": 2
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+30	- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, list pages for 15 seconds, and errors never. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On the bundled read workload this cut median latency from 6.9 ms to 0.2 ms.
+31	- **Consistency.** Search is eventually consistent, as the brief allows. A new posting normally reaches the search database within a few seconds; a cached list page can take up to 15 seconds more to show it.
+```
+
+</details>
+
+Updating DECISIONS.md first: the caching table, the measured result, and the cursor paragraph, which still says every page after the first is safe to cache.
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+| Job detail (200) | 1 hour | `public, max-age=86400, immutable` |
+| List page with a cursor | 15 s | `public, max-age=60` (the cursor pins its snapshot, so the page never changes) |
+| First list page | 15 s | `public, max-age=15` |
+| 404, 400, 409, 503 | not cached | `no-store` (a missing job may be ingested moments later) |
+
+The headers let browsers, proxies and a CDN absorb repeat traffic before it reaches the API; the output cache covers requests that do arrive. On the bundled read workload, which repeats a small set of popular URLs, the median latency fell from 6.9 ms to 0.2 ms and throughput rose from about 490 to 14,900 requests/second ([measurements](API/job-search.api/docs/performance/README.md#output-caching-before-and-after)). That is a best case for popular pages; unique searches still go to PostgreSQL, which handles them in about 1 ms.
+
+The trade-off is staleness: a new job can take up to 15 seconds to appear on a cached first page.
+--- new
+| Job detail (200) | 1 hour | `public, max-age=86400, immutable` |
+| First list page | up to 15 s, never past UTC midnight | `public, max-age` of the same lifetime |
+| List page with a cursor | not cached | `no-store`, so the cursor's signature and expiry are checked on every request |
+| 404, 400, 409, 503 | not cached | `no-store` (a missing job may be ingested moments later) |
+
+The first page's lifetime stops at UTC midnight, and its cache key includes the UTC date, so a cached page never lists a job whose closing date has just arrived.
+
+The headers let browsers, proxies and a CDN absorb repeat traffic before it reaches the API; the output cache covers requests that do arrive. On a synthetic 30-second workload (80% popular pages, 20% varied searches and details), caching served 99% of requests from memory. Median latency fell from 7.2 ms to 0.2 ms, p95 from 20.3 ms to 1.1 ms, database reads per request from 1.77 to 0.02, and throughput rose from about
+… (348 more characters)
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+I kept it here because it is correct and tested, and because a pinned snapshot makes every page after the first safe to cache. See also section 6.
+--- new
+I kept it here because it is correct and tested. Pages with a cursor are deliberately not cached, so that every request re-checks the cursor's signature and expiry. See also section 6.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\README.md
+--- old
+- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, list pages for 15 seconds, and errors never. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On the bundled read workload this cut median latency from 6.9 ms to 0.2 ms.
+--- new
+- **Caching.** Jobs never change once ingested, so search responses are cached: job details for an hour, and first list pages for up to 15 seconds (never past UTC midnight). Pages with a cursor and errors are never cached. `Cache-Control` headers let browsers and a CDN absorb repeat traffic too. On a synthetic read workload, 99% of requests were served from the cache and median latency fell from 7.2 ms to 0.2 ms.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md
+--- old
+- **Response caching.** Job details are cached for 1 hour and list pages for 15 seconds using ASP.NET Core output caching; errors and 404s are never cached. `Cache-Control` headers (`immutable` for details, `max-age=15` or `60` for lists, `no-store` for errors) let browsers and CDNs cache too. See [SearchCaching.cs](src/JobSearch.Api/Search/SearchCaching.cs) and the [before/after measurement](docs/performance/README.md#output-caching-before-and-after).
+--- new
+- **Response caching.** ASP.NET Core output caching keeps job details for 1 hour and first list pages for up to 15 seconds, never past UTC midnight. Pages with a cursor are never cached, so the cursor is validated on every request; errors and 404s are never cached either. `Cache-Control` headers (`immutable` for details, a matching `max-age` for first pages, `no-store` otherwise) let browsers and CDNs cache too. Cache hits are counted by the `search.cache.hits` metric. See [SearchCaching.cs](src/JobSearch.Api/Search/SearchCaching.cs) and the [cache comparison](docs/performance/README.md#cache-comparison-2026-10-06).
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\performance\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\performance\README.md
+--- old
+## Output caching: before and after
+
+--- new
+## Output caching: earlier quick run
+
+> Superseded by the [cache comparison](#cache-comparison-2026-10-06) above, which uses a mixed workload and measures cache hits and database reads. This earlier run repeated six fixed URLs and is kept for the record.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-search.api\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\performance\README.md has been updated successfully. (note: the file had been modified on disk since you last read it — the edit applied cleanly, but the file contains other changes not in your context. Read it before edits that depend on surrounding content.)
+```
+
+</details>
+
+The editor warned that the performance doc had changed on disk since I last read it. Someone may still be editing these files, so before committing I'll check for changes I didn't make:
+
+**Tool: Bash** — Check for concurrent edits to the files
+
+<details><summary>Input</summary>
+
+```text
+date && git status --short && find API/job-search.api -newer API/job-search.api/docs/performance/cache-cached.json -type f -not -path '*/obj/*' -not -path '*/bin/*' -not -path '*/TestResults/*' -printf '%TT %p\n' 2>/dev/null | sort | tail -12
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Tue Oct  6 15:12:57 EDT 2026
+ M API/job-search.api/README.md
+ M API/job-search.api/docs/performance/README.md
+M  API/job-search.api/docs/performance/latest.json
+ M API/job-search.api/docs/search.md
+ M API/job-search.api/src/JobSearch.Api/Diagnostics/SearchMetrics.cs
+ M API/job-search.api/src/JobSearch.Api/Search/JobsController.cs
+ M API/job-search.api/src/JobSearch.Api/Search/SearchCaching.cs
+ M API/job-search.api/tests/JobSearch.Api.Tests/LifecycleTests.cs
+ M API/job-search.api/tests/JobSearch.Api.Tests/SearchCachingTests.cs
+ M API/job-search.api/tools/ReadWorkload/Program.cs
+ M DECISIONS.md
+ M README.md
+?? API/job-search.api/docs/performance/cache-cached.json
+?? API/job-search.api/docs/performance/cache-uncached.json
+14:30:41.2665598000 API/job-search.api/tests/JobSearch.Api.Tests/SearchCachingTests.cs
+14:30:55.5954568000 API/job-search.api/tests/JobSearch.Api.Tests/LifecycleTests.cs
+14:31:35.9988475000 API/job-search.api/docs/search.md
+14:31:51.0775311000 API/job-search.api/src/JobSearch.Api/Search/SearchCaching.cs
+15:11:54.9642207000 API/job-search.api/docs/performance/latest.json
+15:12:49.3418223000 API/job-search.api/README.md
+15:12:50.4072989000 API/job-search.api/docs/perfo
+… (16 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read the retitled measurement section
+
+<details><summary>Input</summary>
+
+```text
+sed -n '/## Output caching: earlier quick run/,/## Read and operational review/p' API/job-search.api/docs/performance/README.md | cut -c1-260
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+## Output caching: earlier quick run
+
+> Superseded by the [cache comparison](#cache-comparison-2026-10-06) above, which uses a mixed workload and measures cache hits and database reads. This earlier run repeated six fixed URLs and is kept for the record.
+
+The list and detail endpoints use ASP.NET Core output caching (in memory; first page at most 15 s and capped at UTC midnight, detail 1 h; only 200 responses). Continuations bypass caching and send no-store so expiry is checked every time. See [SearchCaching.cs
+
+Both runs on 2026-10-06, same machine and command (`10000 4 10`), back to back:
+
+| | Before caching | After caching |
+| --- | ---: | ---: |
+| Requests in 10 s | 4,929 | 148,836 |
+| Requests/second | 493 | 14,874 |
+| p50 | 6.93 ms | 0.19 ms |
+| p95 | 17.20 ms | 0.69 ms |
+| p99 | 21.12 ms | 1.11 ms |
+| Errors | 0 | 0 |
+
+**Read this as a best case.** The workload cycles through six fixed URLs, so after the first request for each almost every request is a cache hit and never reaches PostgreSQL. It shows what caching does for popular pages, such as the unfiltered first page, whi
+
+## Read and operational review
+```
+
+</details>
+
+**Tool: Write** — C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\scratchpad\move-policy-paragraph.js
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\scratchpad\move-policy-paragraph.js
+// Moves the current-policy paragraph from the superseded run section to the cache comparison section.
+const fs = require('fs');
+const file = process.argv[2];
+let text = fs.readFileSync(file, 'utf8');
+const eol = text.includes('\r\n') ? '\r\n' : '\n';
+
+const start = text.indexOf('The list and detail endpoints use ASP.NET Core output caching');
+const end = text.indexOf(eol, start);
+if (start < 0 || end < 0) throw new Error('policy paragraph not found');
+const paragraph = text.slice(start, end);
+text = text.slice(0, start) + 'This run used the earlier policy, under which pages with a cursor were also cached.' + text.slice(end);
+
+const heading = '## Cache comparison (2026-10-06)' + eol + eol;
+const at = text.indexOf(heading);
+if (at < 0) throw new Error('comparison heading not found');
+text = text.slice(0, at + heading.length) + paragraph + eol + eol + text.slice(at + heading.length);
+
+fs.writeFileSync(file, text);
+console.log('moved');
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+File created successfully at: C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\scratchpad\move-policy-paragraph.js (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+**Tool: Bash** — Move the policy paragraph and show result
+
+<details><summary>Input</summary>
+
+```text
+node "C:/Users/saman/AppData/Local/Temp/claude/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/scratchpad/move-policy-paragraph.js" API/job-search.api/docs/performance/README.md && sed -n '/## Cache comparison/,/^The runner accepts/p' API/job-search.api/docs/performance/README.md | cut -c1-140; sed -n '/earlier quick run/,/^Both runs/p' API/job-search.api/docs/performance/README.md | cut -c1-140
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+moved
+## Cache comparison (2026-10-06)
+
+The list and detail endpoints use ASP.NET Core output caching (in memory; first page at most 15 s and capped at UTC midnight, detail 1 h; on
+
+The runner accepts a fourth argument, cached (default) or uncached. It records
+## Output caching: earlier quick run
+
+> Superseded by the [cache comparison](#cache-comparison-2026-10-06) above, which uses a mixed workload and measures cache hits and database
+
+This run used the earlier policy, under which pages with a cursor were also cached.
+
+Both runs on 2026-10-06, same machine and command (`10000 4 10`), back to back:
+```
+
+</details>
+
+The move worked. Now two commits: the caching change itself (code, tests, load tool and performance docs), then the doc updates that bring DECISIONS.md and the READMEs in line with it.
+
+**Tool: Bash** — Commit caching work and docs, then push
+
+<details><summary>Input</summary>
+
+```text
+S=API/job-search.api && git add $S/src $S/tests $S/tools $S/docs/search.md $S/docs/performance && git commit -q -F - <<'EOF'
+Stop caching cursor pages and cap first-page caching at UTC midnight
+
+Cursor pages are no longer cached: they send no-store and bypass the
+output cache, so every request re-validates the cursor's signature and
+expiry instead of a cached page outliving an expired cursor. First
+pages keep a lifetime of at most 15 seconds, now capped at the next
+UTC midnight, with the UTC date in the cache key and a matching
+Cache-Control max-age, so a cached page never lists a job whose
+closing date has arrived. A search.cache.hits counter (route=list or
+detail) records cache hits.
+
+ReadWorkload gains a cached/uncached mode, a mixed workload (80%
+popular routes, 10% varied searches, 10% rotating details), and counts
+database reads and cache hits. 30-second comparison: 99.09% hit rate,
+p50 7.20 -> 0.21 ms, p95 20.33 -> 1.12 ms, database reads per request
+1.77 -> 0.018. Results are in cache-cached.json and cache-uncached.json;
+latest.json is restored to the Stage 7 run its section describes.
+Coverage gate passes: 184 tests, 100% line/branch/method.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git add DECISIONS.md README.md $S/README.md && git commit -q -F - <<'EOF'
+Update caching docs for uncached cursor pages and new measurements
+
+DECISIONS.md, the root README and the search API README still said
+cursor pages were cached with max-age=60 and quoted the earlier
+six-URL measurement. Describe the current policy (first pages up to
+15 s and never past UTC midnight; cursor pages, errors and 404s never
+cached) and quote the mixed-workload comparison instead. The cursor
+section no longer claims later pages are cached.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git status --short && git log --oneline main..HEAD | cat && git push 2>&1 | tail -1
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+2172e8fe Update caching docs for uncached cursor pages and new measurements
+4bf4f6fb Stop caching cursor pages and cap first-page caching at UTC midnight
+9762fea1 Move the posting API prompts into a prompts folder
+bc0c7747 Remove the stale JobBoard.Persistence placeholder
+13151132 Remove the per-API Docker Compose setups in favour of the root file
+   9762fea1..2172e8fe  cleanup-leftovers -> cleanup-leftovers
+```
+
+</details>
+
+I committed the in-progress caching work, brought the docs in line with it, and pushed both commits to `cleanup-leftovers`. The working tree is clean.
+
+**`4bf4f6fb`: the caching change, committed as found apart from two fixes**
+- **What it does:** pages with a cursor are no longer cached, so every request re-checks the cursor's signature and expiry. First pages are cached for at most 15 seconds and never past UTC midnight, so a cached page can't list a job whose closing date has just arrived. Cache hits now show up in a metric.
+- **Gate:** passes with 184 tests and 100% coverage, including the new policy class.
+- **Fix 1:** the new performance doc said `latest.json` preserves the original Stage 7 run, but my earlier commit had overwritten it. I restored the original report so the statement is true.
+- **Fix 2:** that doc now holds two measurements. I marked my earlier six-URL run as superseded, and moved the current-policy description into the new comparison's section, because the old run used the old policy.
+
+**`2172e8fe`: docs updated to match**
+- DECISIONS.md, the root README and the search API README said cursor pages were cached with `max-age=60`. They now describe the new rules: details 1 hour; first pages up to 15 seconds, never past midnight; cursor pages, errors and 404s never cached.
+- They also quote the new measurement: median latency **7.2 → 0.2 ms**, **99% cache hits**, database reads per request **1.77 → 0.02**.
+- DECISIONS.md's cursor section no longer claims later pages are cached.
+
+**To finish, open and merge the pull request.** The branch now holds five commits: three cleanups and these two. https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+After merging, the submission is ready to send. The transcript in `ai-log/` stops before this latest round. I can re-export it if you want the whole session in the record.
+
+## User
+
+> the decisions in the Decision.md file are in the AI language. Write them in clos to human being langugae. Simpler and short sentences.
+
+## Claude
+
+I'll read the current version in full, so the rewrite keeps every fact and only changes the wording.
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\DECISIONS.md"
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+1	# Design decisions
+2	
+3	The key decisions behind this solution, the trade-offs I accepted, and what I would change. For setup and architecture, see the [README](README.md).
+4	
+5	## 1. Separate write and read services, connected by RabbitMQ
+6	
+7	**Decision.** Each API owns its own PostgreSQL database. The posting API publishes a `JobPostingCreated` event to RabbitMQ, and the search API consumes it into a denormalized read model.
+8	
+9	**Why.** The brief describes a strong load imbalance: a handful of posts per day against continuous browsing. Separating the two sides means:
+10	
+11	- search traffic never competes with writes for the same database;
+12	- each side can be scaled, deployed and tuned on its own (the read side gets trigram indexes and keyset pagination; the write side stays normalized);
+13	- the only contract between the services is a versioned event, so neither depends on the other's schema or availability.
+14	
+15	**Alternative considered.** My AI assistant's first proposal was simpler: one shared database, written by the posting API and read by the search API. That fits a 4-hour box well, and at this volume it would perform fine. I chose the broker because it is the des
+… (8705 more characters)
+```
+
+</details>
+
+Written for: the hiring panel, in your own first-person voice.
+
+**Tool: Write** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+# Design decisions
+
+These are the main choices I made, why I made them, and what I'd change. For setup, see the [README](README.md).
+
+## 1. Two services, two databases, joined by RabbitMQ
+
+Each API has its own PostgreSQL database. When a job is saved, the posting API sends a `JobPostingCreated` message to RabbitMQ. The search API reads that message and stores the job in its own database.
+
+Why? The brief says posting is rare and searching is constant. So I kept them apart:
+
+- Search traffic never slows down posting, because they don't share a database.
+- Each side can be scaled and tuned on its own. The search database has indexes built for searching.
+- The only link between them is the message. Neither service needs the other's database or needs the other to be running.
+
+The AI first suggested something simpler: one shared database. That would fit in 4 hours and would work fine at this size. I chose RabbitMQ because it's what I would build at work, and the brief says "eventually consistent is acceptable". The publishing code sits behind an interface, so RabbitMQ could be swapped for another broker later.
+
+## 2. Return 202 only when the job is saved *and* RabbitMQ has it
+
+The posting API saves the job, sends the message, and waits for RabbitMQ to confirm it got it. Only then does it return `202` with the saved job. If sending fails, it deletes the job it just saved and returns `503`. The client can then retry with the same idempotency key.
+
+Why? I wanted `202` to mean "this job will show up in search". The AI suggested a transactional outbox instead: save the job and the message together, then send the message in the background.
+
+My approach has weak spots:
+
+- RabbitMQ might accept the message but the confirmation gets lost. The job is then deleted, but its message is still in the queue.
+- The app might crash between saving and sending. The job is then saved, but search never hears about it.
+
+Both cases are rar
+… (5863 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+**Tool: Bash** — Compare length and sentence length
+
+<details><summary>Input</summary>
+
+```text
+git branch --show-current && echo "words before: $(git show HEAD:DECISIONS.md | wc -w)  after: $(wc -w < DECISIONS.md)" && node -e "const t=require('fs').readFileSync('DECISIONS.md','utf8').replace(/\|[^\n]*\n/g,'').replace(/[#*\`]/g,'');const s=t.split(/[.!?]\s+/).map(x=>x.trim().split(/\s+/).length).filter(n=>n>2);const before=require('child_process').execSync('git show HEAD:DECISIONS.md').toString().replace(/\|[^\n]*\n/g,'').replace(/[#*\`]/g,'').split(/[.!?]\s+/).map(x=>x.trim().split(/\s+/).length).filter(n=>n>2);const avg=a=>(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1);console.log('avg sentence length before',avg(before),'words; after',avg(s),'words')"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+cleanup-leftovers
+words before: 1577  after: 1387
+avg sentence length before 18.5 words; after 12.2 words
+```
+
+</details>
+
+I rewrote [DECISIONS.md](DECISIONS.md) in plainer language. Sentences now average about 12 words instead of 18. The document is somewhat shorter overall (about 1,390 words instead of 1,580), with the same eight sections in the same order.
+
+**What changed in the wording:**
+- **Short sentences, one idea each.** For example, *"Compensation is not an atomic rollback across PostgreSQL and RabbitMQ"* became *"My approach has weak spots"*, followed by the two cases spelled out simply.
+- **Jargon explained or dropped.** "Denormalized read model" now reads *"stores the job in its own database"*. "Keyset pagination" now reads *"each page starts where the last one ended, so page 100 is as fast as page 1"*.
+- **A more natural voice.** It uses contractions ("I'd", "don't") and phrases like *"Honestly, this is more than the exercise needs"* and *"At a few posts a day, I can live with that"*.
+- **The caching table is in plain words.** For example, *"Cache for a day; it won't change"* replaces `public, max-age=86400, immutable`. The exact headers are still in the search API's docs for anyone who wants them.
+
+**What stayed the same:** every decision, trade-off and number. That covers the outbox admission, the cache measurements, the 4-hour cut list, the closing-date mismatch, and where you overruled the AI.
+
+Please read it through once, especially section 6 on going past the time box, since it's written as you speaking. It isn't committed yet. Should I commit it to `cleanup-leftovers`, so it goes in with that pull request?
+
+## User
+
+> what is this ? The posting API saves the job, sends the message, and waits for RabbitMQ to confirm it got it. Rr wrtite the whole document
+
+## Claude
+
+Fair point: "confirm it got it" is vague and too casual. I'll rewrite the whole document in clear, plain sentences that say exactly what happens, without slang or unclear words like "it".
+
+**Tool: Write** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+# Design decisions
+
+This document explains the main design decisions, the reasons behind them, and what I would change in a real product. For setup instructions, see the [README](README.md).
+
+## 1. Separate services for posting and searching
+
+Each API has its own PostgreSQL database. When a job is saved, the posting API publishes a `JobPostingCreated` message to RabbitMQ. The search API receives the message and saves the job in its own database.
+
+The brief says that jobs are posted rarely but searched constantly. Keeping the two sides separate has three benefits:
+
+- Search traffic does not slow down posting, because the two services do not share a database.
+- Each service can be scaled and tuned independently. For example, the search database has indexes designed for text search.
+- The services depend only on the message format. Neither service reads the other's database, and neither needs the other to be running.
+
+The AI's first suggestion was simpler: one database shared by both APIs. That design fits in four hours and would work at this scale. I chose RabbitMQ because it is the design I would use in production, and because the brief accepts eventual consistency. The publishing code is behind an interface, so RabbitMQ can be replaced by another message broker without changing the posting workflow.
+
+## 2. The posting API returns 202 only after the job is saved and the message is delivered
+
+When a job is posted, the API does three things in order:
+
+1. It saves the job in the database.
+2. It publishes the message to RabbitMQ.
+3. It waits until RabbitMQ confirms that the message has been stored.
+
+Only then does the API return `202 Accepted` with the saved job. If publishing fails, the API deletes the job it saved and returns `503`. The client can then retry safely with the same idempotency key.
+
+I chose this so that a `202` response means the job will appear in search. The AI suggested a transactional outbox ins
+… (7275 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+I rewrote [DECISIONS.md](DECISIONS.md) from start to finish. Here's how the sentence you flagged reads now:
+
+> When a job is posted, the API does three things in order:
+> 1. It saves the job in the database.
+> 2. It publishes the message to RabbitMQ.
+> 3. It waits until RabbitMQ confirms that the message has been stored.
+>
+> Only then does the API return `202 Accepted` with the saved job.
+
+**How the new version differs from the last one:**
+- **Clear and precise, not casual.** Phrases like "confirm it got it", "I can live with that" and "Honestly" are gone. Each sentence says exactly what happens.
+- **No unclear "it"s.** Each sentence names what it refers to: the API, the job, the message, or RabbitMQ.
+- **Steps and lists where they help.** The posting flow is a numbered list, and the caching results are three bullet points instead of one long sentence.
+- **Section titles describe the decision.** For example, "The posting API returns 202 only after the job is saved and the message is delivered".
+
+The content hasn't changed: same eight sections, same decisions, trade-offs and numbers. It's still first person, since it's your document, and it isn't committed yet. Once you've read it and are happy, should I commit it to `cleanup-leftovers` so it goes in with that pull request?
+
+## User
+
+> red the document setence by sentence. How you evaluate it ? it is represents decisions properly
+
+## Claude
+
+I read the document sentence by sentence and checked each claim against the code and your AI transcripts.
+
+**Verdict:** the writing is clear, and most of it is accurate. But it has **3 factual errors**, **1 decision whose reasoning is misrepresented**, and **2 statements of opinion I wrote in your voice that you need to confirm**. It also **leaves out several real decisions**, including all the front-end ones and your best example of simplifying the design.
+
+## Factual errors
+
+| Section | Sentence | Problem |
+|---|---|---|
+| 1 | "Search traffic does not slow down posting, because the two services do not share a database." | They have separate *databases* but share one PostgreSQL *server*: the root Compose file runs a single Postgres container. Heavy search load could still slow posting. Say so honestly: separate databases on one server here; separate servers in production. |
+| 2 | "Both cases are rare and both are logged" | Only the lost-confirmation case is logged. Your own shared requirements say a crash "can bypass deletion and Critical logging". The crash case leaves no log entry. |
+| 4 | "No server-side state." | No longer true. Each search instance now holds an in-memory cache. It should say there is no session state, and each instance keeps its own small cache. |
+
+## A decision that is misrepresented
+
+**Section 2, the outbox.** The document says the AI suggested an outbox and you chose the strict 202 rule instead. The transcript shows a different and better story:
+1. You chose the strict 202 rule. The AI then planned to keep an outbox *as well*, for recovery.
+2. Later you said **"I think we are over engineering the whole job"**. You argued that retry and recovery were out of scope, and that once RabbitMQ accepts the message the API's job is done. That's when the outbox and the separate idempotency table were removed, and compensation took their place.
+
+So the real reason there's no outbox is that **you cut scope**, not that 202 and an outbox conflict. They don't conflict; the original plan had both. A reviewer who knows outboxes will notice this, and the true version shows better judgment.
+
+## Statements you must confirm are yours
+
+- **Section 2:** "In production, I would use a transactional outbox." I wrote this. If you'd defend compensation instead, change it, because this is a likely interview question.
+- **Section 6:** "I treated it as a real feature, to show how I handle failures…" This reason for going over time is mine, not yours.
+
+## Smaller wording issues
+
+- **Section 4:** "text-search indexes" suggests full-text search. They're substring indexes (trigram). Say "substring-search indexes".
+- **Section 4:** "the database responds in about 1 ms". That's the query time inside PostgreSQL. A full uncached request takes about 7 ms. Say "the query itself takes about 1 ms".
+- **Section 5:** the browser tests use mocked APIs. Without saying so, a reviewer may assume they test the whole system.
+- **Section 8:** the best example of you overruling the AI is missing: the "over engineering" pushback. It's the strongest evidence of judgment in your transcripts.
+
+## Decisions that are missing
+
+1. **The front end.** Nothing about the Angular apps: Signal Forms, zoneless change detection, Angular Material, validating in the browser *and* showing the server's errors, keeping retry state in `sessionStorage` so a page refresh doesn't create a duplicate. The brief is half front end.
+2. **Simplifying the idempotency design.** Moving the key onto the job row, dropping the separate table, and limiting concurrency handling to one unique constraint. This was your call.
+3. **Why PostgreSQL.** The brief says "database: your choice". One sentence is enough.
+4. **Validation rules.** Especially that the closing date is checked in Toronto time on both sides, with strict parsing on the server.
+5. **Resilience requirements.** You specified the circuit breaker, graceful shutdown and safe error messages yourself. Right now they only appear in the "cut for 4 hours" table, which makes them look like AI extras rather than your requirements.
+
+I'd fix all of the above. That means correcting the three errors, rewriting section 2 to tell the real outbox story, and adding a short front-end section plus a few lines for items 2–5. That only works if the statements match what you'd say in an interview. So before I edit, answer one question: **in production, would you add the outbox, or keep compensation?**
+
+## User
+
+> keep compensation
+
+## Claude
+
+Understood: compensation stays, including in production. Before rewriting, I'll check the front-end facts I plan to add, so the new sections are accurate:
+
+**Tool: Bash** — Verify front-end facts in app docs
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/apps && grep -rhoi "zoneless[^.]*\.\|signal forms[^.]*\.\|sessionStorage[^.]*\.\|local today[^.]*\.\|Toronto[^.]*\." job-posting/docs/*.md | head -6; echo ===; grep -rhoi "debounc[^.]*\.\|bounded cache[^.]*\.\|cancel[^.]*\.\|URL[^.]*query[^.]*\." job-search/docs/*.md | head -6; echo ===; grep -rn "provideZonelessChangeDetection\|provideZoneChangeDetection" job-*/src/app/app.config.ts | cut -c1-120
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+sessionStorage for recovery in one tab; independently entered submissions in different tabs/devices are not deduplicated by client code.
+sessionStorage blocks posting.
+sessionStorage key job-posting.
+sessionStorage is not cross-device deduplication and does not survive every browser/tab lifecycle.
+sessionStorage adapters and page-scoped submission workflow.
+Signal Forms models fields and reactive validation.
+===
+url-query-state.
+cancel old route-id reads and use the shared cache/coordinator.
+cancellation, focus and return navigation.
+UrlTree objects so filters/cursors remain query parameters during actual activation.
+URL criteria and explicit refresh commands share one switchMap; changing query cancels the previous consumer.
+debounce timer.
+===
+job-search/src/app/app.config.ts:2:import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChange
+job-search/src/app/app.config.ts:5:export const appConfig: ApplicationConfig = { providers: [provideBrowserGlobalErrorLi
+```
+
+</details>
+
+**Tool: Bash** — Verify PublishedAt and client date rule
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && grep -rn "PublishedAt" API/job-posting-api/src/JobPosting.Api/Persistence/PostingEntities.cs | head -3; grep -rhoi "closing date[^.]*local[^.]*\.\|local calendar[^.]*\." apps/job-posting/docs/*.md | head -2; cat apps/job-posting/src/app/app.config.ts | grep -o "provide[A-Za-z]*" | tr '\n' ' '
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+19:    public DateTimeOffset? PublishedAt { get; set; }
+Closing date is a valid YYYY-MM-DD calendar date strictly later than today's local calendar date.
+Closing date must be a valid YYYY-MM-DD after the user's local today; validation refreshes on submit to handle midnight.
+provideHttpClient provideBrowserGlobalErrorListeners provideRouter providers provideBrowserGlobalErrorListeners provideHttpClient provideRouter
+```
+
+</details>
+
+**Tool: Write** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+# Design decisions
+
+This document explains the main design decisions, the reasons behind them, and what I would change in a real product. For setup instructions, see the [README](README.md).
+
+## 1. Separate services for posting and searching
+
+Each API has its own PostgreSQL database. When a job is saved, the posting API publishes a `JobPostingCreated` message to RabbitMQ. The search API receives the message and saves the job in its own database.
+
+The brief says that jobs are posted rarely but searched constantly. Keeping the two sides separate has three benefits:
+
+- Each service can be scaled and tuned independently. For example, the search database has indexes designed for searching.
+- The services depend only on the message format. Neither service reads the other's database, and neither needs the other to be running.
+- The two databases can be moved to separate servers without changing any code. In the local Docker setup, they share one PostgreSQL server for simplicity, so heavy search load could still affect posting there. In production, I would give each database its own server.
+
+The AI's first suggestion was simpler: one database shared by both APIs. That design fits in four hours and would work at this scale. I chose separate databases and RabbitMQ because it is the design I would use in production, and because the brief accepts eventual consistency. The publishing code is behind an interface, so RabbitMQ can be replaced by another message broker without changing the posting workflow.
+
+I chose PostgreSQL because it is reliable, works well with EF Core, and has the substring-search indexes the search API needs.
+
+## 2. The posting API returns 202 only after the job is saved and the message is delivered
+
+When a job is posted, the API does three things in order:
+
+1. It saves the job in the database.
+2. It publishes the message to RabbitMQ.
+3. It waits until RabbitMQ confirms that the message has been stored.
+… (11711 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+I asked for these from the start, because both APIs run in Docker and must behave well when something fails:
+--- new
+I asked for the first three from the start, because both APIs run in Docker and must behave well when something fails:
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+- **Health checks.** Both APIs report whether they are alive and whether their dependencies are ready, so Docker can start services in the right order.
+--- new
+- **Health checks.** Both APIs report whether they are running and whether their database and RabbitMQ connections are ready. Docker and load balancers can use this to send traffic only to healthy instances.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+They use mocked API responses, so they test the apps on their own. I also tested the full system manually: post a job in one app and find it in the other.
+--- new
+They use mocked API responses, so they test the apps on their own. I also ran an end-to-end check from a fresh clone of the repository: post a job in one app, then find it and open it in the other.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+Both APIs report whether they are running and whether their database and RabbitMQ connections are ready.
+--- new
+Both APIs report whether they are running and whether the services they depend on are ready.
+```
+
+</details>
+
+**Tool: Bash** — Check section-number references
+
+<details><summary>Input</summary>
+
+```text
+git grep -n -i "DECISIONS.md" -- . ':!ai-log/0*' | grep -i "section\|#" | cut -c1-160; grep -n "section [0-9]" DECISIONS.md | cut -c1-120; echo "words: $(wc -w < DECISIONS.md)"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+141:- **Safeguards for compensation:** the alert and the scheduled check described in section 2.
+142:- **A CDN in front of the search API**, and Redis as a shared cache once several copies of the API are running (sect
+144:- **Separate database servers** for the two APIs in production (section 1).
+words: 2371
+```
+
+</details>
+
+I rewrote [DECISIONS.md](DECISIONS.md) to fix every problem from my review, with section 2 now saying you keep compensation in production. It's longer (about 2,370 words, up from 1,390) because it now covers decisions that were missing. It isn't committed yet.
+
+**Section 2 now tells the real story:**
+- The AI first proposed an outbox and a separate idempotency table. You judged that over-engineered, because the API serves one form, has no read endpoint, and retry and recovery were out of scope. So you removed both and used compensation.
+- **You keep compensation in production.** At a few posts a day, failures are rare and cheap to fix by hand, and an outbox means another background process to build, run and monitor.
+- **Two safeguards make that defensible:**
+  - an alert on the critical log event;
+  - a scheduled check for jobs whose `PublishedAt` is still empty after a few minutes. `PublishedAt` is set only after RabbitMQ confirms the message, so this catches the crash case, which leaves no log.
+- **When you'd switch:** if posting volume grew a lot, or posting had to keep working while RabbitMQ is down.
+
+**Corrected:**
+- The shared PostgreSQL server: separate databases on one server locally, separate servers in production.
+- The crash case is now described as *not* logged.
+- "No server-side state" is now "no session state", and the doc notes each copy has its own small cache.
+- "Substring-search (trigram) indexes" replaces "text-search indexes".
+- "Its database query takes about 1 ms" replaces "the database responds in about 1 ms".
+- The browser tests are described as using mocked APIs.
+
+**Added:**
+- **Section 3:** the simpler idempotency design: the key on the job row, and a unique constraint for simultaneous requests.
+- **Section 4, validation:** the same rules on both sides. The browser uses its own local date, and the server uses Toronto time.
+- **Section 5, the two Angular apps:** Signal Forms, Material, handling of every response type, and search state kept in the URL.
+- **Section 7, reliability:** logging, safe errors, the circuit breaker, graceful shutdown and health checks, noting which you asked for at the start.
+- **Gaps:** the three-way closing-date mismatch (browser date, Toronto, UTC) and separate database servers.
+- **Section 11:** your "over-engineered" pushback, now listed as an example of overruling the AI.
+
+**Three things to confirm, because I wrote them in your voice:**
+1. **The two safeguards in section 2** are my suggestion. Check you'd defend them.
+2. **The reason for PostgreSQL** in section 1: "reliable, works well with EF Core, has the substring-search indexes the search API needs".
+3. **Section 9's reason** for going over the time box. It's still my wording.
+
+Tell me about any edits, or say "commit" and I'll add it to `cleanup-leftovers`.
+
+## User
+
+> read is sentence by sentence. it should be easy to understand
+
+## Claude
+
+I'll go through it sentence by sentence, looking for anything hard to follow: long sentences, unexplained jargon, vague words and passive voice.
+
+**Tool: Bash** — List sentences of 22 words or more
+
+<details><summary>Input</summary>
+
+```text
+node -e "
+const t=require('fs').readFileSync('DECISIONS.md','utf8');
+const lines=t.split(/\r?\n/);let n=0;
+lines.forEach((line,i)=>{ if(/^\s*\|/.test(line)||/^#/.test(line)||!line.trim())return;
+  const plain=line.replace(/^[-*\d.]+\s+/,'').replace(/\*\*/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'\$1');
+  plain.split(/(?<=[.:!?])\s+(?=[A-Z\`])/).forEach(s=>{const w=s.split(/\s+/).length; if(w>=22) {n++;console.log('L'+(i+1)+' ['+w+'w] '+s);} });
+});console.log('long sentences:',n);"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+L15 [23w] I chose separate databases and RabbitMQ because it is the design I would use in production, and because the brief accepts eventual consistency.
+L31 [26w] The AI first proposed a transactional outbox: save the job and the message together in one transaction, and publish the message later from a background process.
+L31 [23w] This API exists to support one form, it has no endpoint for reading jobs, and automatic retry and recovery were out of scope.
+L40 [29w] At a few postings per day, these failures are rare and cheap to fix by hand, and an outbox would add a background process to build, run and monitor.
+L45 [22w] I would reconsider an outbox if posting volume grew a lot, or if posting had to keep working while RabbitMQ is down.
+L53 [33w] Two requests with the same key at the same moment are handled by a unique constraint on the key column: one request saves the job, and the other is detected as a duplicate.
+L57 [27w] Both check the same rules: every field is required, the minimum salary must be less than the maximum, and the closing date must be in the future.
+L60 [24w] If validation fails, the API returns `422` with an error for each field, and the form shows those errors
+… (1690 more characters)
+```
+
+</details>
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\DECISIONS.md"
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+1	# Design decisions
+2	
+3	This document explains the main design decisions, the reasons behind them, and what I would change in a real product. For setup instructions, see the [README](README.md).
+4	
+5	## 1. Separate services for posting and searching
+6	
+7	Each API has its own PostgreSQL database. When a job is saved, the posting API publishes a `JobPostingCreated` message to RabbitMQ. The search API receives the message and saves the job in its own database.
+8	
+9	The brief says that jobs are posted rarely but searched constantly. Keeping the two sides separate has three benefits:
+10	
+11	- Each service can be scaled and tuned independently. For example, the search database has indexes designed for searching.
+12	- The services depend only on the message format. Neither service reads the other's database, and neither needs the other to be running.
+13	- The two databases can be moved to separate servers without changing any code. In the local Docker setup, they share one PostgreSQL server for simplicity, so heavy search load could still affect posting there. In production, I would give each database its own server.
+14	
+15	The AI's first suggestion was simpler: one database shared by b
+… (13078 more characters)
+```
+
+</details>
+
+**Tool: Write** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+# Design decisions
+
+This document explains my main design decisions and the reasons for them. It also lists what I would change in a real product. For setup instructions, see the [README](README.md).
+
+## 1. Separate services for posting and searching
+
+Each API has its own PostgreSQL database. When a job is saved, the posting API sends a `JobPostingCreated` message to RabbitMQ. The search API receives the message and saves the job in its own database.
+
+The brief says that jobs are posted rarely but searched constantly. Keeping the two sides separate has three benefits:
+
+- Each service can grow on its own. For example, the search database has indexes built only for searching.
+- The services share nothing except the message format. Neither reads the other's database. Neither needs the other to be running.
+- The two databases can move to separate servers without any code changes. Locally, Docker runs them on one PostgreSQL server to keep setup simple. There, heavy search traffic could still slow down posting. In production, I would give each database its own server.
+
+The AI first suggested a simpler design: one database shared by both APIs. That design fits in four hours and would work at this scale. I chose separate databases and RabbitMQ because that is what I would build in production. The brief also allows search results to lag slightly behind new postings, which suits a message queue. The code that sends messages sits behind an interface. RabbitMQ can therefore be replaced without changing the posting logic.
+
+I chose PostgreSQL because it is reliable and works well with EF Core. It also has the indexes the search API needs for fast "contains" searches.
+
+## 2. The posting API returns 202 only after the job is saved and the message is delivered
+
+When a job is posted, the API does three things in order:
+
+1. It saves the job in the database.
+2. It sends the message to RabbitMQ.
+3. It waits until RabbitMQ confirms
+… (12288 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Recheck sentence lengths
+
+<details><summary>Input</summary>
+
+```text
+node -e "
+const t=require('fs').readFileSync('DECISIONS.md','utf8');let n=0,all=[];
+t.split(/\r?\n/).forEach((line,i)=>{ if(/^\s*\|/.test(line)||/^#/.test(line)||!line.trim())return;
+  const plain=line.replace(/^[-*\d.]+\s+/,'').replace(/\*\*/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'\$1');
+  plain.split(/(?<=[.:!?])\s+(?=[A-Z\`0-9])/).forEach(s=>{const w=s.split(/\s+/).length; all.push(w); if(w>20){n++;console.log('L'+(i+1)+' ['+w+'w] '+s);} });
+});console.log('sentences over 20 words:',n,' average:',(all.reduce((a,b)=>a+b,0)/all.length).toFixed(1),' longest:',Math.max(...all));"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+L45 [25w] I would switch to an outbox in two situations: if posting volume grew a lot, or if posting had to work while RabbitMQ is down.
+L57 [24w] If two requests with the same key arrive at the same moment, one saves the job and the other is treated as a duplicate.
+L124 [21w] To get the next page, the app sends a page token (a cursor) that the API returned with the previous page.
+L126 [23w] The extra features only stop new jobs from appearing in the middle of a session, and stop users from tampering with the token.
+sentences over 20 words: 4  average: 10.2  longest: 25
+```
+
+</details>
+
+Down to 4 sentences over 20 words, from 20. The average is now 10 words. Two of the four are still clumsy, so I'll split them:
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+I would switch to an outbox in two situations: if posting volume grew a lot, or if posting had to work while RabbitMQ is down.
+--- new
+I would switch to an outbox in two situations. The first is if posting volume grew a lot. The second is if posting had to work while RabbitMQ is down.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+The extra features only stop new jobs from appearing in the middle of a session, and stop users from tampering with the token.
+--- new
+The extra features add only two things. New jobs cannot appear in the middle of a session. And users cannot tamper with the token.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+I went through [DECISIONS.md](DECISIONS.md) sentence by sentence and rewrote everything that was hard to follow. Sentences now average about 10 words, down from 18, and only 2 run past 20 words, down from 20. Both of those are simple "if this, then that" sentences.
+
+**Fixed:**
+
+| Problem | Example before | Now |
+|---|---|---|
+| Long sentences | "At a few postings per day, these failures are rare and cheap to fix by hand, and an outbox would add a background process to build, run and monitor." (29 words) | "At a few postings per day, these failures are rare and easy to fix by hand. An outbox would add a background process to build, run and monitor." |
+| A term used before it was explained | "idempotency key" in section 2, explained in section 3 | Section 2 now says "submit again (see section 3)". Section 3 starts by defining the key: "a unique ID that the Angular app creates for each new job". |
+| Jargon | "eventual consistency", "unique constraint", "trigram", `sessionStorage`, "cursor", "CDN" | "allows search results to lag slightly behind", "the database allows each key only once", "indexes that make 'contains' searches fast", "the browser's session storage", "page token (a cursor)", and a one-line explanation of a CDN |
+| Vague wording | "parses the request strictly", "tuned independently" | "rejects badly formed requests", "can grow on its own" |
+| Long lists inside sentences | The validation rules in one sentence | A short bulleted list |
+
+**Also changed:**
+- The cursor section is renamed "Page tokens", and it's introduced before the caching table refers to it.
+- The Redis paragraph is split, so the rejected idea and its three reasons get their own list.
+
+**Unchanged:** all the facts, numbers and decisions, including keeping compensation and the two safeguards.
+
+It still isn't committed. Read it once more, especially section 9 on why it took longer than four hours, which is still my wording. Then say "commit" and I'll add it to `cleanup-leftovers`.
+
+## User
+
+> commit
+
+## Claude
+
+**Tool: Bash** — Commit DECISIONS.md and push
+
+<details><summary>Input</summary>
+
+```text
+git fetch -q origin && git branch --show-current && echo "cleanup commits not on main: $(git rev-list --count origin/main..HEAD)" && git status --short && git add DECISIONS.md && git commit -q -F - <<'EOF'
+Rewrite DECISIONS.md in plain language and correct its content
+
+Rewrite the document in short, plain sentences, explaining each
+technical term the first time it appears.
+
+Correct three inaccuracies: the two databases share one PostgreSQL
+server in the local setup; a crash between saving and publishing is
+not logged; and each search instance now holds an in-memory cache.
+
+Tell the real outbox story: the outbox and the separate idempotency
+table were removed as over-engineered for a single-form API, and
+compensation is kept in production with two safeguards (an alert on
+the critical error and a check for jobs with no PublishedAt).
+
+Add the missing decisions: the simpler idempotency design, validation
+on both sides (browser date vs Toronto time), the Angular apps, the
+reliability requirements and the choice of PostgreSQL.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push 2>&1 | tail -1 && git log --oneline -1 | cat && git status --short
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+cleanup-leftovers
+cleanup commits not on main: 5
+ M DECISIONS.md
+warning: in the working copy of 'DECISIONS.md', LF will be replaced by CRLF the next time Git touches it
+   2172e8fe..191bb282  cleanup-leftovers -> cleanup-leftovers
+191bb282 Rewrite DECISIONS.md in plain language and correct its content
+```
+
+</details>
+
+I committed the rewritten `DECISIONS.md` as `191bb282` and pushed it to `cleanup-leftovers`. Nothing else is uncommitted.
+
+The pull request isn't merged yet. The branch now has six commits that aren't on `main`:
+
+1. Remove the per-API Docker Compose setups
+2. Remove the stale `JobBoard.Persistence` placeholder
+3. Move the posting API prompts into a `prompts/` folder
+4. Stop caching pages with a cursor, and cap first-page caching at UTC midnight
+5. Update the caching docs to match
+6. Rewrite DECISIONS.md in plain language
+
+**To finish:** merge the pull request at https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers, then send the repository link to your recruiter.
+
+The AI transcript in `ai-log/` stops before these last rounds. If you want them in the record, ask me to re-export it before you merge.
+
+## User
+
+> there are lots of readme files. other the one in the root do we really need them?
+
+## Claude
+
+I'll list every README in the repository, then judge which ones earn their place.
+
+**Tool: Bash** — List all README files and doc folders
+
+<details><summary>Input</summary>
+
+```text
+git ls-files | grep -i "readme\.md$" | while read f; do echo "$(wc -l < "$f") lines  $f"; done; echo "--- other docs per project:"; for d in apps/job-posting/docs apps/job-search/docs API/job-posting-api/docs API/job-posting-api/src/JobPosting.Api/docs API/job-search.api/docs; do echo "$d: $(git ls-files $d | wc -l) files"; done
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+8 lines  API/README.md
+88 lines  API/job-posting-api/README.md
+28 lines  API/job-posting-api/prompts/README.md
+74 lines  API/job-posting-api/src/JobPosting.Api/README.md
+87 lines  API/job-search.api/README.md
+112 lines  API/job-search.api/docs/performance/README.md
+19 lines  API/job-search.api/prompt/README.md
+185 lines  README.md
+67 lines  ai-log/README.md
+61 lines  apps/job-posting/README.md
+52 lines  apps/job-search/README.md
+--- other docs per project:
+apps/job-posting/docs: 4 files
+apps/job-search/docs: 6 files
+API/job-posting-api/docs: 2 files
+API/job-posting-api/src/JobPosting.Api/docs: 7 files
+API/job-search.api/docs: 13 files
+```
+
+</details>
+
+No, not all of them. There are 11 READMEs. Here's my assessment of each:
+
+| README | Verdict | Why |
+|---|---|---|
+| `README.md` (root) | **Keep** | The main entry point. |
+| `ai-log/README.md` | **Keep** | The guided tour of your transcripts. The AI log is graded. |
+| `API/job-posting-api/prompts/README.md`, `API/job-search.api/prompt/README.md` | **Keep** | Indexes of the prompts. They're part of your AI-usage evidence, and GitHub shows them when someone opens the folder. |
+| `apps/job-posting/README.md`, `apps/job-search/README.md`, `API/job-posting-api/README.md`, `API/job-search.api/README.md` | **Keep** | One per project. Reviewers click into folders, and GitHub shows the README first. Each is a short landing page: what the project does, how to run and test it, where things are. Without them, a folder opens straight into a file list. |
+| `API/job-search.api/docs/performance/README.md` | **Keep** (it's really a report) | It's the caching measurement report that DECISIONS.md links to, not a README in the usual sense. |
+| `API/README.md` | **Delete** | 8 lines that repeat the root README. |
+| `API/job-posting-api/src/JobPosting.Api/README.md` | **Delete** | A second README for the same API. It's mostly coverage-gate internals and logging details that reviewers don't need. Anything worth keeping can go into the posting API's README in two or three lines. |
+
+**The bigger problem is the `docs/` folders, not the READMEs.** There are 32 files across five folders. Many are stage-by-stage notes from the build, written in the dense AI style you objected to in DECISIONS.md. Some still start with headings like "Stage 6" or "Stage 7" and use phrases like "verification and handoff". For example, the search API alone has 13 doc files, including `final-verification.md`, `client-integration-handoff.md` and `runbook.md`. A reviewer who opens one of these will see machine-written text, and it weakens the clear impression the root README and DECISIONS.md now give.
+
+**My recommendation:**
+1. Delete the two READMEs marked above.
+2. Cut each project's `docs/` folder down to what a reviewer would actually use, typically the API contract, plus caching and paging for search. Delete the build-stage notes, such as verification, handoff and foundation. The same information is in the prompts and the AI log.
+
+Should I do both? If so, I'll list exactly which doc files I plan to delete before deleting anything, so you can check the list.
+
+## User
+
+> keeping all od these readme files are only confusing for the hiring manager
+
+## Claude
+
+Agreed: one README, at the root. I'll treat the others in three groups:
+
+- **Delete the 7 project and folder READMEs** (both apps, both APIs, the posting API's inner README, `API/README.md`, and both prompt-folder indexes). The prompt files are already numbered in order, so the indexes add nothing. Anything a reviewer needs from them moves into the root README.
+- **Rename the performance "README"** to `read-performance.md`. It's a measurement report, and calling it a README is part of the confusion.
+- **Keep `ai-log/README.md`, with one exception to your rule.** It's the guided tour of your transcripts, the AI log is graded, and it's what a reviewer sees first on opening that folder. Say if you want it gone too.
+
+First, everything that links to those files:
+
+**Tool: Bash** — Find links to READMEs being removed
+
+<details><summary>Input</summary>
+
+```text
+git grep -n -E "\]\([^)]*(README\.md|PROMPTS\.md|prompt/README|prompts/README|performance/README|performance/?\))" -- . ':!ai-log/0*' ':!ai-log/work-notes' | grep -v "^README.md:.*ai-log/README" | cut -c1-170
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+API/README.md:5:- [job-posting-api](job-posting-api/README.md): write side. Validates and stores job postings, then publishes `JobPostingCreated` to RabbitMQ.
+API/README.md:6:- [job-search.api](job-search.api/README.md): read side. Consumes those events into a search read model and serves list and detail queries.
+API/README.md:8:They share no code or database; the only contract between them is the event on RabbitMQ. To run both together with PostgreSQL and RabbitMQ, use `docker co
+API/job-posting-api/README.md:5:For the overall architecture and the one-command Docker setup, see the [root README](../../README.md).
+API/job-posting-api/README.md:87:- [Service README](src/JobPosting.Api/README.md): configuration, logging and coverage-gate details
+API/job-posting-api/README.md:88:- [Implementation prompts](prompts/README.md) used to build this API with AI
+API/job-posting-api/src/JobPosting.Api/README.md:3:Developer reference for the service project: build baseline, coverage gate, configuration and logging. For an overview,
+API/job-posting-api/src/JobPosting.Api/README.md:49:The Development profile listens on http://localhost:5000, the port the posting client's proxy uses. The OpenAPI do
+… (2565 more characters)
+```
+
+</details>
+
+Only a few links point at the files being deleted. The real work is moving their useful content into the root README. Let me read its testing and "outside Docker" sections:
+
+**Tool: Read** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+{
+  "file_path": "C:\\Users\\saman\\source\\repos\\job-posting-app\\README.md",
+  "offset": 90
+}
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+90	'''
+91	
+92	## API reference
+93	
+94	### Job Posting API
+95	
+96	`POST /api/jobs`. Requires an `Idempotency-Key` header containing a UUID.
+97	
+98	'''sh
+99	curl -i -X POST http://localhost:5000/api/jobs \
+100	  -H "Content-Type: application/json" \
+101	  -H "Idempotency-Key: 0f8e2a4c-7b1d-4e3a-9c55-2d6b8f1a3e70" \
+102	  -d '{"title":"Senior Engineer","department":"Engineering","location":"Toronto",
+103	       "description":"Build things.","salaryMin":100000,"salaryMax":130000,"closingDate":"2027-03-31"}'
+104	'''
+105	
+106	| Status | Meaning |
+107	|---|---|
+108	| `202` | Saved and published. The body is the saved record (`id`, `createdAt` and all submitted fields). Repeating the same key returns the same response. |
+109	| `400` / `422` | Validation failed. The body is a Problem Details object with an `errors` map, which the form shows next to each field. |
+110	| `409` | The idempotency key was reused with a different body, or the original request is still in progress. |
+111	| `503` | The database or broker is unavailable (`Retry-After` is set). |
+112	
+113	Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be after today in the
+… (3875 more characters)
+```
+
+</details>
+
+I'll make the changes in two steps. First, delete the 7 READMEs and rename the performance report:
+
+**Tool: Bash** — Delete READMEs, rename report, find stale links
+
+<details><summary>Input</summary>
+
+```text
+git rm -q API/README.md API/job-posting-api/README.md API/job-posting-api/src/JobPosting.Api/README.md API/job-search.api/README.md apps/job-posting/README.md apps/job-search/README.md API/job-posting-api/prompts/README.md API/job-search.api/prompt/README.md && git mv API/job-search.api/docs/performance/README.md API/job-search.api/docs/performance/read-performance.md && git ls-files | grep -i "readme" && echo "--- links still pointing at removed or renamed files:" && git grep -n -E "README\.md|performance/README|performance\)|prompts?/README" -- . ':!ai-log/0*' ':!ai-log/work-notes' | grep -v -E "^README.md:.*\(ai-log/README.md\)|ai-log/README.md" | cut -c1-170
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+README.md
+ai-log/README.md
+--- links still pointing at removed or renamed files:
+API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md:3:The posting API runs in Docker through the repository's **root** [`docker-compose.yml`](../.
+API/job-search.api/docs/design.md:23:See [contracts](contracts.md), [persistence](persistence.md), [messaging lifecycle](messaging.md), [search semantics](search.md), and
+API/job-search.api/docs/docker.md:3:The search API runs in Docker through the repository's **root** [`docker-compose.yml`](../../../docker-compose.yml), which also starts
+API/job-search.api/docs/final-verification.md:17:The retained [Stage 7 report](performance/latest.json) records 10,000 seeded rows, four concurrent clients, 10.009 second
+API/job-search.api/docs/search.md:55:Stage7 provides local EXPLAIN/load evidence in performance/README.md; monitoring exporter and persistent Docker provisioning remain l
+DECISIONS.md:3:This document explains my main design decisions and the reasons for them. It also lists what I would change in a real product. For setup instructions, see 
+DECISIONS.md:110:The full results are in the [performance report](API/job-search.api/docs/per
+… (547 more characters)
+```
+
+</details>
+
+Only `README.md` and `ai-log/README.md` remain. Four links need fixing; the rest point at the root README, which stays. Checking the search design doc's link line first:
+
+**Tool: Bash** — Fix links to the renamed performance report
+
+<details><summary>Input</summary>
+
+```text
+sed -n 23p API/job-search.api/docs/design.md | grep -o "\[[^]]*\]([^)]*)" ; sed -i 's#performance/README\.md#performance/read-performance.md#g' API/job-search.api/docs/design.md API/job-search.api/docs/search.md DECISIONS.md && grep -n "read-performance" API/job-search.api/docs/design.md API/job-search.api/docs/search.md DECISIONS.md | cut -c1-140
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+[contracts](contracts.md)
+[persistence](persistence.md)
+[messaging lifecycle](messaging.md)
+[search semantics](search.md)
+[measured performance](performance/README.md)
+API/job-search.api/docs/design.md:23:See [contracts](contracts.md), [persistence](persistence.md), [messaging lifecycle](messaging.md), [sea
+API/job-search.api/docs/search.md:55:Stage7 provides local EXPLAIN/load evidence in performance/read-performance.md; monitoring exporter and
+DECISIONS.md:110:The full results are in the [performance report](API/job-search.api/docs/performance/read-performance.md#cache-comparison-2
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\README.md
+--- old
+Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be after today in the business time zone (`America/Toronto` by default). The same rules are enforced in the Angular form and in the API.
+--- new
+Validation rules: all text fields are required; `salaryMin` must be less than `salaryMax`; `closingDate` must be in the future. The Angular form checks these rules using the browser's date. The API checks them again using today's date in the business time zone (`America/Toronto` by default).
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\README.md
+--- old
+| Job Posting API | `dotnet test API/job-posting-api/tests/JobPosting.Api.Tests` |
+| Job Search API | `dotnet test API/job-search.api/tests/JobSearch.Api.Tests` |
+
+- **Unit tests** need no running services. The Angular suites enforce 100% coverage.
+- **API integration tests** (`tests/*.IntegrationTests`) run against real PostgreSQL and RabbitMQ containers, which they start and remove themselves. Docker must be running.
+--- new
+| Job Posting API | `dotnet test API/job-posting-api/tests/JobPosting.Api.Tests` |
+| Job Search API | `dotnet test API/job-search.api/tests/JobSearch.Api.Tests` |
+
+- **Unit tests** need no running services. All four projects require 100% coverage. For the APIs, run the coverage check from the API's folder, for example `cd API/job-search.api` then `dotnet run --project tools/CoverageGate`. It fails if any line, branch or method is not covered.
+- **API integration tests** run against real PostgreSQL and RabbitMQ containers, which they start and remove themselves. Docker must be running. Run them with `dotnet test API/job-posting-api/tests/JobPosting.Api.IntegrationTests` or `dotnet test API/job-search.api/tests/JobSearch.Api.IntegrationTests`.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\README.md
+--- old
+To debug an API on the host, start only the infrastructure with `docker compose up postgres rabbitmq`, then follow that project's README:
+
+- [Job Posting API](API/job-posting-api/README.md)
+- [Job Search API](API/job-search.api/README.md)
+--- new
+To debug an API on your machine, start its database, RabbitMQ and migration in Docker, then run the API with `dotnet run`. The exact commands and environment variables are in each API's Docker guide:
+
+- [Job Posting API](API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md#run-the-api-on-the-host)
+- [Job Search API](API/job-search.api/docs/docker.md#run-the-api-on-the-host)
+
+## Project documentation
+
+Each project keeps its detailed notes in a `docs/` folder. The most useful ones:
+
+- **Job Posting API:** [API contract](API/job-posting-api/src/JobPosting.Api/docs/api-contract.md), [idempotency](API/job-posting-api/src/JobPosting.Api/docs/idempotency.md), [POST workflow and compensation](API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md)
+- **Job Search API:** [search, paging and caching](API/job-search.api/docs/search.md), [read performance and caching measurements](API/job-search.api/docs/performance/read-performance.md)
+- **Job Posting app:** [local development](apps/job-posting/docs/local-development.md), [client-side duplicate protection](apps/job-posting/docs/client-idempotency.md)
+- **Job Search app:** [list and detail pages](apps/job-search/docs/list-and-detail-experience.md), [filters and paging in the URL](apps/job-search/docs/url-query-state.md)
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\README.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\README.md
+--- old
+Each project also has a `prompts/` (or `prompt/`) folder with the staged prompts used to build it, and a `docs/` folder with detailed design notes.
+--- new
+Each project also has a `prompts/` (or `prompt/`) folder with the numbered prompts used to build it, and a `docs/` folder with detailed notes.
+```
+
+</details>
+
+**Tool: Bash** — Check all links and anchors resolve
+
+<details><summary>Input</summary>
+
+```text
+node -e "
+const fs=require('fs'),path=require('path');let bad=0;
+for(const f of ['README.md','DECISIONS.md','ai-log/README.md','API/job-search.api/docs/design.md','API/job-search.api/docs/search.md','apps/job-posting/docs/local-development.md']){
+ const t=fs.readFileSync(f,'utf8');for(const m of t.matchAll(/\]\(([^)#\s]+)(#[^)]+)?\)/g)){const l=m[1];if(/^https?:/.test(l))continue;const p=path.join(path.dirname(f),l);if(!fs.existsSync(p)){bad++;console.log('BROKEN',f,l);continue;}
+ if(m[2]&&p.endsWith('.md')){const slug=m[2].slice(1);const heads=fs.readFileSync(p,'utf8').split(/\r?\n/).filter(x=>/^#+ /.test(x)).map(h=>h.replace(/^#+ /,'').toLowerCase().replace(/[^a-z0-9 -]/g,'').replace(/ /g,'-'));if(!heads.includes(slug)){bad++;console.log('BAD ANCHOR',f,l+m[2]);}}}}
+console.log('broken:',bad)"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\README.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+broken: 0
+```
+
+</details>
+
+Every link and section anchor resolves. One check before committing: the editor flagged that DECISIONS.md changed on disk, so I'll confirm the only change there is my link fix.
+
+**Tool: Bash** — Confirm DECISIONS diff and stage changes
+
+<details><summary>Input</summary>
+
+```text
+git diff --stat DECISIONS.md | cat && git diff DECISIONS.md | grep "^[-+][^-+]" | cut -c1-120 && git add -A README.md DECISIONS.md API apps && git status --short
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+warning: in the working copy of 'DECISIONS.md', LF will be replaced by CRLF the next time Git touches it
+ DECISIONS.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+warning: in the working copy of 'DECISIONS.md', LF will be replaced by CRLF the next time Git touches it
+-The full results are in the [performance report](API/job-search.api/docs/performance/README.md#cache-comparison-2026-10
++The full results are in the [performance report](API/job-search.api/docs/performance/read-performance.md#cache-comparis
+warning: in the working copy of 'API/job-search.api/docs/design.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-search.api/docs/search.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'DECISIONS.md', LF will be replaced by CRLF the next time Git touches it
+D  API/README.md
+D  API/job-posting-api/README.md
+D  API/job-posting-api/prompts/README.md
+D  API/job-posting-api/src/JobPosting.Api/README.md
+D  API/job-search.api/README.md
+M  API/job-search.api/docs/design.md
+R  API/job-search.api/docs/performance/README.md -> API/job-search.api/docs/performance/read-performance.md
+M  
+… (160 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Commit README consolidation and push
+
+<details><summary>Input</summary>
+
+```text
+git commit -q -F - <<'EOF'
+Keep a single README at the repository root
+
+Several README files across the projects and folders made it unclear
+where a reviewer should start. Delete the project, API-folder and
+prompt-folder READMEs, and rename the search API's performance
+README to read-performance.md, since it is a measurement report.
+ai-log/README.md stays as the index of the AI transcripts.
+
+Move what was useful into the root README: the coverage-gate and
+integration-test commands, links to each API's guide for running it
+outside Docker, and a short list of the most useful project docs.
+Also correct the validation note: the form checks the closing date
+against the browser's date, the API against Toronto time.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push 2>&1 | tail -1 && git log --oneline -1 | cat && git status --short
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+191bb282..82046f8f  cleanup-leftovers -> cleanup-leftovers
+82046f8f Keep a single README at the repository root
+```
+
+</details>
+
+The repository now has one README, at the root. I committed and pushed this as `82046f8f` on `cleanup-leftovers`.
+
+**Deleted:** 8 README files. These were the READMEs for both Angular apps and both APIs, the posting API's second inner README, `API/README.md`, and the two prompt-folder indexes. The prompt files are numbered, so the indexes added nothing.
+
+**Renamed:** the search API's performance "README" is now `read-performance.md`, since it's a measurement report. The three links to it are updated.
+
+**Kept:** `ai-log/README.md`, the guided tour of your transcripts. It's the one exception I mentioned. If you'd rather it go too, the tour can move into the root README.
+
+**Added to the root README:**
+- the coverage-check and integration-test commands for both APIs;
+- links to each API's guide for running it outside Docker;
+- a new **Project documentation** section with two to three links per project, pointing to the docs actually worth reading.
+
+**Corrected:** the root README said the form and the API apply the same closing-date rule. In fact the form uses the browser's date and the API uses Toronto time, and it now says so.
+
+Every link and section anchor in the edited files still resolves.
+
+The `docs/` folders still hold about 30 files of stage-by-stage notes in the dense AI style. The root README now points reviewers only to the useful ones, but the rest are still there to click on. I can cut them down too. As before, I'd show you the exact deletion list first.
+
+When you're done, merge the pull request: https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+## User
+
+> so how many readme file we keep?
+
+## Claude
+
+Two:
+
+1. **`README.md`** at the repository root, the main entry point for reviewers.
+2. **`ai-log/README.md`**, the index and guided tour of the AI transcripts.
+
+The second is optional. I kept it because the AI log is graded, and a reviewer opening that folder sees the guide first. If you want exactly one README, I can move its contents into the root README and delete it.
+
+## User
+
+> any other document?
+
+## Claude
+
+**Tool: Bash** — List all other markdown documents by group
+
+<details><summary>Input</summary>
+
+```text
+git ls-files '*.md' | grep -v -i "readme.md$" | awk -F/ '{ if ($0 ~ /^ai-log\/0/) g="ai-log transcripts"; else if ($0 ~ /^ai-log\/work-notes/) g="ai-log work notes"; else if ($0 ~ /prompts?\//) g="prompts: "$1"/"$2; else if ($0 ~ /docs\//) g="docs: "$1"/"$2; else g="root"; print g" | "$0 }' | sort | awk -F' \\| ' '{c[$1]++; f[$1]=f[$1]"\n    "$2} END {for (k in c) print c[k]"  "k f[k]}' | sort -k2
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+awk: warning: escape sequence `\|' treated as plain `|'
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-posting-api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    API/job-search.api
+    apps/job-posting
+    apps/job-posting
+    apps/job-posting
+    apps/job-posting
+    apps/job-posting
+    apps/job-posting
+    apps/job-posting
+    apps/job-posting
+    apps/job-
+… (522 more characters)
+```
+
+</details>
+
+That grouping came out garbled. A simpler listing:
+
+**Tool: Bash** — List markdown documents per area
+
+<details><summary>Input</summary>
+
+```text
+f=$(git ls-files '*.md' | grep -v -i "readme.md$"); echo "TOTAL: $(echo "$f" | wc -l)"; echo; echo "== root"; echo "$f" | grep -v /; echo; echo "== ai-log"; echo "$f" | grep "^ai-log/"; echo; for p in apps/job-posting apps/job-search API/job-posting-api API/job-search.api; do echo "== $p prompts: $(echo "$f" | grep "^$p/prompts\?/" | wc -l) files"; echo "== $p docs:"; echo "$f" | grep "^$p/" | grep "/docs/" | sed "s#^$p/##"; echo; done
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+TOTAL: 77
+
+== root
+DECISIONS.md
+
+== ai-log
+ai-log/01-analysis-and-client-apps.md
+ai-log/02-client-polish-posting-api-search-api.md
+ai-log/03-review-compose-docs-caching.md
+ai-log/work-notes/job-posting-api.md
+ai-log/work-notes/job-posting-client.md
+ai-log/work-notes/job-search-api.md
+ai-log/work-notes/job-search-client.md
+
+== apps/job-posting prompts: 9 files
+== apps/job-posting docs:
+docs/api-contract.md
+docs/client-idempotency.md
+docs/local-development.md
+docs/testing-and-coverage.md
+
+== apps/job-search prompts: 9 files
+== apps/job-search docs:
+docs/api-contract.md
+docs/foundation.md
+docs/list-and-detail-experience.md
+docs/query-performance.md
+docs/testing-and-coverage.md
+docs/url-query-state.md
+
+== API/job-posting-api prompts: 11 files
+== API/job-posting-api docs:
+docs/client-integration-handoff.md
+docs/verification-and-handoff.md
+src/JobPosting.Api/docs/api-contract.md
+src/JobPosting.Api/docs/docker-and-local-development.md
+src/JobPosting.Api/docs/idempotency.md
+src/JobPosting.Api/docs/messaging.md
+src/JobPosting.Api/docs/persistence.md
+src/JobPosting.Api/docs/post-workflow.md
+src/JobPosting.Api/docs/resilience-and-shutdown.md
+
+== API/job-search.api prompts: 11 files
+== API/job
+… (233 more characters)
+```
+
+</details>
+
+Besides the two READMEs, there are **77 other Markdown documents**:
+
+| Group | Files | My view |
+|---|---|---|
+| `DECISIONS.md` (root) | 1 | **Keep.** It explains your design choices. |
+| AI transcripts (`ai-log/01…03`) | 3 | **Keep.** The brief requires them. |
+| AI work notes (`ai-log/work-notes/`) | 4 | **Keep.** Short summaries that back up the transcripts. |
+| Prompts (`prompts/` in each project) | 40 | **Keep.** Evidence of how you worked with AI, which is graded. They sit in their own folders, so they don't get in the way. |
+| Project `docs/` folders | 29 | **Cut down.** This is where the clutter is. |
+
+**The 29 docs.** I'd keep the 11 that the root README links to or that a reviewer would actually use, and delete the other 18:
+
+| Project | Keep (11) | Delete (18) |
+|---|---|---|
+| Job Posting API | `api-contract`, `idempotency`, `post-workflow`, `docker-and-local-development` | `client-integration-handoff`, `verification-and-handoff`, `messaging`, `persistence`, `resilience-and-shutdown` |
+| Job Search API | `search`, `docker`, `performance/read-performance` | `client-integration-handoff`, `final-verification`, `runbook`, `design`, `contracts`, `messaging`, `persistence` |
+| Job Posting app | `local-development`, `client-idempotency` | `api-contract`, `testing-and-coverage` |
+| Job Search app | `list-and-detail-experience`, `url-query-state` | `foundation`, `query-performance`, `api-contract`, `testing-and-coverage` |
+
+The deleted files are mostly notes from the build stages: handoffs, verification reports and per-stage designs. Their content is already covered by DECISIONS.md, the code and tests, the prompts, or the AI log, and nothing important is lost. Before deleting, I'd fix any links from the kept docs that point at deleted ones.
+
+One caveat: the 11 docs I'd keep are still written in the dense AI style. If a reviewer clicks one, it won't read like DECISIONS.md. After the cut, I can rewrite those 11 in the same plain style. It's more work, but it would make the whole repository read consistently.
+
+Should I delete the 18 as listed?
+
+## User
+
+> yes
+
+## Claude
+
+**Tool: Bash** — Delete 18 docs and find broken links
+
+<details><summary>Input</summary>
+
+```text
+P=API/job-posting-api && PD=$P/src/JobPosting.Api/docs && S=API/job-search.api/docs && git rm -q $P/docs/client-integration-handoff.md $P/docs/verification-and-handoff.md $PD/messaging.md $PD/persistence.md $PD/resilience-and-shutdown.md $S/client-integration-handoff.md $S/final-verification.md $S/runbook.md $S/design.md $S/contracts.md $S/messaging.md $S/persistence.md apps/job-posting/docs/api-contract.md apps/job-posting/docs/testing-and-coverage.md apps/job-search/docs/foundation.md apps/job-search/docs/query-performance.md apps/job-search/docs/api-contract.md apps/job-search/docs/testing-and-coverage.md && echo "deleted: $(git status --short | grep -c '^D')" && echo "--- remaining docs:" && git ls-files | grep "/docs/" | grep "\.md$" && echo "--- links to deleted files (excluding prompts/ai-log):" && node -e "
+const fs=require('fs'),path=require('path'),{execSync}=require('child_process');
+const files=execSync('git ls-files \"*.md\"').toString().trim().split('\n').filter(f=>!/prompts?\//.test(f)&&!f.startsWith('ai-log/0')&&!f.startsWith('ai-log/work-notes'));
+let n=0;for(const f of files){const t=fs.readFileSync(f,'utf8');for(const m of t.matchAll(/\]\(([^)#\s]+)(#[^)]*)?\)/g)){const l=m[1];if(/^https?:/.test(l))continue;if(!fs.existsSync(path.join(path.dirname(f),l))){n++;console.log(f+': '+l);}}}console.log('broken links:',n)"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+deleted: 18
+--- remaining docs:
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md
+API/job-posting-api/src/JobPosting.Api/docs/idempotency.md
+API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md
+API/job-search.api/docs/docker.md
+API/job-search.api/docs/performance/read-performance.md
+API/job-search.api/docs/search.md
+apps/job-posting/docs/client-idempotency.md
+apps/job-posting/docs/local-development.md
+apps/job-search/docs/list-and-detail-experience.md
+apps/job-search/docs/url-query-state.md
+--- links to deleted files (excluding prompts/ai-log):
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md: ../../../../../apps/job-posting/docs/api-contract.md
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md: persistence.md
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md: ../../../docs/client-integration-handoff.md
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md: ../../../docs/verification-and-handoff.md
+API/job-posting-api/src/JobPosting.Api/docs/idempotency.md: persistence.md
+API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md: persistence.md
+API/j
+… (174 more characters)
+```
+
+</details>
+
+18 deleted, 11 left. Three of the kept posting API docs have 8 links to deleted files, and there may also be plain-text mentions that aren't links. Checking both:
+
+**Tool: Bash** — Show every mention of deleted docs
+
+<details><summary>Input</summary>
+
+```text
+git ls-files | grep "/docs/.*\.md$" | xargs grep -n -E "client-integration-handoff|verification-and-handoff|final-verification|runbook|design\.md|contracts\.md|messaging\.md|persistence\.md|resilience-and-shutdown|testing-and-coverage|foundation\.md|query-performance|docs/api-contract|apps/job-posting/docs/api-contract" | cut -c1-260
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md:200:The current posting client's [contract](../../../../../apps/job-posting/docs/api-contract.md) and transport explicitly treat **every 202** as pending/unconfirmed, even when a complete saved record
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md:204:Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, determinist
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md:209:See the [client integration handoff](../../../docs/client-integration-handoff.md) and [final verification/runbook](../../../docs/verification-and-handoff.md).
+API/job-posting-api/src/JobPosting.Api/docs/idempotency.md:37:See [persistence.md](persistence.md) for schema and upgrade instructions.
+API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md:3:POST `/api/jobs` accepts UTF-8 `application/json` with one required `Idempotency-Key`, including the first attempt. The strict reader rejects malformed JSON, unknown fields, invalid types and salar
+API/job-posting-api/src/JobPosting.Api/docs/post-workflow.
+… (985 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read the stale mentions in context
+
+<details><summary>Input</summary>
+
+```text
+D=API/job-posting-api/src/JobPosting.Api/docs && sed -n 198,210p $D/api-contract.md; echo "=== idempotency 35-38"; sed -n 35,38p $D/idempotency.md; echo "=== post-workflow 3"; sed -n 3p $D/post-workflow.md | grep -o ".\{120\}\](\(persistence\|messaging\)[^)]*).\{60\}"; echo "=== post-workflow 43"; sed -n 43p $D/post-workflow.md; echo "=== read-perf 110"; sed -n 110p API/job-search.api/docs/performance/read-performance.md | grep -o ".\{80\}messaging.md.\{40\}"; echo "=== local-dev 42"; sed -n 42p apps/job-posting/docs/local-development.md | grep -o ".\{80\}testing-and-coverage.\{40\}"; echo "=== list-detail 17"; sed -n 17p apps/job-search/docs/list-and-detail-experience.md | grep -o -E ".{80}(testing-and-coverage|query-performance|foundation).{40}"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+## Angular integration remains a later task
+
+The current posting client's [contract](../../../../../apps/job-posting/docs/api-contract.md) and transport explicitly treat **every 202** as pending/unconfirmed, even when a complete saved record is supplied. This API's broker-confirmed 202 instead resolves creation and must display the authoritative saved record, clear the resolved attempt and explain eventual search visibility. Updating that client behavior, its tests and timezone communication is a separate integration task; this stage does not edit Angular files or connect the form to this API.
+
+## Verification and implementation references
+
+Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, deterministic canonicalization, all seven fingerprint fields, response/problem contracts and timezone/leap/midnight boundaries. In-process host tests separately verify startup/DI, POST responses, strict input rejection and safe exception mapping. Stage 3 adds PostgreSQL persistence and separately measured real-database tests; see the [persistence guide](persistenc
+… (2461 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Extract exact sentences to edit
+
+<details><summary>Input</summary>
+
+```text
+grep -o "See \[API contract\](api-contract.md)[^.]*\." API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md; grep -o "See \.\./messaging\.md[^.]*\." API/job-search.api/docs/performance/read-performance.md; grep -o "See testing-and-coverage\.md[^.]*\." apps/job-posting/docs/local-development.md apps/job-search/docs/list-and-detail-experience.md
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+See [API contract](api-contract.md) for field limits and response bodies, [persistence](persistence.
+See ../messaging.md for the confirmed-acceptance boundary and shutdown budget.
+apps/job-posting/docs/local-development.md:See testing-and-coverage.md for exact scope and failure verification.
+apps/job-search/docs/list-and-detail-experience.md:See testing-and-coverage.md for verified flows and remaining limitations.
+```
+
+</details>
+
+**Tool: Bash** — Get the full post-workflow sentence
+
+<details><summary>Input</summary>
+
+```text
+grep -o "See \[API contract\](api-contract.md).\{0,400\}" API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md | head -1
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+See [API contract](api-contract.md) for field limits and response bodies, [persistence](persistence.md) for explicit database setup/migrations and [messaging](messaging.md) for RabbitMQ setup. The frontend is not connected in this stage.
+```
+
+</details>
+
+That sentence also says "The frontend is not connected in this stage", which is stale too. I'll apply all the edits with exact-match replacements, so nothing else in these files changes:
+
+**Tool: Write** — C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\scratchpad\fix-deleted-doc-refs.js
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\scratchpad\fix-deleted-doc-refs.js
+// Removes references to deleted docs and corrects stale statements. Run from the repository root.
+const fs = require('fs');
+const edit = (file, from, to) => {
+  const text = fs.readFileSync(file, 'utf8');
+  if (!text.includes(from)) throw new Error(`not found in ${file}: ${from.slice(0, 70)}`);
+  fs.writeFileSync(file, text.replace(from, to));
+  console.log(`edited ${file}`);
+};
+const D = 'API/job-posting-api/src/JobPosting.Api/docs';
+
+edit(`${D}/api-contract.md`,
+  '## Angular integration remains a later task',
+  '## How the posting app uses this API');
+edit(`${D}/api-contract.md`,
+  "The current posting client's [contract](../../../../../apps/job-posting/docs/api-contract.md) and transport explicitly treat **every 202** as pending/unconfirmed, even when a complete saved record is supplied. This API's broker-confirmed 202 instead resolves creation and must display the authoritative saved record, clear the resolved attempt and explain eventual search visibility. Updating that client behavior, its tests and timezone communication is a separate integration task; this stage does not edit Angular files or connect the form to this API.",
+  'The posting app treats a 202 that contains a complete saved record as a successful save. It shows the saved record exactly as the API returned it, clears the finished submission, and explains that the job may take a few moments to appear in search.');
+edit(`${D}/api-contract.md`,
+  ' Stage 3 adds PostgreSQL persistence and separately measured real-database tests; see the [persistence guide](persistence.md).',
+  ' Separate integration tests run against a real PostgreSQL database.');
+edit(`${D}/api-contract.md`,
+  'See the [client integration handoff](../../../docs/client-integration-handoff.md) and [final verification/runbook](../../../docs/verification-and-handoff.md).',
+  '');
+e
+… (1336 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+File created successfully at: C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\scratchpad\fix-deleted-doc-refs.js (file state is current in your context — no need to Read it back)
+```
+
+</details>
+
+**Tool: Bash** — Apply fixes and recheck links and mentions
+
+<details><summary>Input</summary>
+
+```text
+node "C:/Users/saman/AppData/Local/Temp/claude/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/scratchpad/fix-deleted-doc-refs.js" && echo "--- recheck links and mentions:" && node -e "
+const fs=require('fs'),path=require('path'),{execSync}=require('child_process');
+const files=execSync('git ls-files \"*.md\"').toString().trim().split('\n').filter(f=>fs.existsSync(f)&&!/prompts?\//.test(f)&&!f.startsWith('ai-log/0')&&!f.startsWith('ai-log/work-notes'));
+let n=0;for(const f of files){const t=fs.readFileSync(f,'utf8');for(const m of t.matchAll(/\]\(([^)#\s]+)(#[^)]*)?\)/g)){const l=m[1];if(/^https?:/.test(l))continue;if(!fs.existsSync(path.join(path.dirname(f),l))){n++;console.log(f+': '+l);}}}console.log('broken links:',n)" && git ls-files | grep "/docs/.*\.md$" | xargs grep -c -E "client-integration-handoff|verification-and-handoff|final-verification|runbook\.md|design\.md|contracts\.md|messaging\.md|persistence\.md|resilience-and-shutdown|testing-and-coverage|foundation\.md|query-performance" | grep -v ":0$"; echo "mention check done"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+edited API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+edited API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+edited API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+edited API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+edited API/job-posting-api/src/JobPosting.Api/docs/idempotency.md
+edited API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md
+edited API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md
+edited API/job-search.api/docs/performance/read-performance.md
+edited apps/job-posting/docs/local-development.md
+edited apps/job-search/docs/list-and-detail-experience.md
+--- recheck links and mentions:
+broken links: 0
+mention check done
+```
+
+</details>
+
+No broken links and no mentions of deleted docs remain. Committing:
+
+**Tool: Bash** — Commit doc pruning and push
+
+<details><summary>Input</summary>
+
+```text
+git add -A API apps && git status --short | sed 's/^/  /' | head -30 && git commit -q -F - <<'EOF'
+Remove build-stage docs and keep the ones reviewers use
+
+Delete 18 docs that were notes from the build stages: client handoffs,
+verification reports, runbook, per-stage design, contract, messaging,
+persistence, resilience, foundation, query-performance and coverage
+notes. Their content is covered by DECISIONS.md, the code and tests,
+the prompts and the AI log.
+
+Keep 11 docs: the posting API's contract, idempotency, POST workflow
+and Docker guide; the search API's search, Docker and read-performance
+docs; and the two Angular apps' local-development, duplicate-protection,
+list-and-detail and URL-state notes.
+
+Remove links and mentions pointing at the deleted docs, and correct a
+stale statement in the posting API contract that said the Angular app
+treats every 202 as pending; it shows the saved record.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push 2>&1 | tail -1 && git log --oneline -1 | cat && git status --short
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+D  API/job-posting-api/docs/client-integration-handoff.md
+  D  API/job-posting-api/docs/verification-and-handoff.md
+  M  API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+  M  API/job-posting-api/src/JobPosting.Api/docs/idempotency.md
+  D  API/job-posting-api/src/JobPosting.Api/docs/messaging.md
+  D  API/job-posting-api/src/JobPosting.Api/docs/persistence.md
+  M  API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md
+  D  API/job-posting-api/src/JobPosting.Api/docs/resilience-and-shutdown.md
+  D  API/job-search.api/docs/client-integration-handoff.md
+  D  API/job-search.api/docs/contracts.md
+  D  API/job-search.api/docs/design.md
+  D  API/job-search.api/docs/final-verification.md
+  D  API/job-search.api/docs/messaging.md
+  M  API/job-search.api/docs/performance/read-performance.md
+  D  API/job-search.api/docs/persistence.md
+  D  API/job-search.api/docs/runbook.md
+  D  apps/job-posting/docs/api-contract.md
+  M  apps/job-posting/docs/local-development.md
+  D  apps/job-posting/docs/testing-and-coverage.md
+  D  apps/job-search/docs/api-contract.md
+  D  apps/job-search/docs/foundation.md
+  M  apps/job-search/docs/list-and-detail-experience.md
+  D  apps/job-search/docs/que
+… (194 more characters)
+```
+
+</details>
+
+I deleted the 18 docs and pushed the result as `2650dccb` on `cleanup-leftovers`.
+
+**What's left:**
+- **11 docs**, all linked from the root README's "Project documentation" section (the two Docker guides are linked from the "outside Docker" section).
+- **Two READMEs:** the root one and `ai-log/README.md`.
+- **`DECISIONS.md`.**
+- **The AI log and the prompts**, unchanged.
+
+**Fixed along the way:**
+- **Links:** three of the kept posting API docs linked to deleted files. Those links are removed or point to the Docker guide instead, and no broken links remain.
+- **Stale statements:**
+  - The posting API's contract still said the Angular app "treats every 202 as pending". In fact the app shows the saved record, and the contract now says so.
+  - "The frontend is not connected in this stage" is gone.
+  - "Stage 7 now adds circuit breaking…" now reads "The API also has a circuit breaker, health checks, metrics and graceful shutdown".
+
+**Still to consider:** the 11 kept docs are still written in the dense AI style, with stage references and long sentences. If a reviewer opens one, it won't read like DECISIONS.md. I can rewrite them in the same plain, short-sentence style if you want everything to read consistently.
+
+The pull request now holds eight commits: https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+## User
+
+> go ahead
+
+## Claude
+
+I'll start by sizing the 11 docs.
+
+**Tool: Bash** — Word counts of the kept docs
+
+<details><summary>Input</summary>
+
+```text
+for f in $(git ls-files | grep "/docs/.*\.md$"); do printf "%5d words  %s\n" "$(wc -w < $f)" "$f"; done
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+1715 words  API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+  749 words  API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md
+  533 words  API/job-posting-api/src/JobPosting.Api/docs/idempotency.md
+  646 words  API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md
+  516 words  API/job-search.api/docs/docker.md
+ 1591 words  API/job-search.api/docs/performance/read-performance.md
+  976 words  API/job-search.api/docs/search.md
+  825 words  apps/job-posting/docs/client-idempotency.md
+  908 words  apps/job-posting/docs/local-development.md
+  430 words  apps/job-search/docs/list-and-detail-experience.md
+  414 words  apps/job-search/docs/url-query-state.md
+```
+
+</details>
+
+**Tool: Agent** — Plain-language rewrite: posting API docs
+
+<details><summary>Input</summary>
+
+```text
+{
+  "description": "Plain-language rewrite: posting API docs",
+  "subagent_type": "general-purpose",
+  "prompt": "Rewrite four Markdown docs in a .NET 10 repository at C:\\Users\\saman\\source\\repos\\job-posting-app so a hiring manager can read them easily. This repository is a take-home exercise submission; the readers are reviewers (engineers and hiring managers).\n\nYour files (rewrite only these; do not touch any other file):\n- API/job-posting-api/src/JobPosting.Api/docs/api-contract.md\n- API/job-posting-api/src/JobPosting.Api/docs/idempotency.md\n- API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md\n- API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md\n\nFor context, read the repository's DECISIONS.md first: it is the style model and summarises the design (strict 202 rule, compensation instead of an outbox, idempotency key on the job row, circuit breaker, etc.).\n\nStyle rules:\n1. Short sentences: aim for 20 words or fewer. One idea per sentence. Active voice.\n2. Explain each technical term in plain words the first time it appears (e.g. idempotency key, compensation, Problem Details, circuit breaker).\n3. Remove build-history language: no \"Stage N\", \"this stage\", \"later task\", \"handoff\", \"revised\", test counts from past runs, or statements about what was not done at the time. Describe the system as it is now.\n4. Keep what a reviewer needs: endpoints, request/response shapes, status codes and when each occurs, validation rules and limits, how duplicates are handled, the save → publish → compensate flow and its known weak spots, how to run it. Cut low-value internal minutiae (e.g. exhaustive lists of parser edge cases, internal class names, coverage instrumentation details). Target roughly half the current length or less, but never drop a fact a reviewer would need to use or evaluate the API.\n5. Use headings, short bullet lists and small tables where they help. Code examples may stay (keep them correct).\n6. Fir
+… (1510 more characters)
+```
+
+</details>
+
+**Tool: Agent** — Plain-language rewrite: search API docs
+
+<details><summary>Input</summary>
+
+```text
+{
+  "description": "Plain-language rewrite: search API docs",
+  "subagent_type": "general-purpose",
+  "prompt": "Rewrite three Markdown docs in a .NET 10 repository at C:\\Users\\saman\\source\\repos\\job-posting-app so a hiring manager can read them easily. This repository is a take-home exercise submission; the readers are reviewers (engineers and hiring managers).\n\nYour files (rewrite only these; do not touch any other file):\n- API/job-search.api/docs/search.md\n- API/job-search.api/docs/docker.md\n- API/job-search.api/docs/performance/read-performance.md\n\nFor context, read the repository's DECISIONS.md first: it is the style model and summarises the design (separate read model fed by RabbitMQ, keyset paging, signed page tokens/cursors, trigram indexes, output caching rules, measured results).\n\nStyle rules:\n1. Short sentences: aim for 20 words or fewer. One idea per sentence. Active voice.\n2. Explain each technical term in plain words the first time it appears (e.g. keyset paging, cursor/page token, HMAC signature, trigram index, output cache, p95).\n3. Remove build-history language: no \"Stage N\", \"this stage\", \"later\", \"handoff\", \"revised\", or statements about what was not done at the time. Describe the system as it is now.\n4. Keep what a reviewer needs. search.md: endpoints, query parameters and limits, sorting, what \"open job\" means, paging and cursor behaviour (signing, snapshot, expiry, error codes 400/409), caching rules, error responses, key rotation in brief. docker.md: how to run, endpoints, cursor signing key, running on the host, stopping. read-performance.md: how to run the workload, the cache comparison results table and its honest caveats, the earlier query-plan measurements in brief, and the Redis decision. Cut low-value internal minutiae (exhaustive validation edge cases, internal class names, implementation trivia). Target roughly half the current length or less for search.md and read-performance.md, but never drop a fact a 
+… (2214 more characters)
+```
+
+</details>
+
+**Tool: Agent** — Plain-language rewrite: Angular app docs
+
+<details><summary>Input</summary>
+
+```text
+{
+  "description": "Plain-language rewrite: Angular app docs",
+  "subagent_type": "general-purpose",
+  "prompt": "Rewrite four Markdown docs in an Angular 22 monorepo at C:\\Users\\saman\\source\\repos\\job-posting-app so a hiring manager can read them easily. This repository is a take-home exercise submission; the readers are reviewers (engineers and hiring managers).\n\nYour files (rewrite only these; do not touch any other file):\n- apps/job-posting/docs/local-development.md\n- apps/job-posting/docs/client-idempotency.md\n- apps/job-search/docs/list-and-detail-experience.md\n- apps/job-search/docs/url-query-state.md\n\nFor context, read the repository's DECISIONS.md first: it is the style model and summarises the design (sections 3–5 cover the client: idempotency key kept in sessionStorage, validation using the browser's date, Signal Forms, Angular Material, response handling, search state in the URL). Also read the root README.md for how the apps are run (npm --prefix ... ci / start, ports 4200/4201, proxy to APIs on 5000/5101, Playwright e2e with mocked APIs).\n\nStyle rules:\n1. Short sentences: aim for 20 words or fewer. One idea per sentence. Active voice.\n2. Explain each technical term in plain words the first time it appears (e.g. idempotency key, sessionStorage, Signal Forms, zoneless, UrlTree, switchMap/cancellation).\n3. Remove build-history language: no \"Stage N\", \"this stage\", \"later\", \"remains unverified because...\", \"proposed\", test counts from past runs, or statements about what was not done at the time. Describe the apps as they are now. Both apps are connected to the real APIs.\n4. Keep what a reviewer needs. local-development.md: how to install, run, test (unit with 100% coverage, Playwright e2e), build, the proxy/API URL settings, source layout, and the main behaviours (validation, confirmation, accessibility, duplicate protection) in brief. client-idempotency.md: how one submission's key is created, stored, reused on retry and clear
+… (1960 more characters)
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a4bac637cf4ebbad2 (internal ID - do not mention to user. Use SendMessage with to: 'a4bac637cf4ebbad2', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\tasks\a4bac637cf4ebbad2.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a03b0a3e131cce7f3 (internal ID - do not mention to user. Use SendMessage with to: 'a03b0a3e131cce7f3', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\tasks\a03b0a3e131cce7f3.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: add3771c884a7cb29 (internal ID - do not mention to user. Use SendMessage with to: 'add3771c884a7cb29', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: C:\Users\saman\AppData\Local\Temp\claude\c--Users-saman-source-repos-job-posting-app\f24f3131-c614-4bc5-9426-520f4457402a\tasks\add3771c884a7cb29.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+```
+
+</details>
+
+Three agents are rewriting the 11 docs in parallel: one on the posting API docs, one on the search API docs, one on the two apps' docs. When they finish I'll check every file myself for:
+- sentence length;
+- leftover build-stage wording;
+- broken links;
+- spot-checked facts against the code.
+
+Then I'll commit.
+
+## Subagent report
+
+> I rewrote all four docs and touched no other file. I ran nothing that changes state: no build, no tests, no git. One target was missed: three of the four files are about 65–115% of their old length, not half. The old text was terse shorthand with no explanations. Defining each term in plain words, as asked, added words back. Markdown table pipes also count as words in `wc -w`, so the prose alone is shorter than these numbers suggest.
+> 
+> **Word counts and summary**
+> 
+> | File | Before | After | Kept | Cut |
+> |---|---|---|---|---|
+> | `apps/job-posting/docs/local-development.md` | 908 | 661 | Install/run, proxy setting, test/e2e/build command table, 100% per-file coverage, Playwright setup, source layout, short notes on Angular (zoneless, signals, Signal Forms, Material), validation, confirmation, accessibility, duplicate protection, links to ai-log and root README | Stage status, test counts, the "Final verification (Oct 4)" section, "unverified" caveats, exact tool versions, internal API names |
+> | `apps/job-posting/docs/client-idempotency.md` | 825 | 582 | Six-step life of one key (create with `crypto.randomUUID`, store in `job-posting.attempt.v1` before sending, 15 s timeout, manual same-key retry, clear on "Post another job"), refresh and leave-page behaviour, a table of every response type, the reset checkbox for blocked submissions, a protected / not-protected table, the server's role (links to DECISIONS.md) | Store method details, freezing/fingerprint and schema-check internals, stage history |
+> | `apps/job-search/docs/list-and-detail-experience.md` | 430 | 429 | Card and detail fields, plain-text description, "Back to jobs" keeps the filters, table of loading/empty/error states (10 s timeout, expired page, 429, 404/410), in-memory cache, `switchMap` cancellation, focus and live-region behaviour, Playwright on desktop and Pixel 7 | Visual-review screenshot notes, `tmp/visual`, external Angular reference links, stage notes |
+> | `apps/job-search/docs/url-query-state.md` | 414 | 477 | Parameter table with limits and defaults, fallback for invalid values, table of what each action does to the URL and history (300 ms typing delay replaces the entry; Enter/selects/paging add one), waiting for Japanese-style composed input, paging memory for Previous, Back/Forward, shared links, return links that cannot point to another site, `UrlTree`, cancellation | Stage notes, the "considered Signal Forms" remark, notes on which tests run where |
+> 
+> **Stale or wrong statements corrected**
+> - **202 handling:** the docs now say any 2xx with a complete saved job, including a 202, is shown as saved. A 202 without a complete job is "pending", and other bad 2xx bodies are "unknown". Source: `classifyResponse` in `apps/job-posting/src/app/core/api/posting-response.ts`.
+> - **"No API server is included" / "Connect the future API" / "proposed search API":** removed. Source: `proxy.conf.cjs` in each app defaults to `http://localhost:5000` (posting) and `http://localhost:5101` (search).
+> - **Links to `api-contract.md`:** removed; that file no longer exists in the app docs.
+> - **`409 idempotency_in_progress`:** now documented as "pending, retry later". The old app docs never described it. Source: `classifyFailure` in `posting-response.ts`.
+> - **429 without a valid `Retry-After`:** the user can retry at once. Source: `retryAt` is null, so `remainingSeconds` is 0, in `posting-workflow.ts`.
+> - **503 / 5xx:** the API sends `Retry-After` with a 503, but the posting app treats any 5xx as "unknown" with no countdown. Only a 429 reads that header. The docs say exactly that.
+> 
+> **New, source-confirmed facts I added**
+> - The search app's in-memory cache: 30 seconds, 50 entries, lists and details share it. It also shows the old copy while refreshing. Source: `query-reads.ts`.
+> - The search app's 10 s request timeout. Source: `job-query-api.ts`.
+> - The optional full-stack check script, `apps/job-posting/tools/verify-local-integration.cjs`.
+> 
+> **Unsure about**
+> - I said production must serve `/api/jobs` from the same origin, carried over from the old doc. It follows from the dev-only proxy and the relative `/api/jobs` URL. No production config exists to confirm it.
+> - The detail page shows a "Refresh details" button, and the list doc's cache section mentions "Refresh" buttons. I did not check the list page's refresh behaviour beyond the template.
+> - I did not test that `verify-local-integration.cjs` works. It searches right after posting. The search API can cache the first page for up to 15 seconds, but a search for the new title is likely a fresh query.
+
+## Claude
+
+The app-docs agent is done. Two app docs got shorter, and the other two stayed about the same length or grew slightly, because each technical term is now explained. It also corrected several stale statements, each checked against the code: the 202 handling, "connect the future API", and how 5xx and 429 responses behave.
+
+One claim I'll verify myself: it says the posting app is "zoneless". Earlier I couldn't confirm that from the posting app's configuration. Waiting for the two API agents.
+
+*[System: Agent "Plain-language rewrite: Angular app docs" finished]*
+
+## Subagent report
+
+> I rewrote all four docs and checked each fact against the source. I found two statements in DECISIONS.md that don't match the code, which I did not change since it isn't my file (bottom of report). All four files now use plain short sentences, with no "Stage N", "revised" or past test counts. I did not build, run tests or run git commands.
+> 
+> Folder: C:\Users\saman\source\repos\job-posting-app\API\job-posting-api\src\JobPosting.Api\docs\
+> 
+> **Word counts and what changed.** Only api-contract.md reached roughly half; the other three are close to their old length.
+> 
+> | File | Before | After |
+> |---|---|---|
+> | api-contract.md | 1715 | 1064 |
+> | idempotency.md | 533 | 528 |
+> | post-workflow.md | 646 | 661 |
+> | docker-and-local-development.md | 749 | 672 |
+> 
+> - **api-contract.md**
+>   - Kept: the endpoint, request example, key rules, field table with limits, which errors are 400 and which are 422, when 202 is returned with its body, a table of every status code and `code` value, Retry-After behaviour, and the 422 and 409 examples.
+>   - Cut: the fingerprint and canonical-format details, parser edge cases, internal class names, a JSON example for each error, verification notes and external reference links.
+> - **idempotency.md**
+>   - Kept: the key hash on the job row with its unique index, what counts as the same job, a table of what happens when a key arrives, two requests at once, unknown save outcome, and key lifetime including recreation after compensation.
+>   - Cut: outcome-enum names, implementation minutiae, and test and coverage counts.
+>   - Each term now has a plain explanation, so the text is denser rather than shorter.
+> - **post-workflow.md**
+>   - Kept: a simpler Mermaid diagram, the save → publish → record steps with timings, a failure table (response and critical event), circuit breaker, shutdown, and the known weak spots.
+>   - Cut: the verification section and test-instrumentation detail.
+>   - It is slightly longer because the circuit breaker and shutdown each have a short section now, and the diagram counts as words.
+> - **docker-and-local-development.md**
+>   - Kept: start, the endpoint table (plus the RabbitMQ UI), image, `## Run the API on the host` with the heading unchanged, the post/replay/conflict examples, the RabbitMQ outage example, and stop.
+>   - Cut: the UID and curl-install details, the external reference links, and the claim that the search API's consumer reconnects by itself (that is in the search API code, not posting).
+> 
+> **Stale or wrong statements I corrected:**
+> 1. **Invalid key message.** The old text was "Provide exactly one key of 1–128 ASCII…". The API actually returns "Supply one valid Idempotency-Key header." (`Posting/JobsController.cs`).
+> 2. **Order of checks.** The old docs said the header is checked first. The body is actually parsed first (400 for badly formed JSON), then the key, then the fields (`JobsController.cs`, `Idempotency/PostingCoordinator.cs`).
+> 3. **Missing status codes, now listed:**
+>    - 413 for a body over 65,536 bytes (`JobsController.cs`, `UnexpectedExceptionHandler.cs`).
+>    - 415 for the wrong content type (`[Consumes]` in the controller, and the 415 host test).
+>    - An empty-body 503 while the API shuts down (`Resilience/ShutdownDrain.cs`).
+> 4. **Missing `publication_failed`.** The old error section only mentioned it in passing. The new status table lists it with when it happens (`Contracts/JobApiProblems.cs`).
+> 5. **Lost confirmation logging, which also affects DECISIONS.md.** DECISIONS.md section 2 says this case "logs a critical error". If the compensating delete succeeds, the API only logs an ordinary error (event 1001, `UnexpectedExceptionHandler.cs`). The critical events 2001 and 2002 cover only a failed delete or a failed `PublishedAt` write (`Posting/PostingWorkflow.cs`).
+> 6. **Duplicates after a retry, which also affects DECISIONS.md.** A retry after compensation creates a new job with a new ID and message ID. The search side's duplicate filtering by message ID therefore does not catch it, and search can show the job twice. The old post-workflow text said this correctly; DECISIONS.md section 6 does not mention it.
+> 7. **Circuit breaker counting, newly stated.** The breaker counts readiness checks as well as publishes. While it is open, each new job is still saved, then deleted and answered with `publication_failed` (`Resilience/PublicationCircuit.cs`).
+> 
+> **What I was unsure about:**
+> - I took the 3-second wait before `idempotency_in_progress` from the default `LockTimeoutMilliseconds = 3000` (`Persistence/PostingDatabaseOptions.cs`). This assumes PostgreSQL's lock timeout applies when a second insert waits on the same key.
+> - I dropped the old sentence that returned numbers may lose trailing zeros, because I could not confirm it.
+> - Three files were not cut to half. Most of api-contract.md and the Docker guide that remains is code examples and tables. idempotency.md and post-workflow.md stayed about the same length because each term now gets a plain explanation and post-workflow gained short circuit-breaker and shutdown sections.
+> 
+> All links are relative and resolve: between the four files, to the `#idempotency-key` and `#known-weak-spots` anchors, to `../../../Dockerfile`, and to `../../../../../{DECISIONS.md,README.md,docker-compose.yml}`. None point to deleted docs.
+
+## Claude
+
+The posting API agent is done, and it flagged **two statements in DECISIONS.md that don't match the code**. I'll verify both myself before changing anything:
+1. DECISIONS.md says a lost RabbitMQ confirmation "logs a critical error". The agent says that, when the job is deleted successfully, the log entry is an ordinary error, and critical events only cover a failed delete.
+2. If the user retries after such a deletion, a second job with a new ID is created, so search can show the job twice. DECISIONS.md doesn't mention this.
+
+**Tool: Bash** — Check logging on publish failure and compensation
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/API/job-posting-api/src/JobPosting.Api && grep -n -i "LogCritical\|LogError\|EventId(\|Critical" Posting/PostingWorkflow.cs Diagnostics/UnexpectedExceptionHandler.cs | cut -c1-200; echo ===; grep -n -i "compensat\|catch\|AcceptanceUnknown\|NotAccepted" Posting/PostingWorkflow.cs | cut -c1-180
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Posting/PostingWorkflow.cs:40:                logger.LogCritical(new EventId(2001, "PostingCleanupFailed"),
+Posting/PostingWorkflow.cs:55:            logger.LogCritical(new EventId(2002, "PostingPublicationStateFailed"),
+Diagnostics/UnexpectedExceptionHandler.cs:13:        logger.LogError(new EventId(1001, "UnhandledException"),
+===
+27:        catch (Exception publicationFailure)
+29:            // Cancellation of the request must not skip compensation of an already saved job.
+36:            catch (Exception cleanupFailure)
+52:        catch (Exception exception)
+```
+
+</details>
+
+*[System: Agent "Plain-language rewrite: posting API docs" finished]*
+
+## Subagent report
+
+> I rewrote all three files and touched nothing else. I checked every fact against the source code, `docker-compose.yml`, the `Dockerfile` and the JSON reports. I did not build, test or run git commands that change anything.
+> 
+> **Word counts (before → after)**
+> | File | Before | After |
+> |---|---:|---:|
+> | `C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\search.md` | 976 | 804 |
+> | `C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\docker.md` | 516 | 563 |
+> | `C:\Users\saman\source\repos\job-posting-app\API\job-search.api\docs\performance\read-performance.md` | 1,591 | 836 |
+> 
+> search.md is not at half by word count; it is about 67% by characters. The old text ran words and numbers together ("limit1..50", "up to200"), so it counted fewer words than it really had. docker.md grew slightly because I split dense sentences into short ones and bullets.
+> 
+> **search.md**
+> - **Kept:** both endpoints and response shapes, the parameter limits table, sorting, what "open job" means, keyset paging, and the cursor rules (signed, tied to the search, snapshot, 15-minute expiry configurable 1–60, not extended by paging). Also kept: 400 `invalid_cursor` vs 409 `cursor_expired`, the caching table, a full error-code table, key config rules and a 3-step rotation.
+> - **Cut:** cursor internals (field list, canonical encoding, advisory lock), test inventory, logging details, Stage notes, and the Toronto-vs-UTC note (DECISIONS.md already covers it).
+> 
+> **docker.md**
+> - **Kept:** start command, endpoints table, migration order, image facts, cursor key, the host run block, stop/update and BrokerFixture.
+> - **Cut:** UID 1654.
+> - **Added:** that readiness reflects the database and schema, and the env vars that name BrokerFixture's exchange and queue (`RABBITMQ_EXCHANGE` and `RABBITMQ_QUEUE`, confirmed in its `Program.cs`).
+> - Both required headings are unchanged: "## Run the API on the host" here and "## Cache comparison (2026-10-06)" in read-performance.md.
+> 
+> **read-performance.md**
+> - **Kept:** run commands with an argument table, the cache comparison table, all the caveats, a brief query-plan table with a plain explanation of trigram indexes, the stale-statistics note and the Redis decision.
+> - **Added:** p50 and p99 rows from the JSON (uncached 7.20 / 25.90 ms, cached 0.21 / 7.55 ms).
+> - **Cut:** the superseded "earlier quick run", which measured an old policy that also cached cursor pages. Also cut the operational review and quarantine paragraphs, and the seeding and timeout minutiae.
+> 
+> **Stale or wrong statements corrected**
+> 1. **Where the example key is rejected.** The old search.md said "Production/Staging reject the development key". `CursorOptionsValidator` actually rejects it in every environment except Development. The docs now say that.
+> 2. **First-page `Cache-Control`.** It is not a fixed `max-age=15`. `FirstPageCacheControl(now)` lowers it at midnight UTC, and a response that crosses midnight is sent as no-store. The docs now say "same seconds".
+> 3. **What the plain workload command writes.** The old text implied it updated `latest.json`. `tools/ReadWorkload/Program.cs` always writes `cache-<mode>.json`, so `latest.json` is a historical file only.
+> 4. **Error bodies.** The 500 response has a `traceId` but no `code` (`UnexpectedExceptionHandler`). The old doc said every error had both.
+> 
+> **Unsure about**
+> - I described malformed cursors (too long, whitespace) under `invalid_cursor` in the cursor table. `QueryReader` rejects some of these first, so they return 400 `invalid_query` instead. Either way the status is 400.
+> - I kept the stale-statistics comparison (22.5 / 89.1 ms). It comes only from the old prose; no JSON file records it.
+> 
+> All relative links point to files that exist, and the new anchors (`search.md#signing-keys`, `../search.md#caching`) match headings. The links from the root README and DECISIONS.md into these docs still resolve. Other files outside my three appeared as modified in git status; I assume those belong to the other agent.
+
+*[System: Agent "Plain-language rewrite: search API docs" finished]*
+
+## Claude
+
+All three agents are done. Continuing my check of the logging claim, I'll read the publish-failure path itself:
+
+**Tool: Bash** — Read publish failure and compensation code
+
+<details><summary>Input</summary>
+
+```text
+sed -n 18,62p Posting/PostingWorkflow.cs; grep -n "1001\|LogError\|Log" Diagnostics/UnexpectedExceptionHandler.cs | head
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+string correlationId, CancellationToken cancellationToken)
+    {
+        var result = await coordinator.ResolveAsync(keys, request, correlationId, cancellationToken);
+        if (result.Outcome != PostingOutcome.Created) return result;
+        var job = result.Posting!.Job;
+        try
+        {
+            await publisher.PublishAsync(JobPostingCreated.FromSaved(job, correlationId), cancellationToken);
+        }
+        catch (Exception publicationFailure)
+        {
+            // Cancellation of the request must not skip compensation of an already saved job.
+            using var cleanup = new CancellationTokenSource(drain?.CleanupBudget ?? TimeSpan.FromSeconds(3));
+            try
+            {
+                if (!await store.DeleteUnpublishedAsync(job.Id, job.EventId, cleanup.Token).WaitAsync(cleanup.Token))
+                    throw new InvalidOperationException("The exact unpublished job could not be deleted.");
+            }
+            catch (Exception cleanupFailure)
+            {
+                JobPosting.Api.Diagnostics.PostingMetrics.Cleanup("failed");
+                var failures = new AggregateException(publicationFailure, cleanupFailure);
+                logger.Log
+… (1583 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Check whether the posting app is zoneless
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app/apps && grep -n "zone" job-posting/package.json job-posting/angular.json job-posting/src/main.ts job-posting/src/app/app.config.ts 2>/dev/null; ls job-posting/node_modules/zone.js >/dev/null 2>&1 && echo "zone.js installed" || echo "zone.js NOT installed"; grep -n -i "zoneless" job-posting/docs/local-development.md | cut -c1-160
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+zone.js NOT installed
+51:**Angular.** Components are standalone and use signals, values that tell Angular when they change. The app is zoneless: Angular redraws only when a signal ch
+```
+
+</details>
+
+The app-docs claim is correct. The posting app has no `zone.js` at all, so it runs zoneless, which is Angular 22's default. Now correcting DECISIONS.md section 2:
+
+**Tool: Bash** — Locate the sections to correct
+
+<details><summary>Input</summary>
+
+```text
+cd /c/Users/saman/source/repos/job-posting-app && grep -n -A3 "Compensation has two weak spots\|I would add two safeguards\|Safeguards for compensation" DECISIONS.md | cut -c1-200
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+33:Compensation has two weak spots:
+34-
+35-- RabbitMQ may store the message, but its confirmation may get lost. The API then deletes the job, while the message stays in the queue. The API logs this case as a critical error.
+36-- The application may crash after saving the job but before sending the message. The job then stays in the database, but search never receives it. Nothing is logged, because the application has sto
+--
+40:I would keep compensation in production. At a few postings per day, these failures are rare and easy to fix by hand. An outbox would add a background process to build, run and monitor. I would add 
+41-
+42-- An alert on the critical error from the first case.
+43-- A scheduled check for jobs whose `PublishedAt` field is still empty after a few minutes. The API fills in `PublishedAt` only after RabbitMQ confirms the message. So this check finds jobs from the
+--
+159:- **Safeguards for compensation.** Add the alert and the scheduled check from section 2.
+160-- **A CDN in front of the search API.** Later, add Redis as a shared cache once several copies of the API run (section 6).
+161-- **One rule for when a job closes.** The posting form uses the browser's date. Th
+… (194 more characters)
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+- RabbitMQ may store the message, but its confirmation may get lost. The API then deletes the job, while the message stays in the queue. The API logs this case as a critical error.
+--- new
+- RabbitMQ may store the message, but its confirmation may get lost. The API then deletes the job, while the message stays in the queue. Search will still show the job. If the user retries, the API creates a second job with a new ID, so search can show the job twice. The API logs this as an ordinary error and counts it in a metric. From the API's side, it looks the same as any failed send.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\source\repos\job-posting-app\DECISIONS.md
+--- old
+- An alert on the critical error from the first case.
+--- new
+- An alert on the `jobposting.compensations` metric, which counts every deleted job. Each one should be checked, because it may be the first case.
+```
+
+</details>
+
+**Tool: Bash** — Confirm metric name and remaining critical mentions
+
+<details><summary>Input</summary>
+
+```text
+grep -n "jobposting.compensations" API/job-posting-api/src/JobPosting.Api/Diagnostics/PostingMetrics.cs | head -2; grep -n -i "critical" DECISIONS.md | cut -c1-160
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\source\repos\job-posting-app\DECISIONS.md has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+11:    private static readonly Counter<long> Compensation = Meter.CreateCounter<long>("jobposting.compensations");
+```
+
+</details>
+
+**Tool: Bash** — Check readability metrics and all links
+
+<details><summary>Input</summary>
+
+```text
+node -e "
+const fs=require('fs'),path=require('path'),{execSync}=require('child_process');
+const docs=execSync('git ls-files').toString().split('\n').filter(f=>/\/docs\/.*\.md$/.test(f));
+const slug=h=>h.replace(/^#+ /,'').toLowerCase().replace(/[^a-z0-9 -]/g,'').replace(/ /g,'-');
+let broken=0;
+for(const f of [...docs,'README.md','DECISIONS.md','ai-log/README.md']){
+  const t=fs.readFileSync(f,'utf8');
+  if(docs.includes(f)){
+    const s=[];t.split(/\r?\n/).filter(l=>l.trim()&&!/^\s*(\||#|\x60\x60\x60|>|-{3})/.test(l)).forEach(l=>l.replace(/\x60[^\x60]*\x60/g,'X').split(/(?<=[.!?])\s+(?=[A-Z])/).forEach(x=>s.push(x.split(/\s+/).length)));
+    const stage=(t.match(/\bStage ?\d|this stage|handoff|later task|revised/gi)||[]).length;
+    console.log(f.padEnd(70),'words',String(t.split(/\s+/).length).padStart(5),' avg sentence',(s.reduce((a,b)=>a+b,0)/s.length).toFixed(1).padStart(5),' >25w:',String(s.filter(x=>x>25).length).padStart(2),' stage words:',stage);
+  }
+  for(const m of t.matchAll(/\]\(([^)\s#]*)(#[^)\s]+)?\)/g)){const l=m[1];if(/^https?:/.test(l))continue;const p=l?path.join(path.dirname(f),l):f;if(!fs.existsSync(p)){broken++;console.log('  BROKEN',f,l);continue;}
+    if(m[2]&&p.endsWith('.md')){const heads=fs.readFileSync(p,'utf8').split(/\r?\n/).filter(x=>/^#+ /.test(x)).map(slug);if(!heads.includes(m[2].slice(1))){broken++;console.log('  BAD ANCHOR',f,l+m[2]);}}}
+}
+console.log('broken links/anchors:',broken)"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+API/job-posting-api/src/JobPosting.Api/docs/api-contract.md            words  1071  avg sentence   6.9  >25w:  0  stage words: 0
+API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md words   673  avg sentence   8.4  >25w:  0  stage words: 0
+API/job-posting-api/src/JobPosting.Api/docs/idempotency.md             words   529  avg sentence  12.5  >25w:  0  stage words: 0
+API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md           words   663  avg sentence  10.7  >25w:  0  stage words: 0
+API/job-search.api/docs/docker.md                                      words   555  avg sentence   9.0  >25w:  0  stage words: 0
+API/job-search.api/docs/performance/read-performance.md                words   838  avg sentence   9.7  >25w:  0  stage words: 0
+API/job-search.api/docs/search.md                                      words   807  avg sentence   8.5  >25w:  0  stage words: 0
+apps/job-posting/docs/client-idempotency.md                            words   583  avg sentence  10.4  >25w:  1  stage words: 0
+apps/job-posting/docs/local-development.md                             words   662  avg sentence   9.8  >25w:  0  stage words: 0
+apps/job-search/docs/list-and-deta
+… (247 more characters)
+```
+
+</details>
+
+**Tool: Bash** — Read weak spots section of post-workflow
+
+<details><summary>Input</summary>
+
+```text
+sed -n '/## Known weak spots/,/^## /p' API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md | head -20
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+## Known weak spots
+
+Compensation cannot undo every failure:
+
+- **Lost confirmation.** RabbitMQ may store the message, but the confirmation may not arrive in time. The API then deletes the job, while the message stays in the queue. If the delete succeeds, the API logs an ordinary error (event 1001), not a critical event. Search still adds the deleted job. A retry creates the job again with a new ID, so search may show it twice.
+- **Crash after save.** If the process stops after saving but before publishing, the job stays unpublished. Search never receives it, and nothing is logged. Retries with the same key return `503 publication_unresolved`.
+- **Unknown delete result.** If the delete fails in an unclear way, the job may or may not still exist.
+- **RabbitMQ down.** Nobody can post a job until RabbitMQ is back.
+
+There is no automatic repair for these cases. A person must check the job by hand, using the IDs in the critical log entry. DECISIONS.md section 2 lists the safeguards that would be added in production.
+```
+
+</details>
+
+It matches DECISIONS.md. Committing in two parts: the doc rewrites, then the DECISIONS.md correction.
+
+**Tool: Bash** — Commit docs rewrite and DECISIONS fix, push
+
+<details><summary>Input</summary>
+
+```text
+git status --short && git add API apps && git commit -q -F - <<'EOF'
+Rewrite the remaining project docs in plain language
+
+Rewrite the 11 kept docs in short, plain sentences with each technical
+term explained, and remove build-stage wording. Facts were checked
+against the source, and stale or missing statements were corrected:
+
+- Posting API: the real invalid-key message and order of checks, the
+  413, 415 and shutdown 503 responses, publication_failed, and that a
+  lost confirmation is logged as an ordinary error (event 1001).
+- Search API: the development cursor key is rejected outside
+  Development, first-page Cache-Control follows the midnight cap, 500
+  bodies carry a traceId but no code, and ReadWorkload writes
+  cache-<mode>.json rather than latest.json. The superseded quick
+  cache run is removed.
+- Angular apps: a complete saved record in any 2xx is shown as saved,
+  409 idempotency_in_progress, 429 and 5xx retry behaviour, and the
+  apps are connected to the real APIs.
+
+Every doc now averages under 13 words per sentence; all links and
+anchors resolve.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git add DECISIONS.md && git commit -q -F - <<'EOF'
+Correct how DECISIONS.md describes a lost RabbitMQ confirmation
+
+When publishing fails and the job is deleted, the API logs an ordinary
+error (event 1001) and increments jobposting.compensations; critical
+events cover only a failed delete or a failed PublishedAt write. Say
+so, note that a retry then creates a second job that search can show
+twice, and base the production safeguard on the compensation metric
+instead of a critical log event.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push 2>&1 | tail -1 && git log --oneline -3 | cat && git status --short
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+M API/job-posting-api/src/JobPosting.Api/docs/api-contract.md
+ M API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md
+ M API/job-posting-api/src/JobPosting.Api/docs/idempotency.md
+ M API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md
+ M API/job-search.api/docs/docker.md
+ M API/job-search.api/docs/performance/read-performance.md
+ M API/job-search.api/docs/search.md
+ M DECISIONS.md
+ M apps/job-posting/docs/client-idempotency.md
+ M apps/job-posting/docs/local-development.md
+ M apps/job-search/docs/list-and-detail-experience.md
+ M apps/job-search/docs/url-query-state.md
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/api-contract.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/docker-and-local-development.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/idempotency.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'API/job-posting-api/src/JobPosting.Api/docs/post-workflow.md', LF will be replaced by CRLF
+… (1342 more characters)
+```
+
+</details>
+
+I rewrote all 11 docs in the same plain style as DECISIONS.md and pushed them as two commits on `cleanup-leftovers`.
+
+**The docs** (`d7d8f061`)
+- Every doc averages 7–13 words per sentence. Only one sentence across all 11 runs past 25 words.
+- No "Stage N", "handoff" or other build-history wording is left.
+- Total length went from about 9,300 words to about 7,300. Some docs didn't shrink much, because each technical term now gets a plain explanation.
+- All links and section anchors resolve, including the ones from the root README and DECISIONS.md.
+
+The three agents checked facts against the code, and found and corrected several stale or missing statements:
+- **Posting API:** the error message for an invalid idempotency key is now the real one, and the order of checks is right (body first, then key, then fields). The `413`, `415` and shutdown `503` responses were missing and are now listed.
+- **Search API:** the development signing key is rejected in every environment except Development, not just in Production. Error `500` responses carry a `traceId` but no `code`. The load tool writes `cache-<mode>.json`, not `latest.json`.
+- **Angular apps:** the docs now describe the real handling of `409`, `429` and `5xx` responses. The "connect the future API" wording is gone, since both apps already use the real APIs.
+
+I checked the one claim I doubted: the posting app is zoneless. It doesn't use `zone.js` at all, so the claim is accurate.
+
+**A correction to DECISIONS.md** (`f12bed79`). The posting API agent found that DECISIONS.md was wrong about the lost-confirmation case, and I confirmed it in the code:
+- When publishing fails and the job is deleted, the API logs an **ordinary** error, not a critical one, and counts it in the `jobposting.compensations` metric.
+- If the user then retries, a **second job** is created, so search can show the job twice. This was missing from DECISIONS.md.
+- The production safeguard is now **an alert on the `jobposting.compensations` metric**, replacing the alert on a critical event that never happens in that case.
+
+Because this changes a decision you'll defend in the interview, please reread section 2 of DECISIONS.md.
+
+The pull request now has ten commits. Merge it when you're ready: https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+## User
+
+> commit and push
+
+## Claude
+
+**Tool: Bash** — Check for anything uncommitted or unpushed
+
+<details><summary>Input</summary>
+
+```text
+git fetch -q origin && git status -sb | head -3 && git log --oneline -1 origin/cleanup-leftovers | cat
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+## cleanup-leftovers...origin/cleanup-leftovers
+f12bed79 Correct how DECISIONS.md describes a lost RabbitMQ confirmation
+```
+
+</details>
+
+There was nothing left to commit or push. All the work went up in my last step, and I checked against GitHub: there are no uncommitted changes, and `cleanup-leftovers` there matches your local branch at `f12bed79`.
+
+The ten commits are still on `cleanup-leftovers`, not on `main`. The last step is merging the pull request: https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+## User
+
+> is it ready to submit
+
+## Claude
+
+I'll check where `main` stands. That's what the recruiter will see.
+
+**Tool: Bash** — Check main, visibility and working tree
+
+<details><summary>Input</summary>
+
+```text
+git fetch -q origin && echo "branch commits not on main: $(git rev-list --count origin/main..origin/cleanup-leftovers)" && git log --oneline -2 origin/main | cat && curl -s https://api.github.com/repos/samanis/job-posting-app | grep -E '"visibility"' && git status --short | wc -l
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+branch commits not on main: 10
+d2b2726d Merge pull request #4 from samanis/root-docker-compose
+69504fe5 Re-export the review session transcript to its end
+  "visibility": "public",
+0
+```
+
+</details>
+
+**Almost.** One required step is left, plus one I'd recommend.
+
+**Required: merge the pull request.** `main` is what the recruiter sees, and it doesn't have the 10 commits on `cleanup-leftovers` yet. Without them, `main` still has the per-API Compose files and the many READMEs and stage docs, and its DECISIONS.md is the dense version with the outbox story misrepresented.
+→ https://github.com/samanis/job-posting-app/compare/main...cleanup-leftovers
+
+**Recommended: re-export the AI transcript first.** The copy in `ai-log/` stops before today's later work: the caching fix, the cleanup, and the DECISIONS.md and docs rewrites. That later part includes things worth showing, like you pushing for plain language and rejecting extra READMEs. If I re-export now, it goes in with this same pull request; if I do it after the merge, it needs a separate one.
+
+**Already in place:**
+- The repository is **public**.
+- Everything the brief asks for is present and was **tested from a fresh clone**, including a real browser test of post-then-search.
+- The changes since that test (the caching fix, file removals and docs) pass both 100% coverage gates. The root `docker-compose.yml` hasn't changed. I haven't re-run the full clean-clone test on this final state, so I can do that after the merge for complete certainty.
+- One README at the root, plus the AI log index. `DECISIONS.md` and the 11 kept docs are in plain language.
+
+**Order I'd suggest:**
+1. I re-export the transcript and push it to `cleanup-leftovers`.
+2. You merge the pull request.
+3. Optionally, I re-run the clean-clone test against `main`.
+4. You send the link: https://github.com/samanis/job-posting-app
+
+Should I start with the transcript?
+
+## User
+
+> yes
+
+## Claude
+
+I'll check the converter script is still in your Temp folder, then update its summary line to cover the later work.
+
+**Tool: Bash** — Check converter script still exists
+
+<details><summary>Input</summary>
+
+```text
+ls -la C:/Users/saman/AppData/Local/Temp/export-transcript.js && grep -n "Scope:" C:/Users/saman/AppData/Local/Temp/export-transcript.js | cut -c1-120
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+-rw-r--r-- 1 saman 197613 6168 Oct  6 13:49 C:/Users/saman/AppData/Local/Temp/export-transcript.js
+103:- **Scope:** reviewing the submission against the brief as a hiring manager would; adding the root \`docker-compose.
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\AppData\Local\Temp\export-transcript.js
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\AppData\Local\Temp\export-transcript.js
+--- old
+splitting dense search API code with verified whitespace-only changes; and a clean-clone end-to-end test.
+--- new
+splitting dense search API code with verified whitespace-only changes; a clean-clone end-to-end test; removing leftover files; tightening the caching rules; cutting the repository to a single README and 11 docs; and rewriting \`DECISIONS.md\` and the docs in plain language, including correcting how the outbox decision and a lost RabbitMQ confirmation were described.
+```
+
+</details>
+
+**Tool: Bash** — Re-export transcript and verify it
+
+<details><summary>Input</summary>
+
+```text
+f=ai-log/03-review-compose-docs-caching.md && node C:/Users/saman/AppData/Local/Temp/export-transcript.js "C:/Users/saman/.claude/projects/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a.jsonl" $f && echo "size: $(wc -c < $f) bytes" && echo "email traces: $(grep -o -i '.\{30\}@gmail.\{10\}' $f | grep -v -c 'grep\|\[a-z')" && echo "subagent reports: $(grep -c '^## Subagent report' $f)  system notes: $(grep -c '^\*\[System:' $f)  raw notifications outside tool output: $(awk '/^'''/{f=!f} !f && /^> <task-notification>/' $f | wc -l)" && grep -n "keeping all od these readme\|AI language\|keep compensation" $f | head -4 | cut -c1-120
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\AppData\Local\Temp\export-transcript.js has been updated successfully.
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+Wrote ai-log/03-review-compose-docs-caching.md: 4956 lines
+size: 555725 bytes
+email traces: 0
+subagent reports: 5  system notes: 3  raw notifications outside tool output: 0
+8965:> the decisions in the Decision.md file are in the AI language. Write them in clos to human being langugae. Simpler
+9204:I'd fix all of the above. That means correcting the three errors, rewriting section 2 to tell the real outbox story
+9208:> keep compensation
+9421:I rewrote [DECISIONS.md](DECISIONS.md) to fix every problem from my review, with section 2 now saying you keep comp
+```
+
+</details>
+
+**Tool: Bash** — Find how the missing report was stored
+
+<details><summary>Input</summary>
+
+```text
+grep -c "search.md is not at half" ai-log/03-review-compose-docs-caching.md; node -e "
+const fs=require('fs');for(const l of fs.readFileSync('C:/Users/saman/.claude/projects/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a.jsonl','utf8').split('\n')){if(!l.includes('search.md is not at half'))continue;const o=JSON.parse(l);console.log(o.type,'isMeta=',o.isMeta,'origin=',JSON.stringify(o.origin||null).slice(0,80),'attachmentType=',o.attachment&&o.attachment.type,'keys=',Object.keys(o).slice(0,12).join(','))}"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+0
+queue-operation isMeta= undefined origin= null attachmentType= undefined keys= type,operation,timestamp,sessionId,content
+attachment isMeta= undefined origin= null attachmentType= queued_command keys= parentUuid,isSidechain,attachment,type,uuid,timestamp,rendered,renderedRole,userType,entrypoint,cwd,sessionId
+queue-operation isMeta= undefined origin= null attachmentType= undefined keys= type,operation,timestamp,sessionId,content,reason,commandUuid,deliveryId
+assistant isMeta= undefined origin= null attachmentType= undefined keys= parentUuid,isSidechain,message,wireToolInputs,wireIngestContext,serverClassifierRequest,apiBlockIndex,requestId,type,uuid,timestamp,advisorModel
+```
+
+</details>
+
+It was stored as a queued-message attachment. I'll look at that record's structure so the converter can include it:
+
+**Tool: Bash** — Inspect queued_command attachment records
+
+<details><summary>Input</summary>
+
+```text
+node -e "
+const fs=require('fs');for(const l of fs.readFileSync('C:/Users/saman/.claude/projects/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a.jsonl','utf8').split('\n')){if(!l)continue;const o=JSON.parse(l);if(o.type!=='attachment'||o.attachment?.type!=='queued_command')continue;const a=o.attachment;console.log('keys:',Object.keys(a).join(','),'| origin:',JSON.stringify(a.origin||null).slice(0,90),'| prompt type:',typeof a.prompt,'| start:',JSON.stringify(typeof a.prompt==='string'?a.prompt.slice(0,90):a.prompt).slice(0,140))}"
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+keys: type,prompt,source_uuid,delivery_id,commandMode,origin,timestamp | origin: {"kind":"task-notification","producer":"session-task"} | prompt type: string | start: "<task-notification>\n<task-id>b3bhexmjr</task-id>\n<tool-use-id>toolu_01AHTNSBsopR4gvGTdrLhq"
+keys: type,prompt,source_uuid,delivery_id,commandMode,origin,timestamp | origin: {"kind":"task-notification","producer":"session-task"} | prompt type: string | start: "<task-notification>\n<task-id>bmy41jkeb</task-id>\n<tool-use-id>toolu_013z8r1PeF3Xhzy6kGrjZP"
+keys: type,prompt,source_uuid,delivery_id,commandMode,origin,timestamp,usage | origin: {"kind":"task-notification","producer":"session-task"} | prompt type: string | start: "<task-notification>\n<task-id>a70d65086c0c48fcc</task-id>\n<tool-use-id>toolu_01DJVcQyBiAVMA"
+keys: type,prompt,source_uuid,delivery_id,commandMode,origin,timestamp | origin: {"kind":"task-notification","producer":"session-task"} | prompt type: string | start: "<task-notification>\n<task-id>b9qmu9bnu</task-id>\n<tool-use-id>toolu_01CUVnz8eXxbkQ2TJYHnL6"
+keys: type,prompt,source_uuid,delivery_id,commandMode,origin,timestamp | origin: {"kind":"task-notification","producer":"session-task"} | prompt t
+… (968 more characters)
+```
+
+</details>
+
+**Tool: Edit** — C:\Users\saman\AppData\Local\Temp\export-transcript.js
+
+<details><summary>Input</summary>
+
+```text
+C:\Users\saman\AppData\Local\Temp\export-transcript.js
+--- old
+for (const entry of lines) {
+  if (entry.isSidechain || !entry.message) continue;
+--- new
+const subagentReport = text => clean(text)
+  .replace(/^[\s\S]*?The report follows:\s*/, '')
+  .replace(/\s*<\/agent-message>[\s\S]*$/, '')
+  .split('\n').map(l => l.replace(/^ {2}/, '')).join('\n').trim();
+
+for (const entry of lines) {
+  // Messages queued while Claude was busy are stored as attachments rather than user messages.
+  if (entry.type === 'attachment' && entry.attachment?.type === 'queued_command' && typeof entry.attachment.prompt === 'string') {
+    const queued = entry.attachment;
+    if (queued.origin?.kind === 'peer') {
+      out.push('## Subagent report', '', subagentReport(queued.prompt).split('\n').map(l => '> ' + l).join('\n'), '');
+      lastRole = 'subagent';
+    } else if (queued.origin?.kind === 'task-notification') {
+      const summary = (queued.prompt.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1] || 'Background task finished';
+      out.push(`*[System: ${summary.replace(EMAIL, '[email redacted]')}]*`, '');
+      lastRole = 'system';
+    }
+    continue;
+  }
+  if (entry.isSidechain || !entry.message) continue;
+```
+
+</details>
+
+**Tool: Bash** — Re-export with queued messages included
+
+<details><summary>Input</summary>
+
+```text
+f=ai-log/03-review-compose-docs-caching.md && node C:/Users/saman/AppData/Local/Temp/export-transcript.js "C:/Users/saman/.claude/projects/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a.jsonl" $f && echo "subagent reports: $(grep -c '^## Subagent report' $f)  system notes: $(grep -c '^\*\[System:' $f)  email traces: $(grep -o -i '.\{30\}@gmail.\{10\}' $f | grep -v -c 'grep\|\[a-z')" && grep -c "search.md is not at half" $f
+```
+
+</details>
+
+<details><summary>Result</summary>
+
+```text
+The file C:\Users\saman\AppData\Local\Temp\export-transcript.js has been updated successfully.
 ```
 
 </details>
