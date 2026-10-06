@@ -195,15 +195,15 @@ Supply `Retry-After`, then:
 
 Server logs contain safe failure types and correlation/identity context; raw exception messages/stacks are suppressed. Client timeouts/disconnects do not prove a save failed; retry the same key/payload for unresolved work. This demo phase has no authentication/authorization and is not an authenticated public production service.
 
-## Angular integration remains a later task
+## How the posting app uses this API
 
-The current posting client's [contract](../../../../../apps/job-posting/docs/api-contract.md) and transport explicitly treat **every 202** as pending/unconfirmed, even when a complete saved record is supplied. This API's broker-confirmed 202 instead resolves creation and must display the authoritative saved record, clear the resolved attempt and explain eventual search visibility. Updating that client behavior, its tests and timezone communication is a separate integration task; this stage does not edit Angular files or connect the form to this API.
+The posting app treats a 202 that contains a complete saved record as a successful save. It shows the saved record exactly as the API returned it, clears the finished submission, and explains that the job may take a few moments to appear in search.
 
 ## Verification and implementation references
 
-Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, deterministic canonicalization, all seven fingerprint fields, response/problem contracts and timezone/leap/midnight boundaries. In-process host tests separately verify startup/DI, POST responses, strict input rejection and safe exception mapping. Stage 3 adds PostgreSQL persistence and separately measured real-database tests; see the [persistence guide](persistence.md). Real PostgreSQL/RabbitMQ workflow tests verify success, replay, concurrent duplicates, compensation and status failure windows.
+Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, deterministic canonicalization, all seven fingerprint fields, response/problem contracts and timezone/leap/midnight boundaries. In-process host tests separately verify startup/DI, POST responses, strict input rejection and safe exception mapping. Separate integration tests run against a real PostgreSQL database. Real PostgreSQL/RabbitMQ workflow tests verify success, replay, concurrent duplicates, compensation and status failure windows.
 
 - [System.Text.Json decimal-token conversion](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.trygetdecimal?view=net-10.0): checks JSON numeric type and representability; raw precision still requires independent validation.
 - [System.Text.Json date/time support](https://learn.microsoft.com/en-us/dotnet/standard/datetime/system-text-json-support): date/timestamp serialization support; the request reader separately enforces exact date-only syntax.
 
-See the [client integration handoff](../../../docs/client-integration-handoff.md) and [final verification/runbook](../../../docs/verification-and-handoff.md).
+

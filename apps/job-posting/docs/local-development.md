@@ -39,7 +39,7 @@ npm.cmd run test:coverage
 npm.cmd run build
 ```
 
-Optional interactive commands: npm.cmd run test:watch and npm.cmd run watch. Coverage already executes the full non-watch suite. Tests use HttpTestingController fixtures, not a mock server or a live API. Production output is dist/job-posting/browser. Coverage output is coverage/job-posting; open its index.html for the report. Per-file 100% statements/branches/functions/lines is enforced, including untouched src TypeScript. See testing-and-coverage.md for exact scope and failure verification.
+Optional interactive commands: npm.cmd run test:watch and npm.cmd run watch. Coverage already executes the full non-watch suite. Tests use HttpTestingController fixtures, not a mock server or a live API. Production output is dist/job-posting/browser. Coverage output is coverage/job-posting; open its index.html for the report. Per-file 100% statements/branches/functions/lines is enforced, including untouched src TypeScript.
 
 ## Source organization
 

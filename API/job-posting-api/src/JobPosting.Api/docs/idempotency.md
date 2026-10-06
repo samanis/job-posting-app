@@ -34,4 +34,4 @@ dotnet build JobBoard.slnx --configuration Release --no-restore
 
 Revised Stage 4 passed 164 isolated unit tests (763/763 lines, 194/194 branches, 119/119 methods), 16 host tests (42/42 lines, 4/4 branches, 1/1 methods) and 22 separate real PostgreSQL cases. Coverage exclusions remain unchanged. PostgreSQL tests force eight independent service providers/DbContexts to race, establish exactly one creator, verify equivalent/conflicting payloads, unresolved restart, published expired replay, lost commit acknowledgment, lock bounds, distinct-key identical content and recreation after compensation deletion. Publication timestamps in these tests are explicit state setup, not evidence that a RabbitMQ producer exists.
 
-See [persistence.md](persistence.md) for schema and upgrade instructions.
+The database schema and migrations are in `src/JobPosting.Api/Persistence`.

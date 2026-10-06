@@ -14,4 +14,4 @@ Verification: component/router/HTTP tests cover rendered states, data identity, 
 
 References: [Angular afterNextRender](https://angular.dev/api/core/afterNextRender), [Angular DatePipe](https://angular.dev/api/common/DatePipe).
 
-Stage 7 added the full 36-check desktop/mobile Chromium suite and inspected fresh results/details/empty/error screenshots. Query-bearing listing links bind UrlTree objects so filters/cursors remain query parameters during actual activation. See testing-and-coverage.md for verified flows and remaining limitations.
+Stage 7 added the full 36-check desktop/mobile Chromium suite and inspected fresh results/details/empty/error screenshots. Query-bearing listing links bind UrlTree objects so filters/cursors remain query parameters during actual activation.

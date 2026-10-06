@@ -1,6 +1,6 @@
 # POST workflow and compensation (Stage 6)
 
-POST `/api/jobs` accepts UTF-8 `application/json` with one required `Idempotency-Key`, including the first attempt. The strict reader rejects malformed JSON, unknown fields, invalid types and salary precision before database access. Default body limit is 65,536 bytes. See [API contract](api-contract.md) for field limits and response bodies, [persistence](persistence.md) for explicit database setup/migrations and [messaging](messaging.md) for RabbitMQ setup. The frontend is not connected in this stage.
+POST `/api/jobs` accepts UTF-8 `application/json` with one required `Idempotency-Key`, including the first attempt. The strict reader rejects malformed JSON, unknown fields, invalid types and salary precision before database access. Default body limit is 65,536 bytes. See the [API contract](api-contract.md) for field limits and response bodies, and the [Docker guide](docker-and-local-development.md) for running the database and RabbitMQ.
 
 ```mermaid
 flowchart TD
@@ -40,4 +40,4 @@ dotnet test tests/JobPosting.Api.IntegrationTests --no-restore
 
 Coverage uses isolated unit tests and separately measured host bootstrap tests; real dependency tests do not contribute to that score. Unit tests cover cleanup errors/timeouts/cancellation, both Critical events, strict request parsing, saved replay and safe centralized exception mapping. Host tests exercise actual HTTP routing/status/content types and reject oversized/unsupported input. Integration tests create disposable, isolated PostgreSQL and RabbitMQ containers: they verify direct publish/replay, a duplicate during publication, pre-send rejection, lost acknowledgement with successful/failed cleanup, and confirmed-before-status failure. Failure injection is deliberate test instrumentation: the lost-acknowledgement case throws after REAL broker confirmation, rather than claiming an actual network acknowledgement was dropped. Each fixture removes only its own container and volumes.
 
-Stage 7 now adds circuit breaking, health, metrics and shutdown: see [resilience and shutdown](resilience-and-shutdown.md). Critical events retain separate safe failure types and IDs; arbitrary exception text/stacks are suppressed.
+The API also has a circuit breaker for RabbitMQ, health checks, metrics and graceful shutdown. Critical events retain separate safe failure types and IDs; arbitrary exception text/stacks are suppressed.
