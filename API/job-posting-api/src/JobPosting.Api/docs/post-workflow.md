@@ -1,43 +1,60 @@
-# POST workflow and compensation (Stage 6)
+# POST workflow: save, publish, compensate
 
-POST `/api/jobs` accepts UTF-8 `application/json` with one required `Idempotency-Key`, including the first attempt. The strict reader rejects malformed JSON, unknown fields, invalid types and salary precision before database access. Default body limit is 65,536 bytes. See the [API contract](api-contract.md) for field limits and response bodies, and the [Docker guide](docker-and-local-development.md) for running the database and RabbitMQ.
+The API returns `202 Accepted` only when the job is saved and RabbitMQ has confirmed the message. If publishing fails, the API undoes the save. This undo step is called compensation. There is no outbox and no background retry. [DECISIONS.md](../../../../../DECISIONS.md) section 2 explains why. Request and response formats are in the [API contract](api-contract.md).
+
+## Steps
 
 ```mermaid
 flowchart TD
-    A[POST: key and JSON] --> B[Strict parsing and normalization]
-    B --> C[Find job by key digest]
-    C -->|Different fingerprint| X[409 key conflict]
-    C -->|Published match| R[Replay original 202; no publish]
-    C -->|Unpublished match| U[503 unresolved; no publish]
-    C -->|Missing| D[Validate closing date; insert and commit job]
-    D -->|Insert lock contention| I[409 in progress]
-    D -->|Creator only| E[Publish once; wait for RabbitMQ confirm and mandatory routing]
+    A[POST with key and JSON] --> B[Validate request and key]
+    B --> C[Look up job by key]
+    C -->|Different job| X[409 key conflict]
+    C -->|Published| R[Replay original 202]
+    C -->|Not published| U[503 publication_unresolved]
+    C -->|Not found| D[Check closing date, save job]
+    D -->|Same key being saved| I[409 in progress]
+    D -->|Saved| E[Publish to RabbitMQ and wait for confirmation]
     E -->|Confirmed| F[Record PublishedAt]
-    F -->|Saved| R
-    F -->|Failed| G[Keep job; Critical log; 503 unresolved]
-    E -->|Exception or cancellation| H[Delete exact unpublished job with independent 3-second token]
-    H -->|Deleted| J[Throw; central handler returns 503 publication_failed]
-    H -->|Failed or uncertain| K[Critical with both failures; throw; 503 unresolved]
+    F -->|Recorded| OK[202 Accepted]
+    F -->|Failed| G[Keep job, log critical, 503 publication_unresolved]
+    E -->|Failed| H[Delete the saved job]
+    H -->|Deleted| J[503 publication_failed]
+    H -->|Delete failed| K[Log critical, 503 publication_unresolved]
 ```
 
-The database transaction ends before broker network IO. Only the successful inserting request can publish. A duplicate during publication sees the committed, unpublished row and receives `publication_unresolved`; an insertion blocked by an uncommitted owner can instead receive `idempotency_in_progress`. Completed retries replay the saved response byte-for-byte, even after the original closing date passes. PostgreSQL uniqueness supplies concurrency protection across API instances. There is no ledger, outbox, dispatcher, ownership lease or automatic business retry.
+1. **Save.** The API saves the job and commits before it contacts RabbitMQ.
+2. **Publish.** It sends one persistent `JobPostingCreated` message. It waits up to 3 seconds for RabbitMQ's confirmation and checks that the message reached a queue. The whole step, including connecting, has an 8-second limit.
+3. **Record.** It sets `PublishedAt` on the job and returns `202`.
 
-Every 202 requires the saved job, confirmed/routable RabbitMQ acceptance and saved PublishedAt. It does not wait for a consumer or promise search visibility. A lost HTTP response can be retried with the same key/payload without another publish. A different payload under a retained key returns 409.
+Only the request that saved the job publishes it. Retries never publish again (see [Idempotency](idempotency.md)).
 
-A publication exception triggers one compensating deletion identified by BOTH job and event UUID. The cleanup token is independent of request cancellation and expires after three seconds. Successful deletion produces `publication_failed`; failed, false, canceled, timed-out or uncertain deletion produces `publication_unresolved` and Critical event 2001 (`PostingCleanupFailed`) containing both failures, job/event IDs and trace ID. Confirmed publication followed by a status-write failure produces Critical event 2002 (`PostingPublicationStateFailed`) and retains the job without another publish. Production responses expose only safe Problem Details and trace identifiers. The central handler maps these exceptions to 503 and `Retry-After: 1`; this header is not a promise that unresolved work will automatically complete.
+## When publishing fails
 
-Database deletion cannot retract a queued message. If RabbitMQ accepted a message but its acknowledgement was lost, deletion may succeed while the message remains queued; recreating the deleted attempt can publish a different event and duplicate the job downstream. This compensation policy cannot guarantee exactly-once delivery. Process crashes or forced termination can bypass cleanup and logging. Unknown SQL cleanup outcomes may leave the row present or absent. These cases require manual investigation; there is no recovery endpoint/scanner. Disconnected callers cannot be guaranteed an HTTP response, even when cleanup runs.
+If RabbitMQ rejects the message, does not confirm it in time, or cannot be reached, the API deletes that exact job. The delete has its own 3-second limit and runs even if the client has disconnected.
 
-## Verification
+| What happened | Response | Critical log event |
+|---|---|---|
+| Delete succeeded | `503 publication_failed`. A retry with the same key starts again. | – |
+| Delete failed or timed out | `503 publication_unresolved` | `PostingCleanupFailed` (2001) |
+| Message confirmed, but saving `PublishedAt` failed. The job is kept. | `503 publication_unresolved` | `PostingPublicationStateFailed` (2002) |
 
-From `API/job-posting-api`:
+All of these responses include `Retry-After: 1`. Critical log entries contain the job ID, message ID and trace ID, but no request data.
 
-```sh
-dotnet build JobBoard.slnx --configuration Release --no-restore
-dotnet run --project tools/CoverageGate
-dotnet test tests/JobPosting.Api.IntegrationTests --no-restore
-```
+## Circuit breaker
 
-Coverage uses isolated unit tests and separately measured host bootstrap tests; real dependency tests do not contribute to that score. Unit tests cover cleanup errors/timeouts/cancellation, both Critical events, strict request parsing, saved replay and safe centralized exception mapping. Host tests exercise actual HTTP routing/status/content types and reject oversized/unsupported input. Integration tests create disposable, isolated PostgreSQL and RabbitMQ containers: they verify direct publish/replay, a duplicate during publication, pre-send rejection, lost acknowledgement with successful/failed cleanup, and confirmed-before-status failure. Failure injection is deliberate test instrumentation: the lost-acknowledgement case throws after REAL broker confirmation, rather than claiming an actual network acknowledgement was dropped. Each fixture removes only its own container and volumes.
+A circuit breaker stops calling a service that keeps failing, so requests do not each wait for a timeout. The breaker counts calls to RabbitMQ, both publishes and readiness checks. It opens when at least half of them fail within 60 seconds, with at least 3 calls. While it is open, the API does not contact RabbitMQ for 15 seconds. Each new job is saved, deleted again and answered with `503 publication_failed` straight away. The readiness check also reports "not ready" during this time. These settings are in the `Resilience` section of `appsettings.json`.
 
-The API also has a circuit breaker for RabbitMQ, health checks, metrics and graceful shutdown. Critical events retain separate safe failure types and IDs; arbitrary exception text/stacks are suppressed.
+## Shutdown
+
+When the API stops, it finishes requests already in progress for up to 30 seconds. New requests get `503`. A cleanup delete that runs during shutdown gets at most the time left in those 30 seconds.
+
+## Known weak spots
+
+Compensation cannot undo every failure:
+
+- **Lost confirmation.** RabbitMQ may store the message, but the confirmation may not arrive in time. The API then deletes the job, while the message stays in the queue. If the delete succeeds, the API logs an ordinary error (event 1001), not a critical event. Search still adds the deleted job. A retry creates the job again with a new ID, so search may show it twice.
+- **Crash after save.** If the process stops after saving but before publishing, the job stays unpublished. Search never receives it, and nothing is logged. Retries with the same key return `503 publication_unresolved`.
+- **Unknown delete result.** If the delete fails in an unclear way, the job may or may not still exist.
+- **RabbitMQ down.** Nobody can post a job until RabbitMQ is back.
+
+There is no automatic repair for these cases. A person must check the job by hand, using the IDs in the critical log entry. DECISIONS.md section 2 lists the safeguards that would be added in production.

@@ -1,112 +1,101 @@
-# Stage 7 local read workload
+# Read performance
 
-Run from API/job-search.api with Docker Linux containers and the pinned .NET SDK:
+This report measures the search API's read endpoints on a local machine. It covers the effect of response caching and the database query plans behind each search.
+
+## How to run the workload
+
+Run from `API/job-search.api`. Docker must be running with Linux containers.
 
 ```powershell
 dotnet restore JobSearch.slnx --locked-mode
-dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 10
-```
-
-## Cache comparison (2026-10-06)
-
-The list and detail endpoints use ASP.NET Core output caching (in memory; first page at most 15 s and capped at UTC midnight, detail 1 h; only 200 responses). Continuations bypass caching and send no-store so expiry is checked every time. See [SearchCaching.cs](../../src/JobSearch.Api/Search/SearchCaching.cs). The workload host registers the same policies; cached mode enables the middleware and uncached mode bypasses it.
-
-The runner accepts a fourth argument, cached (default) or uncached. It records
-separate cache-cached.json and cache-uncached.json reports; the historical latest.json
-is preserved. Each mode owns and removes its own PostgreSQL fixture.
-
-```powershell
 dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 30 uncached
 dotnet run --project tools/ReadWorkload --configuration Release -- 10000 4 30 cached
 ```
 
-Both runs used 10,000 jobs, four concurrent clients and 30 seconds. Traffic includes
-80% requests across six popular search/detail routes, 10% numbered substring searches,
-and 10% rotating detail IDs. All groups eventually repeat; workers overlap their keys.
-Popular routes are warmed before timing. This is an explicit synthetic workload,
-not production traffic or a claim about its hit rate. No continuation traffic or
-concurrent ingestion is included. The fixed clock avoids midnight during the benchmark;
-expiry and midnight correctness are verified separately in HTTP tests.
+| Argument | Meaning | Range | Default |
+|---|---|---|---|
+| 1 | Jobs to create | 1,000–100,000 | 10,000 |
+| 2 | Concurrent clients | 1–32 | 4 |
+| 3 | Duration in seconds | 1–60 | 10 |
+| 4 | `cached` or `uncached` | — | `cached` |
 
-| Measurement | Uncached | Local output cache |
-| --- | ---: | ---: |
+The tool starts its own throwaway PostgreSQL container and removes it afterwards. It never connects to an existing database. It fills the database with synthetic jobs, then runs the API in the same process.
+
+Each run writes `cache-cached.json` or `cache-uncached.json` in this folder. A report includes the machine, runtime, latency percentiles, error counts and full query plans.
+
+## Cache comparison (2026-10-06)
+
+Both runs used 10,000 jobs, four concurrent clients and 30 seconds.
+
+The traffic mix was:
+
+- 80% across six popular searches and job details
+- 10% numbered text searches
+- 10% rotating job details
+
+Popular requests were warmed up before timing. Caching follows the rules in [search.md](../search.md#caching).
+
+**p50, p95 and p99** are percentiles. For example, p95 means 95% of requests were faster than this value.
+
+| Measurement | Uncached | Output cache |
+|---|---:|---:|
 | Requests | 14,100 | 232,915 |
 | Cache hit rate | 0% | 99.09% |
-| Actual database reader commands | 24,913 | 4,120 |
-| Database reads per request | 1.767 | 0.0177 |
-| p95 HTTP latency | 20.33 ms | 1.12 ms |
+| Database queries | 24,913 | 4,120 |
+| Database queries per request | 1.767 | 0.0177 |
+| p50 latency | 7.20 ms | 0.21 ms |
+| p95 latency | 20.33 ms | 1.12 ms |
+| p99 latency | 25.90 ms | 7.55 ms |
 | Requests per second | 469.70 | 7,760.74 |
 | Errors | 0 | 0 |
 
-Database reader commands are counted by an EF command interceptor on the HTTP host;
-fixture setup, plans, and warmup are excluded. Cache hits are counted from output-cache
-policy hit callbacks. Latencies include full response-body reads. The runs are sequential
-with different owned databases and are closed-loop, so faster responses produce more
-requests and more repeated keys. These measurements demonstrate cache benefits on
-repeated reads, not a controlled production speedup or capacity guarantee.
+Sources: [cache-uncached.json](cache-uncached.json) and [cache-cached.json](cache-cached.json).
 
-Decision: keep the local output cache. There is no supplied production replica count,
-cache memory pressure, or cross-replica miss evidence to justify Redis. Reconsider a
-shared Redis output cache when multiple replicas materially duplicate work or cache
-capacity becomes a measured limitation. Consider a Redis search projection only if
-representative cache-miss query plans and latency show PostgreSQL search is the bottleneck.
+### Caveats
 
-Redis acceptance testing must include cache-outage behavior, shared-key versioning,
-and the same cursor/midnight correctness checks. Redis deployment is deferred.
+- **The workload is synthetic.** It is not production traffic. The 99% hit rate is not a forecast.
+- **Requests repeat.** Every group of requests eventually repeats. The clients also overlap.
+- **Closed loop.** Each client sends its next request as soon as the last one finishes. A faster API therefore produces more requests and more repeats.
+- **Not included:** paging with cursors, new jobs arriving during the run, logging, a real network and TLS.
+- **Midnight is avoided.** The test clock stays away from midnight. Separate HTTP tests check expiry and the midnight rule.
+- **Local machine.** The client and the API share one process. These numbers show the benefit of caching repeated reads. They are not a capacity guarantee.
 
-Arguments are seed rows1000..100000, concurrency1..32, duration1..60seconds. Defaults10000/4/10. There is no user connection string or external target argument. The tool creates a GUID-named owned PostgreSQL container, a new owned database, applies existing migrations and removes the container/volumes on disposal, including setup failures. Docker operations have2-minute bounds. Database commands and HTTP calls are bounded; new requests stop at duration and in-flight calls can drain up to the5-second HTTP timeout. A hard process kill can bypass disposal; inspect only the named jobsearch-workload-* fixture container if cleaning up manually. Never apply this seeder to a user database.
+## Query plans (2026-10-05)
 
-The tool bulk-seeds deterministic IDs with four roles/departments/locations, varied source creation minutes/ties, salaries and closing dates (about80% available), long repeated descriptions, uncommon title nebula (1/97) and description rarequasar (1/101). Direct bulk fixture seeding is for read workload only; it does not verify event fingerprinting/ingestion. VACUUM (ANALYZE) jobs runs after seeding so GIN pending inserts/statistics reflect a maintained database. This does not change migration history or production settings.
+An earlier 10-second run without caching recorded how PostgreSQL executes each search. It used `EXPLAIN ANALYZE` on the exact queries the API sends.
 
-EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) runs actual EF-generated parameterized first-page commands, not hand-interpolated filter SQL. Both orders, rare title/description substrings and broad Engineer filters are captured. After warming each route, Kestrel loopback traffic mixes newest, closing-soon, rare title, rare description, AND department/location filters and detail GETs. Actual controllers, read store, cursor codec, JSON serializer and request/error middleware are used. The tool host disables logging and has no consumer; it is not a benchmark of the full deployed Program, production logging, ingestion contention or a remote network. Pagination correctness/commit boundaries and real broker isolation are tested separately.
+Results: 4,146 requests, 414 per second, p50 8.19 ms, p95 21.32 ms, p99 25.64 ms, no errors. Source: [latest.json](latest.json).
 
-Each cache comparison report includes UTC capture, host/runtime/CPU count, pinned PostgreSQL image, arguments, elapsed time, request count, cache hits, actual database reader commands, p50/p95/p99, attempts per second, error classifications, bytes and complete query plans/buffer evidence. Percentiles include attempted requests (including errors); these runs had none. Reruns overwrite only the selected mode's report. latest.json preserves the earlier Stage 7 run below. Never put secrets or connection strings in reports.
+| Query | Time | Index used |
+|---|---:|---|
+| Newest, no filter | 0.052 ms | Newest-first order index |
+| Closing soon, no filter | 0.055 ms | Closing-date order index |
+| Newest, rare word in titles | 0.550 ms | Title and description trigram indexes |
+| Closing soon, rare word in descriptions | 1.326 ms | Title and description trigram indexes |
+| Newest, common word "Engineer" | 0.485 ms | Newest-first order index, then a filter |
 
-## Actual final run
+A **trigram index** splits text into three-letter pieces. It lets PostgreSQL find "contains" matches without reading every row.
 
-Captured 2026-10-05T23:36:47.0778188+00:00; 10000 rows; concurrency4; requested10 seconds, elapsed10.009. Windows build26200, .NET10.0.1,16 logical CPUs; owned Docker PostgreSQL18.6. Docker CPU/memory allocation was not separately measured.
+- Searches without filters read the matching order index directly.
+- Rare words use the trigram indexes, then sort a few rows.
+- Common words walk the order index and filter as they go.
 
-4146 requests, 414.22 attempts/second, p508.19ms, p9521.32ms, p9925.64ms, zero errors. Total response bytes17725567, largest observed response4993 bytes. That observed size is not a worst-case API payload bound.
+These plans needed no new index.
 
-| Query | EXPLAIN execution ms | Plan nodes/indexes |
-| --- | ---: | --- |
-| newest:unfiltered | 0.052 | Limit, ix_jobs_newest |
-| closing-soon:unfiltered | 0.055 | Limit, ix_jobs_closing |
-| newest:nebula | 0.550 | Limit, Sort, Bitmap Heap Scan, BitmapOr, ix_jobs_title_trgm, ix_jobs_description_trgm |
-| closing-soon:rarequasar | 1.326 | Limit, Sort, Bitmap Heap Scan, BitmapOr, ix_jobs_title_trgm, ix_jobs_description_trgm |
-| newest:Engineer | 0.485 | Limit, ix_jobs_newest |
+Plan choice depends on table statistics. Before statistics were refreshed, rare-word searches scanned the table instead and took 22.5 ms and 89.1 ms. Other conditions also differed between those runs, so this is a hint, not proof. Production should keep automatic `VACUUM` and `ANALYZE` running.
 
-Unfiltered queries use their existing order indexes. Selective title/description searches use the existing trigram indexes combined by BitmapOr and a small sort. Broad Engineer filtering uses the order index plus filter. No new index or migration was justified by these maintained local plans; response caching was added later (see below), and no search engine was added. An earlier unmaintained bulk seed chose an order scan/sequence scan for rare filters (22.473/89.085ms); after explicit fixture maintenance, the existing GIN indexes were chosen. Other concurrent test activity and cache state differed between runs, so that comparison is diagnostic evidence, not a controlled causal performance claim.
+The data is repetitive and synthetic. Real data, cold caches or other hardware may produce different plans. Test with realistic data before tuning.
 
-These are short warmed local measurements, not an SLA, sustained-load test or production capacity claim. Dataset text is repetitive and its distribution is synthetic; short substrings can have poor selectivity; real distributions, cold caches, logging, network/TLS, concurrent ingestion, hardware and autovacuum may alter plans/results. Test representative production-like data before tuning. EXPLAIN adds measurement overhead. Later operations must monitor table statistics/GIN pending lists and preserve automatic maintenance, rather than force a planner choice or rebuild indexes on assumption.
+## Decision: no Redis for now
 
-## Output caching: earlier quick run
+Keep the in-memory output cache. Nothing yet shows a need for Redis:
 
-> Superseded by the [cache comparison](#cache-comparison-2026-10-06) above, which uses a mixed workload and measures cache hits and database reads. This earlier run repeated six fixed URLs and is kept for the record.
+- There is no target number of API instances.
+- There is no measured cache memory pressure.
+- There is no evidence that instances repeat each other's work.
 
-This run used the earlier policy, under which pages with a cursor were also cached.
+A shared Redis cache would make sense once several instances clearly duplicate work, or cache size becomes a measured limit. Copying all jobs into Redis for search would make sense only if realistic uncached queries show PostgreSQL is the bottleneck.
 
-Both runs on 2026-10-06, same machine and command (`10000 4 10`), back to back:
+Any Redis change must be tested for Redis outages, cache key versioning, and the same cursor and midnight rules.
 
-| | Before caching | After caching |
-| --- | ---: | ---: |
-| Requests in 10 s | 4,929 | 148,836 |
-| Requests/second | 493 | 14,874 |
-| p50 | 6.93 ms | 0.19 ms |
-| p95 | 17.20 ms | 0.69 ms |
-| p99 | 21.12 ms | 1.11 ms |
-| Errors | 0 | 0 |
-
-**Read this as a best case.** The workload cycles through six fixed URLs, so after the first request for each almost every request is a cache hit and never reaches PostgreSQL. It shows what caching does for popular pages, such as the unfiltered first page, which most visitors load. Long-tail searches with unique filters miss the cache and perform like the "before" column. The client ran in the same process with only 4 concurrent requests, so the cached throughput figure may reflect the load generator as much as the API; it is not a capacity claim.
-
-## Read and operational review
-
-Read queries use AsNoTracking and server-side WHERE/order/summary projection with LIMIT+1. Summary SELECT excludes description (description may still be evaluated for q filtering). List limit1..50 and bounded field/cursor sizes bound JSON output; detail descriptions are bounded by ingestion. First list page uses two SQL reads (watermark + bounded page), continuation one, detail one; there is no per-item database query, offset scan or count. Existing query SQL tests check parameterization/no description projection/no offset/count; real sort/commit-boundary tests remain separate.
-
-New real integration evidence starts Kestrel with actual search controllers/DB/consumer, stops ONLY its fixture broker app, observes ingestion Backoff and health503 while list/detail/read-ready/live all stay200, then starts the broker and observes ingestion Running/200. A separate owned PG table lock verifies actual caller cancellation and command timeout, then successful reading after rollback. Existing graceful/forced-drain and quarantine tests remain in the28-case full integration suite.
-
-The timeout experiment exposed Npgsql EF's InvalidOperationException wrapper around a transient Npgsql exception. Search now classifies that specific wrapper as503/database; unrelated unexpected errors remain safe500. Unit checks verify both cases without broad exception suppression. Logs never attach raw exceptions/queries/cursors/secrets; existing host safety and meter-listener low-cardinality tests pass. Metrics label only outcome/state/status class. No exporter is installed by this stage.
-
-Manual quarantine diagnostics: inspect only the configured search-owned quarantine queue and safe failureCode/original message identity; message bytes belong there, never in logs. Quarantine can have duplicates after lost acceptance/ACK. Diagnose malformed/version/conflict/topology/permissions problems, then explicitly decide whether a valid event should be republished. No automatic replay, shared source queue purge or posting database investigation is implemented.
-
-References: [PostgreSQL EXPLAIN](https://www.postgresql.org/docs/18/sql-explain.html), [VACUUM and pending GIN inserts](https://www.postgresql.org/docs/18/sql-vacuum.html), [Npgsql execution strategy](https://www.npgsql.org/efcore/api/Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.html).
+References: [PostgreSQL EXPLAIN](https://www.postgresql.org/docs/18/sql-explain.html), [VACUUM and pending GIN inserts](https://www.postgresql.org/docs/18/sql-vacuum.html).

@@ -1,15 +1,18 @@
-> Stages 1-6 implement this contract using job-row idempotency and direct RabbitMQ publication; no ledger, outbox or recovery dispatcher.
-
-
 # Job posting API contract
 
-Stage 2 implements the DTOs, strict JSON reader, independent normalization/validation, temporal validation, fingerprinting and Problem Details factories described here. Stages 3–4 add PostgreSQL persistence and [durable idempotency coordination](idempotency.md). Stage 6 implements POST and publication/compensation. See [POST workflow](post-workflow.md).
+The posting API has one endpoint: `POST /api/jobs`. It saves a new job and sends a `JobPostingCreated` message to RabbitMQ for the search API. There are no endpoints to read, update or delete jobs, and no authentication.
 
-## Request and validation
+For the steps behind a successful post, see [POST workflow](post-workflow.md). For duplicate handling, see [Idempotency](idempotency.md).
 
-`POST /api/jobs`, `Content-Type: application/json`, one `Idempotency-Key` header.
+## Request
+
+- Content type: `application/json` (UTF-8).
+- Maximum body size: 65,536 bytes.
+- Header: exactly one `Idempotency-Key`.
 
 ```http
+POST /api/jobs
+Content-Type: application/json
 Idempotency-Key: 3340fd95-4f42-4df0-86aa-0cfb57a862fb
 ```
 
@@ -25,48 +28,60 @@ Idempotency-Key: 3340fd95-4f42-4df0-86aa-0cfb57a862fb
 }
 ```
 
-The header is an opaque, case-sensitive value of 1–128 ASCII letters, digits, `_` or `-`. Missing, empty, comma-combined or multiple values are invalid; no fallback key is generated, trimmed or silently replaced. The job row retains a unique key digest for its lifetime. Keys are not authentication, and distinct keys are not content-based deduplication.
+### Idempotency key
 
-All seven fields are required. Missing/null fields and blank text are semantic errors (422); nullable salary DTOs distinguish absent values from a legitimate zero. The JSON reader requires a single object, exact camelCase field names and supported JSON types. Unknown/case-variant and duplicate fields are rejected (400), a documented Stage 2 choice to avoid ambiguous payload fingerprints. Root arrays/null, malformed JSON (including invalid Unicode surrogate escapes), numeric strings, booleans/objects where text/numbers are expected, non-JSON NaN/infinity and decimal overflow are 400. Errors never echo submitted values or unknown property names.
+An idempotency key is a unique ID the client creates for one submission. The client sends the same key on every retry. The API then knows the retry is not a new job.
+
+- 1–128 characters: ASCII letters, digits, `_` or `-`. Keys are case-sensitive.
+- A missing, empty, repeated or comma-joined header returns `400`. The API never generates a key itself.
+
+### Fields
+
+All seven fields are required. Text fields are trimmed first. Length limits apply after trimming.
 
 | Field | Rule |
-| --- | --- |
-| `title` | Trim leading/trailing whitespace; 1–200 UTF-16 code units |
-| `department` | Trim; 1–100 UTF-16 code units |
-| `location` | Trim; 1–100 UTF-16 code units |
-| `description` | Trim; 1–10,000 UTF-16 code units; retain internal spaces/newlines, case and literal plain text, including HTML-like characters |
-| `salaryMin`, `salaryMax` | Decimal JSON numbers from 0 through 999999999.99 inclusive; at most two decimal places; minimum strictly less than maximum |
-| `closingDate` | String containing a real date in exactly `YYYY-MM-DD`; for new work it must be strictly after today's date in the configured business timezone |
+|---|---|
+| `title` | String, 1–200 characters |
+| `department` | String, 1–100 characters |
+| `location` | String, 1–100 characters |
+| `description` | String, 1–10,000 characters. Line breaks and inner spaces are kept. The text is stored as-is, not as HTML. |
+| `salaryMin`, `salaryMax` | JSON number from 0 to 999999999.99, with at most two decimal places. `salaryMin` must be less than `salaryMax`. No currency is defined. |
+| `closingDate` | String in `YYYY-MM-DD` format. It must be a real date. It must be later than today in the business time zone. |
 
-Text limits are measured **after trimming**, using .NET string length, not byte length or grapheme count. No HTML rendering/sanitization or Unicode normalization is performed; consumers must display description as text. These lengths and salary bounds are the documented implementation assumptions, not extra requirements attributed to the PDF. Currency remains unspecified.
+The business time zone is `America/Toronto` by default. It is set by `JobPosting:BusinessTimeZone`. The browser form checks the date against the user's own local date, so the two can disagree near midnight.
 
-Salary precision is checked on the original JSON token independently of decimal conversion, so parsing cannot hide extra fractions. For exponent notation, fractional scale is mantissa fractional digits minus exponent: `1e1` and `10.00` are valid equivalents; `1e-3`, `10.001` and even `10.000` have excessive scale and are 422. `10.000e1` is valid (100.00). Very small fractions are rejected rather than accepted as rounded zero; overflow is 400. Direct typed validation also checks decimal scale. No floating-point arithmetic is used. The endpoint uses `CreateJobRequestReader`; permissive MVC/default numeric-string binding does not establish this contract.
+### Which errors are 400 and which are 422
 
-A malformed/nonexistent calendar date or datetime string is 400; missing/null date is 422. Closing date is never converted to UTC. Default business timezone is `America/Toronto`, startup validated; the validator converts injectable `TimeProvider.GetUtcNow()` into this zone only to determine today's calendar date. The browser currently validates against its own local date; users outside this timezone can disagree with the server near midnight. Later client integration must explain/align this rule.
+The API returns `400 Bad Request` when the request is badly formed:
 
-## Preparation, temporal validation and replay
+- The body is not valid JSON or not a JSON object.
+- It contains an unknown field, a wrongly cased field name or a repeated field.
+- A field has the wrong JSON type, such as a salary sent as a string.
+- A salary is too large to represent.
+- `closingDate` is not a real date in `YYYY-MM-DD` format.
+- The `Idempotency-Key` header is invalid.
 
-The request workflow uses these boundaries in order:
+The API returns `422 Unprocessable Entity` when the request is well formed but breaks a rule:
 
-1. Validate the header with `IdempotencyKeyValidator.TryValidate`.
-2. Read JSON with `CreateJobRequestReader.Read`. A non-null `ErrorStatus` is 400 or 422; do not continue with a failed result. Mixed syntax/precision errors use 400 if any syntax error exists.
-3. Normalize and validate non-temporal fields with `JobRequestValidator.Normalize`. Failure yields 422 field errors. Success returns an immutable `NormalizedJobRequest`.
-4. Compute `JobRequestFingerprint.Compute`, using `JobRequestFingerprint.Version` (currently 1), then resolve the matching saved job by digest before applying today's date rule. A mismatched fingerprint conflicts.
-5. Only for a **new key**, call `NewJobTemporalValidator.ValidateNew`. Its closing-date error is 422. A matching saved request bypasses current-date validation: published rows replay 202, while unpublished rows remain unresolved without recovery or republication.
+- A field is missing, `null` or blank.
+- A text field is too long.
+- A salary is out of range or has more than two decimal places.
+- `salaryMin` is not less than `salaryMax`.
+- `closingDate` is today or earlier.
 
-Normalization and fingerprinting never read the clock. Their success alone is not acceptance; all new requests still require temporal validation and the durable workflow. JSON metadata/ordering and leading/trailing text whitespace do not participate in fingerprint identity. Internal whitespace, case, Unicode code-point differences and each of the seven fields do.
+Error messages never repeat the submitted values.
 
-Canonicalization version 1 produces a UTF-8 JSON array in this fixed order:
+## Success: 202 Accepted
 
-```json
-[1,"Engineer","Engineering","Toronto","Build software","100000.00","150000.00","2028-02-29"]
-```
+The API returns `202` only after three things succeed:
 
-The leading number is the canonicalization version. Salary entries are invariant decimal **strings with exactly two places** inside the canonical representation only; wire request/response salaries remain JSON numbers. Date is invariant `yyyy-MM-dd`. System.Text.Json's default escaping keeps delimiters, quotes, Unicode and newlines unambiguous. The SHA-256 digest of these exact bytes is a 64-character lowercase hex fingerprint. Equivalent 10 and 10.00 produce equal fingerprints, independent of process culture or property order. Persist version alongside the hash; changing canonicalization requires an explicit version/migration/replay strategy, not silently rehashing retained keys.
+1. The job is saved in PostgreSQL.
+2. RabbitMQ confirms it has stored the message.
+3. The API records the publish time (`PublishedAt`) on the job.
 
-## Acceptance: 202 with the complete authoritative saved record
+The API does not wait for the search API. A `202` means the job will reach search, not that it is already searchable.
 
-Return 202 **only after** (a) the PostgreSQL transaction commits the job and its idempotency metadata, (b) RabbitMQ confirms the directly published event and mandatory routing produces no return, and (c) PublishedAt is durably recorded on the same job. PostgreSQL save alone, an unconfirmed send or a confirmation with an unroutable return is insufficient.
+The body contains the saved job, a generated `id`, a UTC `createdAt`, and a fixed status and message:
 
 ```json
 {
@@ -84,29 +99,33 @@ Return 202 **only after** (a) the PostgreSQL transaction commits the job and its
 }
 ```
 
-`SavedJobRecord` contains all seven normalized fields plus a generated string UUID and UTC `createdAt`. `SavedJobRecord.Create` accepts the persistence-generated identity/time and normalizes the supplied timestamp to UTC. `JobAcceptedResponse.FromSaved` copies this authoritative record at the top level, adding fixed status/message. It does not itself verify the acceptance gate. Persist the original response snapshot for a stable 202 replay (same identity, timestamp, fields and message); do not regenerate it or republish a known-completed event. Decimal JSON formatting may omit redundant zeroes without changing numeric meaning.
+Text values are returned trimmed. The API stores this response. A retry with the same key and body returns it again.
 
-The message means broker-confirmed acceptance for asynchronous search projection, not verified search visibility. Do not invent a Location/status URI or return a body-less 202. There is no job GET/status, update/delete or search endpoint in this phase. Broker redelivery and recreation after compensating deletion can duplicate event delivery; a future search consumer must deduplicate event IDs.
+## Errors
 
-## Error responses
+Errors use Problem Details. This is a standard JSON error format (RFC 9457) with the content type `application/problem+json`. Every error body has a `traceId`. The same value is sent in the `X-Trace-Id` response header. Use it to find the request in the logs.
 
-Use `application/problem+json`, camelCase field names, safe server-generated messages, top-level `traceId` and matching `X-Trace-Id`. Code values are top-level Problem Details extensions, not nested in an `extensions` object. `JobApiProblems.Validation` and `.Failure` build these contracts; the endpoint is responsible for actual HTTP status/content type/headers. Central exception handling already supplies generic 500 responses.
+### Status codes
 
-### 400: invalid JSON/header/shape/type/calendar date
+| Status | `code` | When it happens |
+|---|---|---|
+| `400` | – | The request or the key header is badly formed (see above) |
+| `413` | – | The body is larger than 65,536 bytes |
+| `415` | – | The content type is not `application/json` |
+| `422` | – | A field breaks a validation rule (see above) |
+| `409` | `idempotency_key_conflict` | The key was already used with a different job |
+| `409` | `idempotency_in_progress` | Another request with the same key is saving the job right now |
+| `503` | `publication_failed` | RabbitMQ did not confirm the message. The API deleted the saved job. |
+| `503` | `publication_unresolved` | The job is saved, but the API cannot tell whether search will receive it |
+| `503` | `dependency_unavailable` | The database is unavailable, or the API cannot tell whether the save succeeded |
+| `503` | – | The API is shutting down (empty body) |
+| `500` | – | An unexpected error |
 
-```json
-{
-  "type": "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.1",
-  "title": "Invalid request.",
-  "status": 400,
-  "errors": { "salaryMin": ["The field must be a representable decimal JSON number, not a string."] },
-  "traceId": "trace-example"
-}
-```
+Every `409 idempotency_in_progress` and every `503` with a `code` also sends `Retry-After: 1`. The client should then retry with the same key and the same body. After `publication_unresolved`, a retry never publishes again. It returns the same error while the unpublished job exists.
 
-An invalid header uses `errors: { "Idempotency-Key": ["Provide exactly one key of 1–128 ASCII letters, digits, underscore or hyphen."] }`. Malformed JSON/root/unknown fields use `$`. The reader does not expose parsing exceptions, submitted values, stack traces or infrastructure details.
+### Example: 422
 
-### 422: required fields, length/range/precision/order or new-date rule
+Field errors are grouped by field name. Errors about the whole body use the name `$`.
 
 ```json
 {
@@ -121,7 +140,11 @@ An invalid header uses `errors: { "Idempotency-Key": ["Provide exactly one key o
 }
 ```
 
-### 409: same key with a different normalized payload
+A `400` has the same shape, with the title `Invalid request.`. An invalid key header is reported under the name `Idempotency-Key`.
+
+### Example: 409 and 503
+
+These errors add a `detail` message and a `code` at the top level:
 
 ```json
 {
@@ -134,76 +157,6 @@ An invalid header uses `errors: { "Idempotency-Key": ["Provide exactly one key o
 }
 ```
 
-### 409: another owner is processing the same key
+A `500` has the title `An unexpected error occurred.` and asks the user to contact support with the trace ID. No error response contains stack traces, exception messages or connection details.
 
-Supply bounded integer-seconds `Retry-After` (`Retry-After: 1`), then:
-
-```json
-{
-  "type": "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.10",
-  "title": "Job posting is being processed.",
-  "status": 409,
-  "detail": "Wait for Retry-After, then retry the same key and payload.",
-  "code": "idempotency_in_progress",
-  "traceId": "trace-example"
-}
-```
-
-### 503: committed job, publication or confirmed-state recording unresolved
-
-Supply `Retry-After` (1 second), then:
-
-```json
-{
-  "type": "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.4",
-  "title": "Publication is pending.",
-  "status": 503,
-  "detail": "The job has been saved, but publication is unresolved. Retain the same key and payload; manual investigation may be required.",
-  "code": "publication_unresolved",
-  "traceId": "trace-example"
-}
-```
-
-There is no automatic recovery or republication. Confirmed-before-status failure retains the job; cleanup failure may leave its state uncertain. Manual investigation may be required. A publication exception with successful deletion instead returns 503 `publication_failed`; a queued message may still exist after lost acknowledgement. Neither failure returns 202.
-
-### 503: database unavailable or commit outcome uncertain
-
-Supply `Retry-After`, then:
-
-```json
-{
-  "type": "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.4",
-  "title": "A required dependency is unavailable.",
-  "status": 503,
-  "detail": "The outcome may be uncertain. Wait for Retry-After, then retry the same key and payload.",
-  "code": "dependency_unavailable",
-  "traceId": "trace-example"
-}
-```
-
-### 500: unexpected exception
-
-```json
-{
-  "type": "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.1",
-  "title": "An unexpected error occurred.",
-  "status": 500,
-  "detail": "The request could not be completed. Contact support with the trace identifier.",
-  "traceId": "trace-example"
-}
-```
-
-Server logs contain safe failure types and correlation/identity context; raw exception messages/stacks are suppressed. Client timeouts/disconnects do not prove a save failed; retry the same key/payload for unresolved work. This demo phase has no authentication/authorization and is not an authenticated public production service.
-
-## How the posting app uses this API
-
-The posting app treats a 202 that contains a complete saved record as a successful save. It shows the saved record exactly as the API returned it, clears the finished submission, and explains that the job may take a few moments to appear in search.
-
-## Verification and implementation references
-
-Run `dotnet run --project tools/CoverageGate` from `API/job-posting-api`. The isolated unit suite covers JSON shape/type errors, all required fields/limits, raw precision and overflow, deterministic canonicalization, all seven fingerprint fields, response/problem contracts and timezone/leap/midnight boundaries. In-process host tests separately verify startup/DI, POST responses, strict input rejection and safe exception mapping. Separate integration tests run against a real PostgreSQL database. Real PostgreSQL/RabbitMQ workflow tests verify success, replay, concurrent duplicates, compensation and status failure windows.
-
-- [System.Text.Json decimal-token conversion](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.trygetdecimal?view=net-10.0): checks JSON numeric type and representability; raw precision still requires independent validation.
-- [System.Text.Json date/time support](https://learn.microsoft.com/en-us/dotnet/standard/datetime/system-text-json-support): date/timestamp serialization support; the request reader separately enforces exact date-only syntax.
-
-
+The posting app treats a `202` as success. It shows the saved job exactly as the API returned it.

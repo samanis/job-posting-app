@@ -1,55 +1,108 @@
-# Search read API (Stage 6)
+# Search API
 
-Both routes use only the separately configured search PostgreSQL database. No posting code/database/HTTP dependency or in-memory fallback exists. Query records are immutable create-only projections. No public POST/PUT/DELETE route is implemented.
+The search API has two read-only endpoints. It reads only its own PostgreSQL database, which RabbitMQ messages from the posting API keep filled. See [DECISIONS.md](../../../DECISIONS.md) for the design.
 
-Successful first-page responses use the local output cache for at most 15 seconds,
-capped at the next UTC midnight. The cache key includes the UTC day so a new day's
-request cannot reuse yesterday's availability snapshot. New ingestion is visible
-after this short freshness window. Requests already in flight across midnight may
-finish with their captured day, but are marked no-store and are not stored.
-Continuation responses are no-store and bypass output-cache lookup/storage: every
-request validates the cursor, including its expiry. Immutable successful details
-remain cached for one hour on the server and one day downstream. Errors are not cached.
-The low-cardinality search.cache.hits counter distinguishes list and detail hits.
-
-GET /api/jobs accepts q (title OR description substring, up to200 trimmed UTF16 characters), department/location (up to100), limit1..50(default20), sort=newest(default) or closing-soon, and optional cursor<=2048. Filters combine with AND. Blank filters are omitted; unknown/duplicate parameters, controls, invalid limit/sort and malformed cursors return400. Percent, underscore and backslash are literal text: parameterized ILIKE uses explicit backslash escaping. SQL predicates/order/projection run on the server with AsNoTracking and LIMIT+1; there is no OFFSET or total count. List rows do not retrieve descriptions.
-
-Availability is closingDate strictly greater than captured TODAY UTC. This is a deliberate existing client alignment, not a PDF timezone requirement; posting's Toronto validation can differ. Details accept a nonzero D-format UUID, return400 for malformed,404 for missing, and200 for existing closed records. Source IDs and source created timestamps are authoritative. Response dates are yyyy-MM-dd; timestamps are UTC ISO with exactly3 fractional digits, truncating display precision only. Original source ticks remain unchanged in persistence and fingerprinting. Summaries omit description; details include it. Currency remains unspecified.
+## Endpoints
 
 ```text
 GET /api/jobs?q=engineer&location=toronto&limit=20&sort=newest
-200 {"items":[...],"nextCursor":null|"opaque-token"}
-GET /api/jobs/{source-job-uuid}
-200 {"id":...,"createdAt":...,"title":...,"department":...,"location":...,"description":...,"salaryMin":...,"salaryMax":...,"closingDate":...}
+200 {"items":[{"id","createdAt","title","department","location","salaryMin","salaryMax","closingDate"}],"nextCursor":"<token>"|null}
+
+GET /api/jobs/{id}
+200 {"id","createdAt","title","department","location","description","salaryMin","salaryMax","closingDate"}
 ```
 
-## Stable pages and cursors
+- The list returns open jobs only, without descriptions.
+- The detail endpoint returns any job, including closed ones.
+- `closingDate` is `yyyy-MM-dd`. `createdAt` is UTC with milliseconds, such as `2026-10-06T14:05:09.123Z`.
 
-Newest sorts database createdAt DESC, UUID DESC. Closing-soon sorts closingDate ASC, createdAt DESC, UUID DESC. Continuation uses PostgreSQL row comparison for the descending time/UUID tuple, never .NET string/UUID ordering or offset scanning. PostgreSQL timestamp precision is microseconds; the cursor boundary uses the actual stored timestamp, while source precision is used for outgoing DTOs. The UUID tie-breaker provides a complete order.
+## List parameters
 
-The first page captures TimeProvider.GetUtcNow once and reads the maximum committed ingestion sequence. Every page filters sequences <= that upper watermark. The existing write protocol holds a transaction-scoped advisory lock before sequence allocation through commit; a pending lower sequence cannot later become visible beneath a newer committed maximum. A plain PostgreSQL sequence alone would not provide that guarantee. Later ingestions are excluded even if their source date sorts ahead or behind existing jobs. Immutable records make the bounded snapshot stable; this is not a general MVCC snapshot or update/delete protocol.
+| Parameter | Meaning | Limit |
+|---|---|---|
+| `q` | Text in the title or description | 200 characters |
+| `department` | Text in the department | 100 characters |
+| `location` | Text in the location | 100 characters |
+| `limit` | Jobs per page | 1–50, default 20 |
+| `sort` | `newest` (default) or `closing-soon` | — |
+| `cursor` | Page token from the previous page | 2,048 characters |
 
-A cursor is canonical base64url JSON plus a separate HMAC-SHA256 tag. Its strict, bounded shape contains version, signing key ID, SHA256 binding of normalized q/department/location/limit/sort, captured UTC day, upper committed watermark, last time/UUID/closing-day tuple, original issue time and expiry. The MAC authenticates all payload bytes with constant-time comparison. Filters are hashed to keep worst-case Unicode queries comfortably inside the2048-character bound. The cursor is authenticated, not encrypted. Extra/duplicate fields, noncanonical encoding, bad signatures, missing keys or query binding mismatch are400 invalid_cursor. Only an authentic otherwise-valid expired or unsupported/retired-version token produces409 cursor_expired. Expiry is not refreshed per page. Default TTL15 minutes, configurable1..60. UTC midnight does not change availability within a still-valid chain; a new chain captures a new day.
+- Text filters are case-insensitive "contains" matches. They combine with AND.
+- Blank filters are ignored. `%` and `_` match literally.
+- An unknown, repeated or out-of-range parameter returns `400`.
 
-## Signing configuration and rotation
+**Sorting.** `newest` puts the newest job first. `closing-soon` puts the earliest closing date first, then the newest. Job ID breaks any tie.
 
-Configure the SAME key ring, active key ID and lifetime on every replica using external environment/secret configuration. Keys are base64 encoding of at least32 random bytes, with1..4 keys; IDs are1..32 ASCII alphanumeric/hyphen characters. Startup validates without echoing keys.
+**Open job.** A job is open while its closing date is after today's UTC date. It leaves the list at midnight UTC on its closing date.
+
+## Paging and cursors
+
+The API uses **keyset paging**: each page starts right after the last job of the previous page. The database never skips over earlier rows, as `OFFSET` does, so late pages stay fast. There is no total count.
+
+To get the next page, send `nextCursor` as `cursor` and keep the other parameters the same. A `null` `nextCursor` means the last page.
+
+A **cursor** (page token) is an opaque string marking where the next page starts.
+
+- **Signed.** It carries an HMAC-SHA256 signature: a code made from the token and a secret key. Any edit breaks it. The token is not encrypted.
+- **Tied to the search.** It holds a hash of the filters, limit and sort. Other values are rejected.
+- **Snapshot.** The first page fixes the UTC date and the newest job received. Later pages use the same snapshot. New jobs do not appear mid-session, so no job is skipped or repeated.
+- **Expiry.** It expires 15 minutes after the first page by default (configurable from 1 to 60). Paging does not extend it.
+
+| Cursor problem | Response |
+|---|---|
+| Edited, malformed, unknown key, or different filters | `400 invalid_cursor` |
+| Authentic but expired, or an unsupported version | `409 cursor_expired`; start again from page one |
+
+## Caching
+
+An **output cache** keeps whole responses in each instance's memory and replays them without a database query.
+
+| Response | Server cache | `Cache-Control` header |
+|---|---|---|
+| First list page | Up to 15 s, never past midnight UTC | `public, max-age=` same seconds |
+| Page with a `cursor` | Not cached | `no-store` |
+| Job details | 1 hour | `public, max-age=86400, immutable` |
+| Errors, including `404` | Not cached | `no-store` |
+
+- Each combination of parameters is cached separately.
+- Cursor pages bypass the cache, so every request checks the token.
+- The midnight cap keeps closed jobs out of cached pages.
+- A new job can take up to 15 seconds to reach the first page.
+
+## Errors
+
+Errors are problem details JSON (`application/problem+json`) with a `traceId`. Endpoint errors also carry a `code`.
+
+| Status | `code` | Cause |
+|---|---|---|
+| 400 | `invalid_query` | Bad parameter |
+| 400 | `invalid_id` | ID is not a non-empty UUID |
+| 400 | `invalid_cursor` | Cursor failed its checks |
+| 404 | `job_not_found` | No such job |
+| 409 | `cursor_expired` | Cursor expired |
+| 503 | `search_unavailable` | Database unreachable or timed out |
+| 500 | — | Unexpected failure |
+
+Responses never expose stack traces, query values, cursors or secrets.
+
+## Signing keys
+
+Every instance needs the same key ring, active key ID and lifetime, set outside the repository. Each key is base64 of at least 32 random bytes. The ring holds 1 to 4 keys.
 
 ```powershell
-# Generate a secret with a cryptographically secure source; store it outside the repository.
 $env:Cursor__Keys__current = [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
 $env:Cursor__ActiveKeyId = 'current'
 $env:Cursor__LifetimeMinutes = '15'
 ```
 
-Generate once and securely distribute the same key to replicas; do not generate a different key on each startup. Development ONLY supplies a public, known nonproduction example key when no ring is configured. Production/Staging reject empty rings, short/malformed keys and that known development key. Do not use the development key for exposed environments.
+Without a key, the Development environment uses a public example key. Other environments refuse to start without a valid key, and reject the example key.
 
-To rotate, first distribute a ring containing old and new keys to all replicas, retaining the old active ID; then switch the shared active ID to new. Existing tokens remain valid under retained old keys until their original expiry. Keep old keys for the maximum outstanding TTL (up to60 minutes plus clock tolerance) before removal. Removing a key makes its old tokens invalid_cursor400 because their authenticity can no longer be established, rather than claiming authentic expiry409. Coordinate clocks/configuration and protocol retirement across deployments; do not independently change a key's material under the same ID.
+**Rotation:**
 
-## Errors and validation
+1. Add the new key to every instance, keeping the old key active.
+2. Make the new key active everywhere.
+3. Wait until old tokens expire (up to 60 minutes), then remove the old key. Leftover old tokens then return `400 invalid_cursor`.
 
-Known database transport/timeouts return503 search_unavailable; unexpected failures go through the safe central500 handler. No raw database error, query value, cursor, secret, payload or stack appears in responses/logs. ProblemDetails errors contain code and traceId. Request duration metrics/logs use bounded status classes and route templates. Caller cancellation propagates rather than being used as permission for fallback reads.
+Never change the value behind an existing key ID.
 
-Unit tests cover strict cursor authentication/binding/expiry/retirement/encoding, key validation/rotation, parameterized server SQL, bounded projection, controller result/error paths and serializer conversion. Host tests cover actual routes, OpenAPI response contracts, method rejection, millisecond wire timestamps, safe400/404/409/503/500 and startup validation. Real owned PostgreSQL fixtures cover literal wildcards/AND filters, description matching, empty results, closed details, both sorts/UUID ties, no gaps/duplicates after new ingestion, UTC midnight and pending-commit watermark boundaries. External tests do not contribute to unit coverage.
-
-Stage7 provides local EXPLAIN/load evidence in performance/read-performance.md; monitoring exporter and persistent Docker provisioning remain later-stage work. No SLA or full-stack Angular integration is claimed. Existing B-tree/trigram migration is unchanged. See [Npgsql translations](https://www.npgsql.org/efcore/mapping/translations.html) for ILIKE escaping and row comparisons, and [EF Core keyset pagination](https://learn.microsoft.com/en-us/ef/core/querying/pagination).
+See also: [Docker and local development](docker.md) and [read performance](performance/read-performance.md).
