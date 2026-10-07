@@ -171,14 +171,45 @@ Each project keeps its detailed notes in a `docs/` folder. The most useful ones:
 ├── API/
 │   ├── job-posting-api/      # .NET API 1: src, unit and integration tests, migrations, docs
 │   └── job-search.api/       # .NET API 2: src, unit and integration tests, migrations, docs
-└── ai-log/                   # AI chat transcripts and working notes
+└── ai-log/                   # AI chat transcripts
 ```
 
 Each project also has a `prompts/` (or `prompt/`) folder with the numbered prompts used to build it, and a `docs/` folder with detailed notes.
 
 ## AI usage
 
-All transcripts and AI work notes are in [`ai-log/`](ai-log/README.md). Its README has a guided tour with line numbers for the points where I steered or simplified the AI's design. Each project was built from a sequence of small, reviewed prompts rather than one large request; the prompts are committed alongside each project.
+Raw, unedited AI session logs are in [`ai-log/raw/`](ai-log/raw/manifest.json). The manifest records their source files and verification hashes. Each project was built from a sequence of small, reviewed prompts rather than one large request; the prompts are committed alongside each project.
+
+## Final submission
+
+The updated submission instructions require a local Git repository archive or a
+Git bundle, rather than a public GitHub submission. Include raw, unedited AI chat
+exports from every tool and session in the root `ai-log/` directory. Work notes
+and edited transcript presentations do not replace these exports.
+
+Original local Codex and Claude Code JSONL logs are in `ai-log/raw/`, with a hash
+manifest. Refresh them with `python ai-log/export-raw-transcripts.py` after the
+final AI session, then add and commit all submission files. Check that any sessions
+from other tools or machines are also supplied.
+
+To create a bundle containing all local Git refs and their reachable history,
+run from the repository root after the final commit:
+
+```sh
+git bundle create ../job-posting-app.bundle --all
+git bundle verify ../job-posting-app.bundle
+```
+
+A bundle includes committed files and history, not uncommitted or untracked files.
+The recipient can restore the repository with:
+
+```sh
+git clone job-posting-app.bundle job-posting-app
+```
+
+Alternatively, zip the local repository with its hidden `.git` directory included;
+a source-only archive is insufficient. Send the bundle or ZIP and a separate copy
+of `README.md` by replying to the assignment email.
 
 ## Commit history
 

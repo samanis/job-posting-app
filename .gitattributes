@@ -1,0 +1,2 @@
+# Preserve raw AI exports byte-for-byte across platforms.
+ai-log/raw/**/*.jsonl -text

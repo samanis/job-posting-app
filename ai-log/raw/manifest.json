@@ -1,0 +1,243 @@
+{
+  "snapshotUtc": "2026-10-07T19:28:31.720373+00:00",
+  "project": "C:\\Users\\saman\\source\\repos\\job-posting-app",
+  "method": "Original JSONL file bytes copied unchanged; no redaction or reserialization.",
+  "scope": "Locally available Codex sessions with this project cwd (including descendants), and all Claude Code JSONL files in this project's directory, including subagents.",
+  "limitations": "Active sessions may append after the snapshot. Run this script again before the final commit. Deleted logs, other machines, browser-only conversations, and other tools without local logs are not recoverable by this script.",
+  "counts": {
+    "codex": 15,
+    "claude-code": 8
+  },
+  "files": [
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T10-40-38-01a1075c-18fe-7980-9679-ac43c2567593.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T10-40-38-01a1075c-18fe-7980-9679-ac43c2567593.jsonl",
+      "bytes": 12655400,
+      "sha256": "2f485821e4b3eb76fd867dc1ba9ef8641a22f58cb3a5054e75a9419d17255368",
+      "jsonlRecords": 2229,
+      "lastRecordedTimestamp": "2026-10-04T18:32:27.964Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T10-40-39-01a1075c-1a02-7750-bf7e-b15b4b003ba5.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T10-40-39-01a1075c-1a02-7750-bf7e-b15b4b003ba5.jsonl",
+      "bytes": 394747,
+      "sha256": "22be88bd0d89f49d15778bebd83f3b070d2b8870540faa2a425e358cadfef58c",
+      "jsonlRecords": 169,
+      "lastRecordedTimestamp": "2026-10-04T15:24:00.930Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T11-29-48-01a10789-195f-7bc2-8187-a43648b7d491.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T11-29-48-01a10789-195f-7bc2-8187-a43648b7d491.jsonl",
+      "bytes": 876480,
+      "sha256": "96a1e630fee28d190e2d62ba54bf2ee32d47a91625a9b68beb426c67a1d3d70f",
+      "jsonlRecords": 346,
+      "lastRecordedTimestamp": "2026-10-04T16:59:00.489Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T13-03-53-01a107df-3f79-76e1-b75b-af0346731b63.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T13-03-53-01a107df-3f79-76e1-b75b-af0346731b63.jsonl",
+      "bytes": 739274,
+      "sha256": "c063b8e18914444e923347ea04cd46992480fecfe3d25ab945d2f5a3fe73c136",
+      "jsonlRecords": 267,
+      "lastRecordedTimestamp": "2026-10-04T18:11:29.424Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T14-32-05-01a1082f-ffe6-75e2-9e03-63f21e2de920.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T14-32-05-01a1082f-ffe6-75e2-9e03-63f21e2de920.jsonl",
+      "bytes": 160170,
+      "sha256": "a59d2f22409f33af8f92925b1c8df40227e207184758ee0738a4f0d1196ed211",
+      "jsonlRecords": 29,
+      "lastRecordedTimestamp": "2026-10-04T18:32:18.715Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T14-48-33-01a1083f-0fa7-7c40-8d04-c5e59bd6d819.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T14-48-33-01a1083f-0fa7-7c40-8d04-c5e59bd6d819.jsonl",
+      "bytes": 12137171,
+      "sha256": "66d7c323dea535d729df5703d115b2a1cc61ea33dbeec0b511a07a95b5f4e946",
+      "jsonlRecords": 3885,
+      "lastRecordedTimestamp": "2026-10-06T14:01:58.059Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\04\\rollout-2026-10-04T14-48-33-01a1083f-1098-78c1-90f1-a146e56a714e.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/04/rollout-2026-10-04T14-48-33-01a1083f-1098-78c1-90f1-a146e56a714e.jsonl",
+      "bytes": 812290,
+      "sha256": "7bede7fc6a700a94b05abcd9435b4604887e24540498aecb1e5948bfafdd1b74",
+      "jsonlRecords": 325,
+      "lastRecordedTimestamp": "2026-10-05T15:46:41.106Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\05\\rollout-2026-10-05T11-51-46-01a10cc3-9322-7fb2-8858-897ef8851940.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/05/rollout-2026-10-05T11-51-46-01a10cc3-9322-7fb2-8858-897ef8851940.jsonl",
+      "bytes": 902042,
+      "sha256": "c4fdf6a190e1e679bb35cfdb91f0b55f6109450392a425b9501fa5cfedfcb455",
+      "jsonlRecords": 366,
+      "lastRecordedTimestamp": "2026-10-05T17:48:00.958Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\05\\rollout-2026-10-05T13-51-41-01a10d31-5c85-7673-b6fd-9b156da3d1f0.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/05/rollout-2026-10-05T13-51-41-01a10d31-5c85-7673-b6fd-9b156da3d1f0.jsonl",
+      "bytes": 1097138,
+      "sha256": "4c380609964a8c65df1a28dcdc11c9eef1f97dcf61f632e7ff6391e344c4c8f2",
+      "jsonlRecords": 414,
+      "lastRecordedTimestamp": "2026-10-05T21:09:06.855Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\05\\rollout-2026-10-05T17-12-10-01a10de8-e85d-7513-9cab-a66beb07a51c.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/05/rollout-2026-10-05T17-12-10-01a10de8-e85d-7513-9cab-a66beb07a51c.jsonl",
+      "bytes": 924158,
+      "sha256": "b3269f5d11792ace0976a2f6a3045d0ccaad4b1542d927b162d1ed5ce25566f0",
+      "jsonlRecords": 359,
+      "lastRecordedTimestamp": "2026-10-05T21:58:36.624Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\05\\rollout-2026-10-05T18-03-03-01a10e17-7f10-7dd0-a208-3ab8af05ce97.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/05/rollout-2026-10-05T18-03-03-01a10e17-7f10-7dd0-a208-3ab8af05ce97.jsonl",
+      "bytes": 916896,
+      "sha256": "b4b4b43a9fc791ffe07bb1fcbea26467e8dd2f2bbd867e82ffb11482377ce74a",
+      "jsonlRecords": 370,
+      "lastRecordedTimestamp": "2026-10-05T23:01:41.960Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\05\\rollout-2026-10-05T19-13-08-01a10e57-a86d-7c30-88c3-d6acf4c92711.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/05/rollout-2026-10-05T19-13-08-01a10e57-a86d-7c30-88c3-d6acf4c92711.jsonl",
+      "bytes": 1007307,
+      "sha256": "0a5dc0f709d68dd36e4f8a30a2ea6e18a7eaf656725ca141065e773bb188ca0c",
+      "jsonlRecords": 390,
+      "lastRecordedTimestamp": "2026-10-05T23:53:08.904Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\05\\rollout-2026-10-05T19-56-44-01a10e7f-93c3-7e53-885e-d2c916e5d1da.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/05/rollout-2026-10-05T19-56-44-01a10e7f-93c3-7e53-885e-d2c916e5d1da.jsonl",
+      "bytes": 461176,
+      "sha256": "e93a452ccedce669453cd96b01207fd44b01114e44eda0dfc6ad74367a3c9e99",
+      "jsonlRecords": 174,
+      "lastRecordedTimestamp": "2026-10-06T13:09:03.319Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\06\\rollout-2026-10-06T10-40-31-01a111a8-b5fd-7313-b9b8-2874c10bc34e.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/06/rollout-2026-10-06T10-40-31-01a111a8-b5fd-7313-b9b8-2874c10bc34e.jsonl",
+      "bytes": 1813014,
+      "sha256": "bd5fda0afd87557b12805a7050f17fec972d92b1635fbc29047f4b163d8083f7",
+      "jsonlRecords": 746,
+      "lastRecordedTimestamp": "2026-10-07T19:28:30.214Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "codex",
+      "source": "C:\\Users\\saman\\.codex\\sessions\\2026\\10\\06\\rollout-2026-10-06T10-40-33-01a111a8-b700-7263-a948-0be4d62db300.jsonl",
+      "file": "ai-log/raw/codex/sessions/2026/10/06/rollout-2026-10-06T10-40-33-01a111a8-b700-7263-a948-0be4d62db300.jsonl",
+      "bytes": 203310,
+      "sha256": "84e86c7342b2cf8878ea5f293d5f0ae868090113139ea3a1a6cef74f504ed9d4",
+      "jsonlRecords": 72,
+      "lastRecordedTimestamp": "2026-10-06T18:28:53.817Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\0df35fd1-6c8c-4ed8-b40b-5bcfb4d2bc5d.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/0df35fd1-6c8c-4ed8-b40b-5bcfb4d2bc5d.jsonl",
+      "bytes": 502300,
+      "sha256": "c14aebfb61966aa031fa396ddb41aca45c05efeef2091f61e0433989e03a802d",
+      "jsonlRecords": 89,
+      "lastRecordedTimestamp": "2026-10-06T14:17:52.057Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a\\subagents\\agent-a03b0a3e131cce7f3.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/subagents/agent-a03b0a3e131cce7f3.jsonl",
+      "bytes": 464215,
+      "sha256": "63607df40b6e4fdb2338bc34dd57055388caa5bc0fdcd6fd635672d791bf4630",
+      "jsonlRecords": 107,
+      "lastRecordedTimestamp": "2026-10-06T19:50:01.278Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a\\subagents\\agent-a3aac94b88a395814.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/subagents/agent-a3aac94b88a395814.jsonl",
+      "bytes": 239441,
+      "sha256": "211b9bb809ad91dd70123b45007c0d55e462bf78c4112c883b9c25aa62ebee18",
+      "jsonlRecords": 66,
+      "lastRecordedTimestamp": "2026-10-06T16:11:46.037Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a\\subagents\\agent-a4bac637cf4ebbad2.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/subagents/agent-a4bac637cf4ebbad2.jsonl",
+      "bytes": 537862,
+      "sha256": "0864d0b77cdcad053dd81acc5957487856e3fa663264f2c6b0699de5c670b07e",
+      "jsonlRecords": 101,
+      "lastRecordedTimestamp": "2026-10-06T19:49:58.120Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a\\subagents\\agent-a70d65086c0c48fcc.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/subagents/agent-a70d65086c0c48fcc.jsonl",
+      "bytes": 294514,
+      "sha256": "012091555529072cdc5eef4ce30081c6ea449762acb240555ed061051d1e716b",
+      "jsonlRecords": 87,
+      "lastRecordedTimestamp": "2026-10-06T16:12:37.753Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a\\subagents\\agent-a7218f7a4b7c61def.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/subagents/agent-a7218f7a4b7c61def.jsonl",
+      "bytes": 226880,
+      "sha256": "4ad7327002134fbb8512b0beb8b860a71024988f7c72835df5c529e62f797538",
+      "jsonlRecords": 65,
+      "lastRecordedTimestamp": "2026-10-06T16:11:30.007Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a\\subagents\\agent-add3771c884a7cb29.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a/subagents/agent-add3771c884a7cb29.jsonl",
+      "bytes": 569010,
+      "sha256": "127e88e88fb7c353b275d28cdb832fb721ba0d4698b6c61f1b8afd3322274bab",
+      "jsonlRecords": 142,
+      "lastRecordedTimestamp": "2026-10-06T19:49:49.421Z",
+      "sourceUnchangedAtVerification": true
+    },
+    {
+      "tool": "claude-code",
+      "source": "C:\\Users\\saman\\.claude\\projects\\c--Users-saman-source-repos-job-posting-app\\f24f3131-c614-4bc5-9426-520f4457402a.jsonl",
+      "file": "ai-log/raw/claude-code/c--Users-saman-source-repos-job-posting-app/f24f3131-c614-4bc5-9426-520f4457402a.jsonl",
+      "bytes": 6703087,
+      "sha256": "a257010eae706b6624614d1437dd2469260202aadfb4140b0cf46bc472bc3aa3",
+      "jsonlRecords": 2465,
+      "lastRecordedTimestamp": "2026-10-06T20:15:41.117Z",
+      "sourceUnchangedAtVerification": true
+    }
+  ]
+}
